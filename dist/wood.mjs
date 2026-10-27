@@ -1,0 +1,45 @@
+// Physical-scale procedural wood. Relief amplitudes are illustrative, not scans.
+const add=(a,b)=>a.map((x,i)=>x+b[i]),sub=(a,b)=>a.map((x,i)=>x-b[i]),mul=(a,s)=>a.map(x=>x*s),dot=(a,b)=>a.reduce((s,x,i)=>s+x*b[i],0),cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],norm=a=>mul(a,1/(Math.hypot(...a)||1));
+const fract=x=>x-Math.floor(x),mix=(a,b,t)=>a+(b-a)*t,smooth=(a,b,x)=>{let t=Math.max(0,Math.min(1,(x-a)/(b-a)));return t*t*(3-2*t)};
+const hash=(x,y)=>fract(Math.sin(x*127.1+y*311.7)*43758.5453);
+export function woodNoise(x,y){let a=Math.floor(x),b=Math.floor(y),u=smooth(0,1,fract(x)),v=smooth(0,1,fract(y));return mix(mix(hash(a,b),hash(a+1,b),u),mix(hash(a,b+1),hash(a+1,b+1),u),v)}
+function woodCell(x,y){let a=Math.floor(x),b=Math.floor(y),fx=fract(x),fy=fract(y),near=8,second=8,id=.5;for(let i=-1;i<=1;i++)for(let j=-1;j<=1;j++){let hx=hash(a+i,b+j),hy=fract(Math.sin((a+i)*269.5+(b+j)*183.3)*43758.5453),dx=i+.2+.6*hx-fx,dy=j+.2+.6*hy-fy,d=dx*dx+dy*dy;if(d<near){second=near;near=d;id=hx}else second=Math.min(second,d)}return[Math.sqrt(second)-Math.sqrt(near),id]}
+export function barkSample(type,uv,age=.65,zone=0){
+ let x=uv[0],y=uv[1],coarse=woodNoise(x*13,y*8),warp=woodNoise(x*24,y*9),fibers=Math.sin(x*3100+Math.sin(y*180)*1.5),height=0,dark=0,rough=.82;
+ if(zone>.075){let pores=woodNoise(x*950,y*750);return {height:(pores-.5)*.00005,dark:smooth(.8,1,pores)*.20,roughness:.60,color:coarse}}
+ if(type==='birch'&&zone>.03&&zone<.05){let row=Math.floor(y*115),u=fract(x*42+hash(row,1)*2),v=fract(y*115),line=(1-smooth(.055,.14,Math.abs(v-.5)))*(1-smooth(.12,.36,Math.abs(u-.5)));let diamond=Math.abs(Math.sin(x*95+y*25))*Math.abs(Math.sin(x*95-y*25));let fissure=(1-smooth(.012,.04,diamond))*age*age;return{height:-.00017*line-.0012*fissure+(coarse-.5)*.00012,dark:Math.max(line*.78,fissure*.72),roughness:.50+coarse*.16,color:coarse}}
+ if(type==='pine'){let cell=woodCell(x*(zone>.05?105:52)+warp*.3,y*(zone>.05?85:24)+coarse*.3),crack=1-smooth(.018,.11,cell[0]);height=((1-crack)*(.65+.35*cell[1])-.25*crack)*(zone>.05?.0012:.004)*(.3+.7*age);dark=crack*.80;rough=zone>.05?.66:.85;
+ }else if(type==='birch'){let a=Math.abs(Math.sin(x*88+y*21)),b=Math.abs(Math.sin(x*88-y*21)),fissure=1-smooth(.035,.15,a*b);height=(1-fissure)*.002*age;dark=fissure*.7;rough=.85;
+ }else{let cell=woodCell(x*(type==='willow'?75:52)+warp*.6+(woodNoise(x*180,y*120)-.5)*.24,y*(type==='willow'?24:17)+coarse*.5+(woodNoise(x*90,y*140)-.5)*.20),edge=1-smooth(.014,.09,cell[0]),spacing=type==='willow'?550:420,phase=x*spacing+(warp-.5)*3.8+Math.sin(y*31)*.5,groove=Math.pow(.5+.5*Math.sin(phase),9)*.72,crack=Math.max(edge*.85,groove),grain=woodNoise(x*330,y*250)-.5;height=(.30-crack)*(.002+.004*age)+(cell[1]-.5)*.0011*age+grain*.0005*age;dark=Math.min(.95,crack*.95);}
+
+ let chip=woodNoise(x*150,y*120)-.5,grain=woodNoise(x*580,y*430)-.5,dust=woodNoise(x*2200,y*1700)-.5;return {height:height+fibers*.000035*age+age*(chip*.0008+grain*.00024+dust*.000045),dark,roughness:Math.min(.94,rough+grain*.08),color:Math.max(0,Math.min(1,coarse*.35+(grain+.5)*.45+(dust+.5)*.20))};
+}
+export const woodRadius=(r0,r1,t)=>r1+(r0-r1)*Math.pow(Math.max(0,1-t),.88);
+function interpolatePath(points,t){let x=t*(points.length-1),i=Math.min(points.length-2,Math.floor(x)),f=x-i,p0=points[Math.max(0,i-1)],p1=points[i],p2=points[i+1],p3=points[Math.min(points.length-1,i+2)];return p1.map((v,k)=>.5*((2*v)+(-p0[k]+p2[k])*f+(2*p0[k]-5*v+4*p2[k]-p3[k])*f*f+(-p0[k]+3*v-3*p2[k]+p3[k])*f*f*f))}
+export function woodTube(mesh,points,r0,r1,type,{fine=false,macro=false,maturity=.65,root=false,collar=false,preview=true,cap=false,zone:forceZone}={}){
+ const isTwig=r0<.007,white=type==='birch'&&r0>.018,upperPine=type==='pine'&&(points[0][1]>.6||r0<.09);
+ let zone=forceZone??(isTwig?.08:white?.04:upperPine?.06:0),age=Math.max(.04,Math.min(1,maturity*(isTwig?.10:.35+.65*Math.min(1,r0/.09))));
+ const base=zone===.04?[.70,.69,.62]:zone===.06?[.43,.20,.075]:zone===.08?(type==='willow'?[.34,.30,.095]:[.24,.15,.09]):type==='birch'?[.24,.22,.19]:type==='willow'?[.24,.22,.18]:[.27,.235,.19];
+ let sides=macro?(preview?112:224):fine?96:r0>.14?56:r0>.035?24:r0>.007?10:5,steps=macro?(preview?90:160):fine?80:Math.max(points.length-1,r0>.04?32:points.length-1),rings=[],arc=0,previousU=null;
+ const phase=points[0][0]*.37+points[0][2]*.53,uvOffset=points[0][1];
+ for(let j=0;j<=steps;j++){
+  let t=j/steps,p=interpolatePath(points,t),before=interpolatePath(points,Math.max(0,t-.0003)),after=interpolatePath(points,Math.min(1,t+.0003)),axis=norm(sub(after,before));if(j)arc+=Math.hypot(...sub(p,rings[j-1].center));
+  let u=previousU?norm(sub(previousU,mul(axis,dot(previousU,axis)))):norm(cross(axis,Math.abs(axis[1])>.94?[1,0,0]:[0,1,0]));if(Math.hypot(...u)<.9)u=norm(cross(axis,[0,0,1]));previousU=u;let v=norm(cross(u,axis)),r=woodRadius(r0,r1,t),localAge=age*(.3+.7*Math.sqrt(r/r0)),collarBump=collar?.28*Math.exp(-Math.pow((arc-r0*2.6)/Math.max(.01,r0*1.3),2)):0,ring=[];
+  for(let k=0;k<=sides;k++){
+   let a=k/sides*Math.PI*2,n=add(mul(u,Math.cos(a)),mul(v,Math.sin(a))),uv=[a*r+phase,arc+uvOffset],surface=barkSample(type,uv,localAge,zone),rootFlare=root?.38*Math.exp(-arc/Math.max(.08,r0*2))*(.6+.4*Math.cos(a*5+phase)):0,rr=r*(1+collarBump+rootFlare)+surface.height*Math.min(1,r/.02);
+   let pos=add(p,mul(n,Math.max(r*.75,rr))),taper=(r0-r1)/Math.max(.001,Math.hypot(...sub(points.at(-1),points[0])));let normal=norm(add(n,mul(axis,taper)));
+   const co=base.map(x=>x*(.94+.12*surface.color));ring.push({p:pos,n:normal,c:co,uv,age:localAge,r});
+  }ring[sides].p=[...ring[0].p];ring[sides].n=[...ring[0].n];rings.push({points:ring,center:p,axis});
+ }
+ let quadCount=0;
+ function quad(a,b,c,d){let n=norm(add(a.n,c.n)),cr=cross(sub(b.p,a.p),sub(c.p,a.p)),indices=dot(cr,n)<0?[a,c,b,c,d,b]:[a,b,c,c,b,d];for(let q of indices)mesh.v(q.p,q.n,q.c,zone,q.age,q.r,q.uv);if(preview)mesh.preview.push({pts:[a.p,b.p,d.p,c.p],n,c:a.c,kind:zone,phase:0});quadCount++}
+ for(let j=0;j<steps;j++)for(let k=0;k<sides;k++)quad(rings[j].points[k],rings[j+1].points[k],rings[j].points[k+1],rings[j+1].points[k+1]);
+ if(cap){for(let end of [0,steps]){let ring=rings[end],normal=mul(ring.axis,end?1:-1),radius=end?r1:r0,center=ring.center,wood=[.48,.35,.21];for(let k=0;k<sides;k++){let a=ring.points[k],b=ring.points[k+1],cr=cross(sub(a.p,center),sub(b.p,center)),order=dot(cr,normal)>0?[a,b]:[b,a];let ca=k/sides*Math.PI*2,cb=(k+1)/sides*Math.PI*2;mesh.v(center,normal,wood,.12,age,radius,[0,0]);for(let q of order){let a0=q===a?ca:cb;mesh.v(q.p,normal,wood,.12,age,radius,[Math.cos(a0)*radius,Math.sin(a0)*radius])}if(preview)mesh.preview.push({pts:[center,a.p,b.p],n:normal,c:wood,kind:.12,phase:0})}}}
+ return {rings:steps+1,sides,quadCount,zone,age,collar,root};
+}
+export const WOOD_NOTES={
+ oak:{text:'Grey-brown longitudinal ridges and fissures, with a finer fibrous surface. Relief increases with the maturity control.',source:'https://www.ucc.ie/en/tree-explorers/trees/a-z/quercusrobur/'},
+ willow:{text:'Grey-brown, irregularly furrowed older bark; smoother yellow-brown fine stems. The surface uses branching grooves and fine grain.',source:'https://plants.ces.ncsu.edu/plants/salix-babylonica/'},
+ pine:{text:'Coarser basal plates and finer orange-brown upper bark. Select Branch to inspect the upper-bark treatment.',source:'https://plants.ces.ncsu.edu/plants/pinus-sylvestris/'},
+ birch:{text:'Pale older bark with horizontal lenticels and dark fissures; brown fine twigs. Maturity increases diamond-like dark striations.',source:'https://www.ucc.ie/en/tree-explorers/trees/a-z/betulapendula/'}
+};
