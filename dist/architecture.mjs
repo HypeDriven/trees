@@ -1,4 +1,5 @@
-import {SOUTH_AFRICAN_CROWNS,SOUTH_AFRICAN_SPECIES} from './south-africa.mjs?v=12';
+import {buildXerophytaArchitecture} from './garden-species.mjs?v=13';
+import {SOUTH_AFRICAN_CROWNS,SOUTH_AFRICAN_SPECIES} from './south-africa.mjs?v=13';
 // Species-biased crown architecture in metres. An illustrative habit model,
 // not a simulation of growth, reaction wood, competition or branch mechanics.
 const add=(a,b)=>a.map((v,i)=>v+b[i]),sub=(a,b)=>a.map((v,i)=>v-b[i]),mul=(a,s)=>a.map(v=>v*s),dot=(a,b)=>a.reduce((s,v,i)=>s+v*b[i],0),norm=a=>mul(a,1/(Math.hypot(...a)||1)),mix=(a,b,t)=>add(mul(a,1-t),mul(b,t));
@@ -23,6 +24,7 @@ export function sampleBranch(points,t){
 }
 
 export function buildTreeArchitecture(cfg){
+ if(cfg.type==='monkeytail')return buildXerophytaArchitecture(cfg);
  const random=seeded(cfg.seed^0x391a6d27),R=(a,b)=>a+(b-a)*random(),type=cfg.type,h=cfg.height,m=clamp(cfg.maturity??.65,0,1),levels=clamp(Math.round(cfg.levels),2,5),dense=(cfg.shoots??3)>=2;
  const south=SOUTH_AFRICAN_CROWNS[type];
  const records=[],baseRadius=h*(south?.radius??(type==='oak'||type==='willow'?.025:type==='pine'?.015:.012)),azimuth=R(0,Math.PI*2),bias=R(.12,.25),crownPhase=R(0,6.283);
@@ -53,7 +55,9 @@ export function buildTreeArchitecture(cfg){
   }else if(type==='pine'){
    end=norm(add(mul(out,.65),[0,depth===1?R(.22,.55):R(.55,1.1),0]));bend=depth===1?.16+.18*m:.20;
   }else if(south){
-   if(type==='baobab'){const [side]=frame(start);end=norm(add(add(mul(out,.80),mul(side,R(-.40,.40))),[0,depth===1?R(.35,.75):R(.25,.65),0]));bend=.40+.15*m;}
+   if(type==='jacaranda'){end=norm(add(mul(out,.9),[0,depth===1?R(.05,.30):R(-.05,.30),0]));bend=.42;}
+   else if(type==='eucalyptus'){const [side]=frame(start);end=norm(add(add(mul(out,.65),mul(side,R(-.35,.35))),[0,depth===1?R(.12,.45):R(-.35,.15),0]));bend=.46;}
+   else if(type==='baobab'){const [side]=frame(start);end=norm(add(add(mul(out,.80),mul(side,R(-.40,.40))),[0,depth===1?R(.35,.75):R(.25,.65),0]));bend=.40+.15*m;}
    else if(type==='fevertree'){end=norm(add(mul(out,.95),[0,depth===1?R(-.02,.13):R(.04,.32),0]));bend=.36;}
    else if(type==='sausagetree'){end=norm(add(mul(out,.8),[0,depth===1?R(-.12,.18):R(-.32,.20),0]));bend=.36;}
    else if(type==='karee'){end=norm(add(mul(out,depth===1?.8:.6),[0,depth===1?R(-.08,.18):depth===2?R(-.32,-.12):R(-.65,-.25),0]));bend=.39;}

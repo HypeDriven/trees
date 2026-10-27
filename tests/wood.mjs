@@ -10,7 +10,7 @@ for(const type of Object.keys(SPECIES)){
  }
  assert(Math.max(...signatures)-Math.min(...signatures)>.0001,`${type} has no physical relief`);
  let r=buildSpecimen({type,view:'wood',woodPart:'junction',height:10,leafSize:SPECIES[type].length,maturity:.7,seed:2847,barkPosition:.44},{preview:false});
- assert.equal(r.stats.leaves,0);assert.equal(r.stats.wood.rootFlares,1);assert.equal(r.stats.wood.collars,1);assert(r.vertices.every(Number.isFinite));assert(r.vertices.length/14>10000);assert(r.inspectFocus.every(Number.isFinite));
+ assert.equal(r.stats.leaves,0);assert.equal(r.stats.wood.rootFlares,type==='monkeytail'?0:1);assert.equal(r.stats.wood.collars,type==='monkeytail'?0:1);assert(r.vertices.every(Number.isFinite));assert(r.vertices.length/14>10000);assert(r.inspectFocus.every(Number.isFinite));
  console.log(`${type}: deterministic relief, wood junction geometry and finite physical coordinates passed`);
 }
 let vertices=[],mesh={v(p,n,c,kind,phase,flutter,uv){vertices.push({p,n,uv})},preview:[]};

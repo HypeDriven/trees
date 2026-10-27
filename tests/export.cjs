@@ -11,16 +11,18 @@ const source=fs.readFileSync(require('node:path').join(__dirname,'../dist/app.js
  vm.runInContext(source.slice(source.indexOf('async function thornCutoutFiles'),source.indexOf("$('#export').onclick=")),context);
  const vertices=[];for(let pairs=3;pairs<=5;pairs++)for(let i=0;i<6;i++)vertices.push(i*.01,0,0,0,1,0,.13,.27,.06,1.2+pairs*.01,0,0,i%2,i<3?0:1);
  for(let pairs=4;pairs<=7;pairs++)for(let i=0;i<6;i++)vertices.push(i*.01,0,0,0,1,0,.18,.29,.075,1.3+pairs*.01,0,0,i%2,i<3?0:1);
+ for(let pairs=7;pairs<=14;pairs++)for(let i=0;i<6;i++)vertices.push(i*.01,0,0,0,1,0,.15,.30,.07,1.4+(pairs-6)*.01,0,0,i%2,i<3?0:1);
  context.treeVertices=new Float32Array(vertices);
  vm.runInContext("cfg={...defaults,type:'sweetthorn',view:'tree',leafSize:.006};",context);
  await vm.runInContext('exportMesh()',context);
  assert(files['starhermit-thorn.png'] instanceof Uint8Array);assert(files['starhermit-thorn-opacity.png'] instanceof Uint8Array);
  assert(files['starhermit-trees.mtl'].includes('map_d starhermit-thorn-opacity.png'));assert(files['starhermit-trees.mtl'].includes('thorn_cutout'));
  const obj=files['starhermit-trees.obj'],uvs=obj.split('\n').filter(l=>l.startsWith('vt ')).map(l=>Number(l.split(' ')[1]));
- for(let slot=0;slot<3;slot++)assert(uvs.slice(slot*6,slot*6+6).every(x=>x>=slot/5-1e-6&&x<=(slot+1)/5+1e-6));
- const tex=obj.split('\n').filter(l=>l.startsWith('vt ')).map(l=>l.split(' ').slice(1).map(Number));for(let n=0;n<4;n++){const slot=n+1;for(const [u,v]of tex.slice(18+n*6,24+n*6)){assert(u>=slot/5-1e-6&&u<=(slot+1)/5+1e-6);assert(v>=0&&v<=.5,'Fever-tree UVs must address the fine-leaflet atlas row');}}
+ for(let slot=0;slot<3;slot++)assert(uvs.slice(slot*6,slot*6+6).every(x=>x>=slot/9-1e-6&&x<=(slot+1)/9+1e-6));
+ const tex=obj.split('\n').filter(l=>l.startsWith('vt ')).map(l=>l.split(' ').slice(1).map(Number));for(let n=0;n<4;n++){const slot=n+1;for(const [u,v]of tex.slice(18+n*6,24+n*6)){assert(u>=slot/9-1e-6&&u<=(slot+1)/9+1e-6);assert(v>=1/3-1e-6&&v<=2/3+1e-6,'Fever-tree UVs must address the fine-leaflet atlas row');}}
+ for(let n=0;n<8;n++)for(const [u,v]of tex.slice(42+n*6,48+n*6)){assert(u>=n/9-1e-6&&u<=(n+1)/9+1e-6);assert(v>=-1e-6&&v<=1/3+1e-6,'Jacaranda UVs must address the terminal-pinna atlas row');}
  assert(obj.includes('f 1/1/1 2/2/2 3/3/3'));assert(mask.some(v=>v===0)&&mask.some(v=>v===255));
- const recipe=JSON.parse(files['recipe.json']);assert.equal(recipe.version,9);assert.equal(recipe.parameters.type,'sweetthorn');
+ const recipe=JSON.parse(files['recipe.json']);assert.equal(recipe.version,10);assert.equal(recipe.parameters.type,'sweetthorn');
  // Actual ZIP builder must preserve binary PNG bytes rather than text-encode them.
  vm.runInContext(source.slice(source.indexOf('function zipDownload('),source.indexOf('\n',source.indexOf('function zipDownload('))),context);
  vm.runInContext("zipDownload({'tiny.png':new Uint8Array([137,80,78,71,255,0])})",context);
@@ -28,8 +30,8 @@ const source=fs.readFileSync(require('node:path').join(__dirname,'../dist/app.js
  // Execute the real import handler for every new species and a legacy recipe.
  const importStart=source.indexOf("$('#import').onchange=")+"$('#import').onchange=".length,importEnd=source.indexOf('\n',importStart);
  vm.runInContext('var restore='+source.slice(importStart,importEnd).replace(/;$/,''),context);
- for(const type of ['sweetthorn','marula','wildolive','yellowwood','baobab','fevertree','sausagetree','karee','oak']){
-  const defaults=vm.runInContext('({...defaults})',context),r={format:type==='oak'?'silva-tree':'starhermit-trees',version:type==='oak'?6:8,parameters:{...defaults,type,leafSize:SPECIES[type].length}};
+ for(const type of ['sweetthorn','marula','wildolive','yellowwood','baobab','fevertree','sausagetree','karee','jacaranda','monkeytail','eucalyptus','oak']){
+  const defaults=vm.runInContext('({...defaults})',context),r={format:type==='oak'?'silva-tree':'starhermit-trees',version:type==='oak'?6:8,parameters:{...defaults,...(type==='monkeytail'?{height:1.1,rootDepth:.25}:{}),type,leafSize:SPECIES[type].length}};
   if(type==='oak'){delete r.parameters.fruitStage;delete r.parameters.coneOpening;}
   const input={files:[{async text(){return JSON.stringify(r);}}],value:'file'};
   await context.restore({target:input});assert.equal(vm.runInContext('cfg.type',context),type);assert.equal(vm.runInContext('cfg.fruitStage',context),'mature');assert.equal(input.value,'');

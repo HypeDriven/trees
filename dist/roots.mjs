@@ -1,7 +1,10 @@
-import {woodTube,woodRadius} from './wood.mjs?v=12';
+import {woodTube,woodRadius} from './wood.mjs?v=13';
 const add=(a,b)=>a.map((v,i)=>v+b[i]),sub=(a,b)=>a.map((v,i)=>v-b[i]),mul=(a,s)=>a.map(v=>v*s),cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],norm=a=>mul(a,1/(Math.hypot(...a)||1));
 function seeded(seed){return()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 export const ROOT_PROFILES={
+ jacaranda:{primaries:10,spread:.50,depth:1.3,lateral:.14,sinkers:4,tap:true},
+ monkeytail:{primaries:18,spread:.28,depth:.25,lateral:.27,sinkers:3,tap:false,fibrous:true},
+ eucalyptus:{primaries:10,spread:.52,depth:1.7,lateral:.17,sinkers:5,tap:true},
  baobab:{primaries:8,spread:.62,depth:1.3,lateral:.12,sinkers:3,tap:false},
  fevertree:{primaries:11,spread:.50,depth:1.0,lateral:.10,sinkers:3,tap:false},
  sausagetree:{primaries:9,spread:.50,depth:1.5,lateral:.16,sinkers:4,tap:true},
@@ -48,7 +51,7 @@ export function buildRootSystem(mesh,cfg,{preview=false,study=false,baseRadius}=
  const gaps=Array.from({length:profile.primaries},()=>R(.48,1.55)),total=gaps.reduce((a,b)=>a+b,0);let angle=rotation;
  for(let k=0;k<profile.primaries;k++){
   angle+=gaps[k]/total*Math.PI*2;const a=angle,start=[Math.cos(a)*base*.28,base*(cfg.type==='baobab'?R(.03,.10):R(.20,.39)),Math.sin(a)*base*.28],vigor=1+.23*Math.cos(a-sectorPhase);
-  branch(start,a+R(-.20,.20),spread*R(.58,.98)*vigor,base*R(.29,.50),0);
+  branch(start,a+R(-.20,.20),spread*R(.58,.98)*vigor,base*(profile.fibrous?R(.025,.065):R(.29,.50)),0);
  }
  for(let k=0;k<profile.sinkers;k++){
   const site=sinkerSites[Math.floor(R(0,sinkerSites.length))],p=site.p,drop=Math.min(depth+p[1],depth*R(.48,.85)),a=R(0,6.28),offset=depth*R(.10,.23),points=Array.from({length:11},(_,j)=>{let t=j/10;return j===0?p:[p[0]+offset*(Math.sin(a+t*3)-Math.sin(a))*t,boundedY(p[1]-drop*t),p[2]+offset*(Math.cos(a+t*4)-Math.cos(a))*t]});

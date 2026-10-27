@@ -22,7 +22,7 @@ for(const [type,species] of Object.entries(SPECIES)){
  if(type!=='pine'){
   let upper=0,lower=0;for(let i=9;i<leaf.vertices.length;i+=14){if(leaf.vertices[i]===1)upper++;if(Math.abs(leaf.vertices[i]-1.02)<.001)lower++}
   assert(upper>0&&lower>0,'Finite blade needs separate upper and lower faces');
-  assert(leaf.bounds.max[1]-leaf.bounds.min[1]<(species.compound?.33:.18),'Anatomy must remain at natural scale');
+  assert(leaf.bounds.max[1]-leaf.bounds.min[1]<(species.organStudySpan??(species.compound?.33:.18)),'Anatomy must remain at natural scale');
  }
  console.log(`${type}: seeded geometry, natural dimensions, winter behavior, and organ anatomy passed`);
 }

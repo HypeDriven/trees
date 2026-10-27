@@ -5,6 +5,9 @@ const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),smooth=(a,b,x)=>{let t=clamp((x-a
 const frame=d=>{const u=norm(cross(d,Math.abs(d[1])>.94?[1,0,0]:[0,1,0]));return[u,norm(cross(u,d))]};
 const hash=x=>{const v=Math.sin(x*127.1+311.7)*43758.5453;return v-Math.floor(v)};
 export const FRUIT_NOTES={
+ jacaranda:{name:'Flattened woody capsule',source:'https://biodiversityadvisor.sanbi.org/search/detail/352061a0-edb2-43c9-b5b9-ed053ce81552',text:'A rounded, strongly flattened woody capsule with two finite-thickness valves. Release separates the valves to expose thin winged seeds. Older capsules can persist alongside new flowers.'},
+ monkeytail:{name:'Bristly seed capsule',source:'https://pza.sanbi.org/xerophyta-retinervis',text:'An oblong capsule on a slender peduncle, with coarse brown emergences. The release study separates the three loculicidal sectors and shows sample small seeds; it does not simulate dispersal.'},
+ eucalyptus:{name:'Woody gum-nut umbel',source:'https://hortflora.rbg.vic.gov.au/taxon/ad99bce8-5340-11e7-b82b-005056b0018f',text:'An umbel of small hemispherical woody capsules. Each has a thick raised rim, a recessed interior and four projecting valves. The release study opens the valve gaps and reveals sample seeds.'},
  baobab:{name:'Velvety woody capsule',source:'https://apps.worldagroforestry.org/treedb2/speciesprofile.php?Spid=143',text:'A pendant ovoid capsule with a woody shell and dense yellow-brown surface hairs. The capsule is indehiscent: it stays closed. Curved stalk, shell mottling, apical scar and fine surface fuzz are modeled.'},
  fevertree:{name:'Segmented seed pod',source:'https://apps.worldagroforestry.org/treedb/AFTPDFS/Acacia_xanthophloea.PDF',text:'A flattened, lightly curved pale brown pod with constrictions between seeds. The valves and edge sutures are separate geometry; the release study reveals the enclosed brown seeds.'},
  sausagetree:{name:'Pendant sausage fruit',source:'https://pza.sanbi.org/kigelia-africana',text:'A long grey-brown woody fruit supported by a rope-like hanging stalk. The closed shell has irregular coarse grain, lenticel-like flecks and an apical scar. Seed release through decay is not represented by opening valves.'},
@@ -45,7 +48,29 @@ export function buildFruit(mesh,cfg,{base=[0,0,0],axis=[0,-1,0],fine=false,attac
  function stalk(len,radius){lathe(base,axis,len,t=>radius*(1-.25*t),[.25,.19,.11],.36,fine?16:3,fine?14:5);return add(base,mul(axis,len));}
  function wing(p,d,w,l,col){const [a,b]=frame(d);patch((t,x)=>add(add(p,mul(d,l*t)),add(mul(a,x*w*Math.pow(Math.sin(Math.PI*t),.65)),mul(b,l*.05*Math.sin(t*Math.PI)*x*x))),fine?12:2,fine?6:2,col,.42,fine?.000025:0,[w*2,l],seed*.07);}
 
- if(type==='pine'){
+ if(type==='jacaranda'){
+  const young=stage==='developing',D=rnd(1,.04,.060)*(young?.70:1),R=D*.5,H=D*.075,p=stalk(.010,.0008),opening=stage==='released'?.65:0,col=young?[.26,.33,.13]:[.28,.20,.12];
+  for(const sign of [-1,1])patch((t,x)=>{const width=R*Math.pow(Math.sin(Math.PI*t),.52),bulge=Math.sqrt(Math.max(0,1-x*x))*Math.sin(Math.PI*t);return add(add(p,mul(axis,D*t)),add(mul(u,x*width),mul(v,sign*(H*bulge+D*opening*.30*Math.sin(Math.PI*t)))));},fine?80:10,fine?40:6,(t,x)=>col.map(c=>c*(.90+.12*Math.sin(t*27+x*8))),.32,fine?.0008:.0004,[D,D],seed);
+  if(opening)for(let k=0;k<(fine?10:3);k++){const t=.23+.52*(k+.5)/(fine?10:3),q=add(add(p,mul(axis,D*t)),mul(u,rnd(k+5,-D*.23,D*.23))),length=rnd(k+12,.010,.015);patch((a,x)=>add(q,add(mul(axis,length*(a-.5)),mul(u,x*length*.55*Math.pow(Math.sin(Math.PI*a),.55)))),fine?18:3,fine?12:2,[.58,.48,.30],.42,fine?.000025:0,[length,length],k);lathe(add(q,mul(axis,-.0015)),axis,.003,a=>.0012*Math.sin(Math.PI*a),[.28,.18,.075],.34,8,10);details.wingedSeeds++;}
+  details.length=D;details.valves=2;details.opening=opening;details.capsules=1;details.flattened=true;focus=add(add(p,mul(axis,D*.50)),mul(v,H+D*opening*.30));
+ }else if(type==='monkeytail'){
+  const young=stage==='developing',L=rnd(1,.013,.019),r=.0045,p=stalk(rnd(2,.10,.15),.00055),opening=stage==='released'?.0035:0,col=young?[.26,.33,.12]:[.29,.21,.12];
+  const shell=(t,a,sector)=>{const rr=r*Math.pow(Math.sin(Math.PI*t),.35),spread=opening*Math.sin(Math.PI*t),sa=sector*TAU/3;return add(add(p,mul(axis,L*t)),add(add(mul(u,Math.cos(a)*rr),mul(v,Math.sin(a)*rr)),add(mul(u,Math.cos(sa)*spread),mul(v,Math.sin(sa)*spread))));};
+  for(let k=0;k<3;k++)patch((t,x)=>shell(t,k*TAU/3+x*Math.PI/3,k),fine?48:8,fine?18:4,col,.36,fine?.00022:0,[r*TAU/3,L],seed+k);
+  if(fine)for(let k=0;k<128;k++){const t=.06+.88*(k+.5)/128,a=k*GOLD,sector=Math.floor((((a+Math.PI/3)%TAU)+TAU)%TAU/(TAU/3)),q=shell(t,a,sector),out=norm(add(mul(u,Math.cos(a)),mul(v,Math.sin(a)))),edge=norm(cross(out,axis));patch((s,x)=>add(q,add(mul(out,.0016*s),add(mul(axis,.0007*s),mul(edge,x*.000055*(1-s))))),3,1,[.27,.18,.095],.36,0,[.00011,.002],k);details.surfaceHairs=(details.surfaceHairs??0)+1;}
+  if(opening&&fine)for(let k=0;k<12;k++){const q=add(p,add(mul(axis,L*(.15+.65*k/12)),mul(u,rnd(k+7,-.001,.001))));lathe(q,axis,.0008,t=>.00025*Math.sin(Math.PI*t),[.08,.065,.04],.34,5,6);details.seeds++;}
+  details.length=L;details.valves=3;details.capsules=1;details.opening=opening;focus=add(add(p,mul(axis,L*.55)),mul(u,r+opening));
+ }else if(type==='eucalyptus'){
+  details.valves=0;
+  const young=stage==='developing',count=fine?9:7,p=stalk(.010,.00065),L=rnd(1,.0055,.008),r=L*.55,opened=stage==='released',col=young?[.29,.35,.16]:[.35,.26,.17];
+  for(let k=0;k<count;k++){
+   const a=k*GOLD,out=add(mul(u,Math.cos(a)),mul(v,Math.sin(a))),q=add(p,add(mul(out,.010),mul(axis,.003))),d=norm(add(mul(axis,.35),mul(out,.9))),[aa,bb]=frame(d);lathe(p,norm(sub(q,p)),length(sub(q,p)),t=>.00038*(1-.3*t),[.34,.24,.15],.36,fine?4:2,fine?6:4);
+   lathe(q,d,L,t=>r*Math.sqrt(t)*(1-.04*t),col,.36,fine?44:4,fine?40:6);lathe(add(q,mul(d,L*.38)),d,L*.62,t=>r*.82*Math.sqrt(t),col.map(c=>c*.55),.36,fine?32:3,fine?40:6);
+   patch((t,x)=>{const angle=(x+1)*Math.PI,rr=r*(.82+.18*t);return add(add(q,mul(d,L+.00035*Math.sin(Math.PI*t))),add(mul(aa,Math.cos(angle)*rr),mul(bb,Math.sin(angle)*rr)));},fine?6:1,fine?40:6,col.map(c=>c*1.1),.36,0,[r*.18,TAU*r],seed+k);
+   for(let valve=0;valve<4;valve++){const angle=valve*TAU/4,radial=add(mul(aa,Math.cos(angle)),mul(bb,Math.sin(angle))),edge=norm(cross(d,radial));patch((t,x)=>add(add(q,mul(d,L*(.76+.40*t))),add(mul(radial,r*(.78*(1-t)+(opened?.66:.18)*t)),mul(edge,x*r*.42*(1-t)))),fine?12:2,fine?8:1,col,.36,fine?.00013:0,[r,L*.4],valve);details.valves++;}
+   if(opened&&fine){lathe(add(q,mul(d,L*.75)),d,.0007,t=>.00028*Math.sin(Math.PI*t),[.40,.29,.12],.34,5,6);details.seeds++;}details.capsules++;if(k===0)focus=add(add(q,mul(d,L)),mul(aa,r*.4));
+  }details.length=L;details.raisedRims=count;details.projectingValves=true;
+ }else if(type==='pine'){
   const young=stage==='developing',L=young?rnd(1,.016,.024):rnd(1,.038,.062),radius=L*(young?.29:.28),p=stalk(rnd(2,.004,.008),L*.025),opening=young?0:stage==='released'?Math.max(.75,cfg.coneOpening??.45):clamp(cfg.coneOpening??.45,0,1),count=fine?88:55;
   const coneRadius=t=>radius*Math.pow(Math.max(0,Math.sin(Math.PI*t)),.65)*(1.18-.34*t),core=L*.075;
   lathe(p,axis,L,t=>Math.max(core*Math.pow(Math.sin(Math.PI*t),.6),coneRadius(t)*mix(.88,.20,opening)),young?[.23,.29,.13]:[.18,.115,.065],.32,fine?40:8,fine?24:8);
@@ -126,5 +151,5 @@ export function buildFruit(mesh,cfg,{base=[0,0,0],axis=[0,-1,0],fine=false,attac
    if(fine&&i%(released?2:3)===0){const nut=add(q,mul(out,.00035));lathe(nut,axis,.0018,s=>.0005*Math.sin(Math.PI*s),[.31,.20,.095],.34,8,10);for(let sign of [-1,1])wing(nut,norm(add(mul(side,sign),mul(axis,.15))),.00075,.0022,young?[.40,.43,.19]:[.55,.42,.24]);details.wingedSeeds++;}
   }details.length=L;focus=add(add(p,mul(axis,L*.5)),mul(u,.003));
  }
- return{...details,focus,inspectDistance:type==='baobab'?.060:type==='sausagetree'?.070:type==='fevertree'?.028:type==='karee'?.016:type==='pine'?.038:type==='sweetthorn'?.028:type==='marula'?.030:type==='oak'?.028:.018};
+ return{...details,focus,inspectDistance:type==='jacaranda'?.035:type==='monkeytail'?.018:type==='eucalyptus'?.016:type==='baobab'?.060:type==='sausagetree'?.070:type==='fevertree'?.028:type==='karee'?.016:type==='pine'?.038:type==='sweetthorn'?.028:type==='marula'?.030:type==='oak'?.028:.018};
 }

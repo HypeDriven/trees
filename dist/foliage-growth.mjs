@@ -8,7 +8,7 @@ export const FOLIAGE_REFERENCES=[
  ['Oak rhythmic shoot growth','https://academic.oup.com/treephys/article-abstract/26/2/229/1676814']
 ];
 export function shootGrowth(cfg,key=0){
- const seed=cfg.seed*.19+key*1.37,summerChance={willow:.72,birch:.48,oak:.20,pine:0,sweetthorn:.35,marula:.20,wildolive:.25,yellowwood:.15,baobab:.18,fevertree:.35,sausagetree:.28,karee:.35}[cfg.type];
+ const seed=cfg.seed*.19+key*1.37,summerChance={willow:.72,birch:.48,oak:.20,pine:0,sweetthorn:.35,marula:.20,wildolive:.25,yellowwood:.15,baobab:.18,fevertree:.35,sausagetree:.28,karee:.35,jacaranda:.25,monkeytail:.20,eucalyptus:.35}[cfg.type];
  return{seed,vigor:.84+.30*hash(seed+3),phase:hash(seed+8)*6.283,
   active:cfg.season==='spring'||(cfg.season==='summer'&&hash(seed+17)<summerChance)};
 }

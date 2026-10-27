@@ -1,6 +1,8 @@
+import {GARDEN_SPECIES,GARDEN_PRESETS,GARDEN_CROWNS,GARDEN_REFERENCES} from './garden-species.mjs?v=13';
 // Adult organ ranges in metres; regional crown and root settings are
 // illustrative profiles, not fixed dimensions or a calibrated growth model.
 export const SOUTH_AFRICAN_SPECIES={
+ ...GARDEN_SPECIES,
  baobab:{name:'African baobab',latin:'Adansonia digitata',family:'Malvaceae',leaf:[.05,.15],length:.095,petiole:[.05,.12],width:.20,bud:.009,veins:8,rows:8,twig:[.37,.34,.28],leafColor:[.19,.32,.07],fall:[.51,.39,.12],compound:'palmate',region:'South Africa',fruitStudySpan:.70,source:'https://pza.sanbi.org/adansonia-digitata',habit:'Swollen bottle-like bole; short, heavy, irregular ascending limbs and an open rounded crown.',traits:['Adult leaves have 5–7 leaflets radiating from one petiole tip','Smooth grey bark with soft folds and growth seams','Large pendant, hairy, woody capsules remain closed'],range:'Adult leaflet length 50–150 mm; petiole 50–120 mm. Leaf study shows a complete palmate leaf.',limitations:'A mature single-bole form is represented. Juvenile simple leaves, hollow multi-stem giants and internal fruit pulp are not modeled. The dry winter phase is leafless; mature capsules may persist.'},
  fevertree:{name:'Fever tree',latin:'Vachellia xanthophloea',family:'Fabaceae',leaf:[.0025,.0065],length:.0045,petiole:[.005,.012],width:.14,bud:.002,veins:0,rows:4,twig:[.42,.44,.16],leafColor:[.18,.29,.075],fall:[.45,.39,.12],compound:'bipinnate',pinnaPairs:[4,7],leafletPairs:[10,17],cardLeafletPairs:13,region:'South Africa',fruitStudySpan:.22,source:'https://pza.sanbi.org/vachellia-xanthophloea',habit:'High branching trunk and an open, spreading, somewhat flattened crown.',traits:['Fine bipinnate foliage and paired pale straight stipular spines','Smooth yellow-green bark with a powdery surface','Pale brown pods with constrictions between seeds'],range:'Representative leaflets 2.5–6.5 mm; leaves carry 4–7 pinna pairs and 10–17 leaflet pairs per pinna.',limitations:'Winter represents a dry/cold leaf-loss phase; some sites retain foliage longer. Powder, flaking and leaf hairs are procedural approximations. Wet-site roots use an adjustable shallow spreading profile, not soil hydraulics.'},
  sausagetree:{name:'Sausage tree',latin:'Kigelia africana',family:'Bignoniaceae',leaf:[.04,.17],length:.095,petiole:[.035,.10],width:.30,bud:.006,veins:10,rows:8,twig:[.37,.32,.24],leafColor:[.15,.29,.065],fall:[.48,.36,.10],compound:'pinnate',leafPairs:[2,5],whorl:3,region:'South Africa',fruitStudySpan:2.4,source:'https://pza.sanbi.org/kigelia-africana',habit:'Short stout bole with large spreading boughs, a rounded crown and low hanging outer branches.',traits:['Pinnate leaves arranged in opposite pairs or whorls of three; this model uses threes','Broad, leathery, often wavy leaflets','Maroon trumpet flowers; large closed fruits on long hanging stalks'],range:'Leaflet target 40–170 mm; representative complete leaves vary around 0.25–0.50 m. Fruit studies retain a long supporting stalk.',limitations:'A deciduous riverine form is represented. Leaflets vary between entire and toothed; this adult preset uses wavy entire margins. The indehiscent woody fruit stays closed; internal pulp and seed release by decay are not modeled.'},
@@ -11,6 +13,7 @@ export const SOUTH_AFRICAN_SPECIES={
  yellowwood:{name:'Real yellowwood',latin:'Podocarpus latifolius',family:'Podocarpaceae',leaf:[.035,.06],length:.048,petiole:[.001,.003],width:.085,bud:.003,veins:0,rows:8,twig:[.25,.29,.17],leafColor:[.105,.25,.10],fall:[.105,.25,.10],evergreen:true,region:'South Africa',source:'https://pza.sanbi.org/podocarpus-latifolius',habit:'Tall forest bole with an irregular rounded crown and spreading branches.',traits:['Single, flat evergreen leaves with a strong central midrib','Longitudinally fissured grey bark peeling in narrow strips','Female seed cone: exposed seed above a fleshy receptacle'],range:'Adult blade length 35–60 mm. Juvenile leaves can be longer; this preset represents adult foliage.',limitations:'A female forest-form tree is represented. Its fleshy receptacle is not a botanical fruit or a woody pine cone. Exposed mountain forms and juvenile foliage are not modeled.'}
 };
 export const SOUTH_AFRICAN_PRESETS={
+ ...GARDEN_PRESETS,
  baobab:{height:12,spread:1,leafSize:.095,density:62,rootDepth:1.3},
  fevertree:{height:18,spread:1,leafSize:.0045,density:60,rootDepth:1.0},
  sausagetree:{height:12,spread:1,leafSize:.095,density:72,rootDepth:1.5},
@@ -21,6 +24,7 @@ export const SOUTH_AFRICAN_PRESETS={
  yellowwood:{height:20,spread:.85,leafSize:.048,density:72,rootDepth:1.8}
 };
 export const SOUTH_AFRICAN_REFERENCES=[
+ ...GARDEN_REFERENCES,
  ['Baobab foliage, bark and capsules','https://apps.worldagroforestry.org/treedb2/speciesprofile.php?Spid=143'],
  ['Fever tree leaflet and pod dimensions','https://apps.worldagroforestry.org/treedb/AFTPDFS/Acacia_xanthophloea.PDF'],
  ['Sausage tree leaf arrangement and anatomy','https://biodiversityadvisor.sanbi.org/search/detail/3a1a7d21-92cd-485d-8b1c-38495073cca6'],
@@ -31,6 +35,7 @@ export const SOUTH_AFRICAN_REFERENCES=[
  ['Yellowwood adult leaves and seed cones','https://opus.sanbi.org/bitstreams/bc8be93e-4e49-42bb-af72-057e09277a7a/download']
 ];
 export const SOUTH_AFRICAN_CROWNS={
+ ...GARDEN_CROWNS,
  baobab:{radius:.085,trunk:.48,lean:.025,bend:.11,taper:.76,scaffolds:6,start:.65,up:.45,length:.48,leader:.32,spread:.85},
  fevertree:{radius:.022,trunk:.48,lean:.045,bend:.13,taper:.33,scaffolds:8,start:.63,up:.45,length:.45,leader:.28,spread:.77},
  sausagetree:{radius:.036,trunk:.35,lean:.045,bend:.18,taper:.44,scaffolds:8,start:.42,up:.80,length:.48,leader:.38,spread:.77},
