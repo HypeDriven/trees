@@ -11,3 +11,5 @@
 @media(max-width:480px){header{padding:0 12px}.brand{font-size:18px}.brand .mark{display:none}.badge{display:none}.dark{font-size:10px;padding:9px}}
 
 .project-links{display:flex;gap:16px;margin-top:12px}.project-links a{color:#647d57;text-decoration:none}.project-links a:hover{text-decoration:underline}
+
+.growth-references{display:flex;flex-direction:column;gap:8px;margin:16px 0}
