@@ -5,6 +5,10 @@ const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),smooth=(a,b,x)=>{let t=clamp((x-a
 const frame=d=>{const u=norm(cross(d,Math.abs(d[1])>.94?[1,0,0]:[0,1,0]));return[u,norm(cross(u,d))]};
 const hash=x=>{const v=Math.sin(x*127.1+311.7)*43758.5453;return v-Math.floor(v)};
 export const FRUIT_NOTES={
+ sweetthorn:{name:'Curved seed pod',source:'https://pza.sanbi.org/vachellia-karroo',text:'Flat, sickle-shaped pods develop from green to dry brown. Two finite-thickness valves carry seed bulges and raised sutures; release separates the valves to reveal compressed seeds.'},
+ marula:{name:'Detached marula drupe',source:'https://pza.sanbi.org/sclerocarya-birrea',text:'A female tree bears green, round to oval drupes. Final yellow ripening normally takes place after the fruit falls. The ripe study is detached; the whole-tree model retains green fruit. Skin mottling, fine pores and an apical scar are modeled.'},
+ wildolive:{name:'Wild olive drupe',source:'https://pza.sanbi.org/sites/default/files/info_library/oleaeuropafric.pdf',text:'Small fleshy drupes ripen from green to purple-black. The surface has fine pale speckles, a short stalk, basal calyx and a small apical point. This is the small wild fruit, not a large cultivated olive.'},
+ yellowwood:{name:'Seed and receptacle',source:'https://pza.sanbi.org/podocarpus-latifolius',text:'A female seed cone has an exposed grey-blue seed on a thickened fleshy receptacle which ripens red-purple. The seed and receptacle are separate geometry and materials. This reduced conifer cone has no woody pine scales.'},
  pine:{name:'Seed cone',source:'https://www.treesandshrubsonline.org/articles/pinus/pinus-sylvestris/',text:'Ovoid to conical seed cones, with overlapping woody scales, rhombic exposed faces, transverse keels and blunt dorsal umbos. A cone is a reproductive structure, not a botanical fruit. Opening is a drying response; it is independent of the season control here.'},
  oak:{name:'Stalked acorn',source:'https://plants.ces.ncsu.edu/plants/quercus-robur/',text:'An ovoid nut on a long stalk, with a scaly cup covering about a quarter to a third of its length. The cup, rim, shell and apical scar are separate geometric details.'},
  willow:{name:'Female fruiting catkin',source:'https://plants.ces.ncsu.edu/plants/salix-babylonica/',text:'A female fruiting catkin carries many small capsules. At seed release the two valves part and reveal seeds with silky hairs. This study represents a female tree.'},
@@ -73,6 +77,29 @@ export function buildFruit(mesh,cfg,{base=[0,0,0],axis=[0,-1,0],fine=false,stage
    for(let sign of [-1,1]){patch((s,x)=>add(add(q,mul(d,len*s)),add(mul(side,x*width*Math.sin(Math.PI*s)),mul(n,sign*width*Math.sin(Math.PI*s)*(opened?1+s*2.5:1)))),fine?16:3,fine?8:2,young?[.30,.36,.12]:opened?[.39,.29,.16]:[.29,.34,.13],.38,fine?.000055:0,[width*2,len],i);}
    details.capsules++;if(opened&&fine){lathe(add(q,mul(d,len*.62)),d,.0011,s=>.00014*Math.sin(Math.PI*s),[.29,.20,.10],.34,6,8);details.seeds++;}if(opened){for(let k=0;k<(fine?10:2);k++){const z=k*GOLD+i,dir=norm(add(d,[Math.cos(z)*.8,Math.sin(z)*.35,Math.sin(z)*.8])),origin=add(q,mul(d,len*.7)),[edge]=frame(dir),hair=rnd(k+i+9,.003,.006);patch((s,x)=>add(add(origin,mul(dir,hair*s)),add(mul(edge,x*.000012),mul(n,Math.sin(s*4+i)*hair*.15*s))),fine?8:2,1,[.73,.72,.60],.44,0,[.000024,hair],i);details.silkyHairs++;}}
   }details.length=L;focus=add(add(p,mul(axis,L*.5)),mul(u,.003));
+ }else if(type==='sweetthorn'){
+  const L=rnd(1,.08,.135)*(stage==='developing'?.70:1),W=rnd(2,.0035,.0045),p=stalk(.009,.0005),count=Math.floor(rnd(3,7,12)),opened=stage==='released',col=stage==='developing'?[.23,.32,.10]:[.34,.23,.12];
+  const center=t=>add(add(p,mul(axis,L*t)),mul(u,L*.20*Math.sin(Math.PI*t))),width=t=>W*Math.pow(Math.sin(Math.PI*t),.38)*(1-.12*Math.cos(t*count*TAU)),gap=t=>opened?L*.075*Math.sin(Math.PI*t):0;
+  for(const sign of [-1,1]){
+   patch((t,x)=>{const seedBulge=.0008*Math.pow(.5+.5*Math.cos((t-.04)*count*TAU),4)*(1-x*x),round=(1-x*x)*.00055;return add(center(t),add(mul(u,x*width(t)),mul(v,sign*(round+seedBulge+gap(t)))));},fine?100:14,fine?12:4,(t,x)=>col.map(c=>c*(.90+.10*Math.sin(t*count*TAU)**2+.06*Math.abs(x))),.36,fine?.00024:0,[W*2,L],seed);
+   // Both longitudinal sutures remain distinct raised geometric strips.
+   for(const edge of [-1,1])patch((t,x)=>add(center(t),add(mul(u,edge*width(t)+x*.00018),mul(v,sign*(gap(t)+.00026*Math.sin(Math.PI*(x+1)*.5))))),fine?80:12,2,col.map(c=>c*.75),.36,fine?.00008:0,[.00036,L],seed+1);
+  }
+  if(opened)for(let k=0;k<count;k++){const t=.09+.82*(k+.5)/count,q=add(center(t),mul(v,-gap(t)*.5)),d=norm(add(axis,mul(u,.25)));lathe(q,d,.006,s=>.0018*Math.pow(Math.sin(Math.PI*s),.6),[.27,.21,.12],.34,fine?24:5,fine?18:6);details.seeds++;}
+  details.length=L;details.valves=2;details.sutures=2;details.opening=opened?1:0;focus=add(center(.52),mul(v,gap(.52)+.0014));
+ }else if(type==='marula'||type==='wildolive'){
+  const young=stage==='developing',olive=type==='wildolive',L=olive?rnd(1,.008,.012):rnd(1,.032,.042),r=L*(olive?.43:.49),p=stalk(olive?.006:.012,olive?.0004:.0009),col=young?(olive?[.28,.35,.12]:[.30,.40,.13]):olive?[.055,.036,.075]:[.72,.56,.16];
+  lathe(p,axis,L,t=>r*Math.pow(Math.sin(Math.PI*t),.52)*(1-.07*t),(t,x)=>{const fleck=hash(Math.floor(t*170)*197+Math.floor(x*240)+seed),mottle=.90+.10*Math.sin(t*37+x*16);return col.map((c,i)=>c*mottle+(fleck>.93?(olive?.06:.035):0)+(young?0:i===0?.008:0));},.34,fine?96:10,fine?96:14);
+  // Persistent basal calyx and apical stigma scar.
+  for(let k=0;k<(olive?4:5);k++){const a=k*TAU/(olive?4:5),d=add(mul(u,Math.cos(a)),mul(v,Math.sin(a))),side=norm(cross(axis,d)),size=olive?.00075:.0014;patch((t,x)=>add(p,add(mul(d,t*size),add(mul(axis,-size*.12*Math.sin(t*Math.PI)),mul(side,x*size*.35*Math.sin(t*Math.PI))))),fine?10:2,4,[.25,.22,.12],.36,fine?.00006:0,[size*.7,size],k);}
+  lathe(add(p,mul(axis,L*.99)),axis,L*.025,t=>L*.018*Math.sin(Math.PI*t),olive?[.12,.08,.07]:[.40,.28,.12],.34,8,12);
+  details.length=L;details.drupes=1;details.detachedRipe=!young&&!olive;details.skin='speckled dielectric';focus=add(add(p,mul(axis,L*.52)),mul(u,r));
+ }else if(type==='yellowwood'){
+  const young=stage==='developing',p=stalk(.007,.0005),R=rnd(1,.009,.013),S=rnd(2,.007,.011),receptacle=young?[.27,.36,.13]:[.40,.075,.18];
+  lathe(p,axis,R,t=>R*.44*Math.pow(Math.sin(Math.PI*t),.34)*(1+.13*Math.sin(t*TAU)),receptacle,.38,fine?64:8,fine?64:12);
+  const seedBase=add(p,mul(axis,R*.88));lathe(seedBase,axis,S,t=>S*.44*Math.pow(Math.sin(Math.PI*t),.5),young?[.21,.31,.18]:[.27,.31,.34],.34,fine?64:8,fine?64:12);
+  lathe(add(seedBase,mul(axis,S*.98)),axis,.00035,t=>.00023*Math.sin(Math.PI*t),[.17,.19,.17],.34,8,10);
+  details.length=R*.88+S;details.receptacles=1;details.exposedSeeds=1;details.seeds=1;focus=add(add(seedBase,mul(axis,S*.48)),mul(u,S*.44));
  }else{
   const L=rnd(1,.023,.033),p=stalk(.011,.0006),young=stage==='developing',released=stage==='released',count=fine?78:25;lathe(p,axis,L,t=>.0015*Math.pow(Math.sin(Math.PI*t),.4),[.26,.23,.12],.36,fine?40:8,10);
   for(let i=0;i<count;i++){
@@ -81,5 +108,5 @@ export function buildFruit(mesh,cfg,{base=[0,0,0],axis=[0,-1,0],fine=false,stage
    if(fine&&i%(released?2:3)===0){const nut=add(q,mul(out,.00035));lathe(nut,axis,.0018,s=>.0005*Math.sin(Math.PI*s),[.31,.20,.095],.34,8,10);for(let sign of [-1,1])wing(nut,norm(add(mul(side,sign),mul(axis,.15))),.00075,.0022,young?[.40,.43,.19]:[.55,.42,.24]);details.wingedSeeds++;}
   }details.length=L;focus=add(add(p,mul(axis,L*.5)),mul(u,.003));
  }
- return{...details,focus,inspectDistance:type==='pine'?.038:type==='oak'?.028:.018};
+ return{...details,focus,inspectDistance:type==='pine'?.038:type==='sweetthorn'?.028:type==='marula'?.030:type==='oak'?.028:.018};
 }

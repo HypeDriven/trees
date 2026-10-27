@@ -9,6 +9,10 @@ export function barkSample(type,uv,age=.65,zone=0){
  if(zone>.075&&type!=='pine'){let pores=woodNoise(x*950,y*750);return {height:(pores-.5)*.00005,dark:smooth(.8,1,pores)*.20,roughness:.60,color:coarse}}
  if(type==='birch'&&zone>.03&&zone<.05){let row=Math.floor(y*115),u=fract(x*42+hash(row,1)*2),v=fract(y*115),line=(1-smooth(.055,.14,Math.abs(v-.5)))*(1-smooth(.12,.36,Math.abs(u-.5)));let diamond=Math.abs(Math.sin(x*95+y*25))*Math.abs(Math.sin(x*95-y*25));let fissure=(1-smooth(.012,.04,diamond))*age*age;return{height:-.00017*line-.0012*fissure+(coarse-.5)*.00012,dark:Math.max(line*.78,fissure*.72),roughness:.50+coarse*.16,color:coarse}}
  if(type==='pine'){let upper=smooth(0,.06,zone),young=smooth(.06,.08,zone),cell=woodCell(x*mix(52,105,upper)+warp*.3,y*mix(24,85,upper)+coarse*.3),crack=1-smooth(.018,.11,cell[0]),pores=woodNoise(x*950,y*750);height=mix(((1-crack)*(.65+.35*cell[1])-.25*crack)*mix(.004,.0012,upper)*(.3+.7*age),(pores-.5)*.00005,young);dark=mix(crack*.80,smooth(.8,1,pores)*.20,young);rough=mix(mix(.85,.66,upper),.60,young);
+ }else if(type==='marula'){let cell=woodCell(x*24+warp*.35,y*28+coarse*.30),edge=1-smooth(.018,.14,cell[0]);height=(.30-edge)*.0036*age;dark=edge*.48;rough=.82;
+ }else if(type==='sweetthorn'){let cell=woodCell(x*42+warp*.35,y*18+coarse*.3),edge=1-smooth(.02,.12,cell[0]),groove=Math.pow(.5+.5*Math.sin(x*430+warp*4),10)*.65,crack=Math.max(edge,groove);height=(.34-crack)*.006*age;dark=crack*.87;rough=.90;
+ }else if(type==='wildolive'){let cell=woodCell((x+Math.sin(y*7)*.008)*65+warp*.3,y*16+coarse*.3),crack=1-smooth(.018,.12,cell[0]);height=(.3-crack)*.0045*age+(coarse-.5)*.0012*age;dark=crack*.75;rough=.84;
+ }else if(type==='yellowwood'){let phase=x*610+warp*5+Math.sin(y*13)*.8,split=Math.pow(.5+.5*Math.sin(phase),12),peel=woodNoise(x*110,y*12);height=(.30-split)*.004*age+peel*.001*age;dark=split*.72;rough=.83;
  }else if(type==='birch'){let a=Math.abs(Math.sin(x*88+y*21)),b=Math.abs(Math.sin(x*88-y*21)),fissure=1-smooth(.035,.15,a*b);height=(1-fissure)*.002*age;dark=fissure*.7;rough=.85;
  }else{let cell=woodCell(x*(type==='willow'?75:52)+warp*.6+(woodNoise(x*180,y*120)-.5)*.24,y*(type==='willow'?24:17)+coarse*.5+(woodNoise(x*90,y*140)-.5)*.20),edge=1-smooth(.014,.09,cell[0]),spacing=type==='willow'?550:420,phase=x*spacing+(warp-.5)*3.8+Math.sin(y*31)*.5,groove=Math.pow(.5+.5*Math.sin(phase),9)*.72,crack=Math.max(edge*.85,groove),grain=woodNoise(x*330,y*250)-.5;height=(.30-crack)*(.002+.004*age)+(cell[1]-.5)*.0011*age+grain*.0005*age;dark=Math.min(.95,crack*.95);}
 
@@ -25,13 +29,14 @@ function interpolatePath(points,t){let x=t*(points.length-1),i=Math.min(points.l
 export function woodTube(mesh,points,r0,r1,type,{fine=false,macro=false,maturity=.65,root=false,collar=false,preview=true,cap=false,zone:forceZone,treeHeight=10}={}){
  const isTwig=r0<.007,white=type==='birch'&&r0>.018;
  let zone=forceZone??(type==='pine'?pineBarkStyle(points[0][1],r0,treeHeight).zone:isTwig?.08:white?.04:0),age=Math.max(.04,Math.min(1,maturity*(isTwig?.10:.35+.65*Math.min(1,r0/.09))));
+ const southern={sweetthorn:[[.20,.17,.135],[.34,.17,.10]],marula:[[.40,.38,.33],[.34,.30,.22]],wildolive:[[.29,.29,.24],[.30,.29,.20]],yellowwood:[[.33,.31,.26],[.25,.29,.17]]}[type];
  const base=zone===.04?[.70,.69,.62]:zone===.06?[.43,.20,.075]:zone===.08?(type==='willow'?[.34,.30,.095]:[.24,.15,.09]):type==='birch'?[.24,.22,.19]:type==='willow'?[.24,.22,.18]:[.27,.235,.19];
  let sides=macro?(preview?112:224):fine?96:r0>.14?56:r0>.035?24:r0>.007?10:5,steps=macro?(preview?90:160):fine?80:Math.max(points.length-1,r0>.04?32:points.length-1),rings=[],arc=0,previousU=null;
  const phase=points[0][0]*.37+points[0][2]*.53,uvOffset=points[0][1];
  for(let j=0;j<=steps;j++){
   let t=j/steps,p=interpolatePath(points,t),before=interpolatePath(points,Math.max(0,t-.0003)),after=interpolatePath(points,Math.min(1,t+.0003)),axis=norm(sub(after,before));if(j)arc+=Math.hypot(...sub(p,rings[j-1].center));
   let u=previousU?norm(sub(previousU,mul(axis,dot(previousU,axis)))):norm(cross(axis,Math.abs(axis[1])>.94?[1,0,0]:[0,1,0]));if(Math.hypot(...u)<.9)u=norm(cross(axis,[0,0,1]));previousU=u;let v=norm(cross(u,axis)),r=woodRadius(r0,r1,t),localAge=age*(.3+.7*Math.sqrt(r/r0)),collarBump=collar?.28*Math.exp(-Math.pow((arc-r0*2.6)/Math.max(.01,r0*1.3),2)):0,ring=[];
-  const pineStyle=type==='pine'?pineBarkStyle(p[1],r,treeHeight):null,ringZone=forceZone??pineStyle?.zone??zone,ringBase=pineStyle?.color??base;
+  const pineStyle=type==='pine'?pineBarkStyle(p[1],r,treeHeight):null,ringZone=forceZone??pineStyle?.zone??zone,ringBase=pineStyle?.color??(southern?southern[0].map((c,i)=>mix(c,southern[1][i],1-smooth(.003,.025,r))):base);
   for(let k=0;k<=sides;k++){
    let a=k/sides*Math.PI*2,n=add(mul(u,Math.cos(a)),mul(v,Math.sin(a))),uv=[a*r+phase,arc+uvOffset],surface=barkSample(type,uv,localAge,ringZone),rootFlare=root?.38*Math.exp(-arc/Math.max(.08,r0*2))*(.6+.4*Math.cos(a*5+phase)):0,rr=r*(1+collarBump+rootFlare)+surface.height*Math.min(1,r/.02);
    let pos=add(p,mul(n,Math.max(r*.75,rr))),taper=(r0-r1)/Math.max(.001,Math.hypot(...sub(points.at(-1),points[0])));let normal=norm(add(n,mul(axis,taper)));
@@ -45,6 +50,10 @@ export function woodTube(mesh,points,r0,r1,type,{fine=false,macro=false,maturity
  return {rings:steps+1,sides,quadCount,zone,age,collar,root};
 }
 export const WOOD_NOTES={
+ sweetthorn:{text:'Dark mature bark has irregular fissured plates with a rusty undertone; finer reddish young axes share a continuous radius-based palette.',source:'https://pza.sanbi.org/vachellia-karroo'},
+ marula:{text:'Grey-brown bark breaks into irregular flaking disks with paler mottling. Broad plate relief differs from the narrow strip bark of yellowwood.',source:'https://apps.worldagroforestry.org/treedb2/AFTPDFS/Sclerocarya_birrea_ssp._caffra.PDF'},
+ wildolive:{text:'Grey, rough mature bark has winding longitudinal furrows and fine irregular flakes. Young axes blend gradually into the same grey-olive palette.',source:'https://pza.sanbi.org/olea-europaea-subsp-africana'},
+ yellowwood:{text:'Grey-brown mature bark has narrow longitudinal fissures and peeling strip relief; young fine axes are smoother.',source:'https://pza.sanbi.org/podocarpus-latifolius'},
  oak:{text:'Grey-brown longitudinal ridges and fissures, with a finer fibrous surface. Relief increases with the maturity control.',source:'https://www.ucc.ie/en/tree-explorers/trees/a-z/quercusrobur/'},
  willow:{text:'Grey-brown, irregularly furrowed older bark; smoother yellow-brown fine stems. The surface uses branching grooves and fine grain.',source:'https://plants.ces.ncsu.edu/plants/salix-babylonica/'},
  pine:{text:'A shared brown palette blends gradually into warmer upper bark across the trunk and limbs. Plate relief becomes finer toward the crown and young twigs without abrupt colour bands.',source:'https://plants.ces.ncsu.edu/plants/pinus-sylvestris/'},

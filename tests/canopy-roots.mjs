@@ -5,7 +5,7 @@ for(const type of Object.keys(SPECIES)){
  const cfg={...base,type,view:'tree',leafSize:SPECIES[type].length};let r=buildSpecimen(cfg,{preview:false});
  assert(r.stats.apicalContinuations>0);assert.equal(r.stats.coveredTips,r.stats.terminalTips,`${type} skipped living terminal foliage`);assert(r.stats.terminalTips>0);
  assert(r.stats.tipGaps.every(gap=>gap<SPECIES[type].leaf[0]*.25),`${type} left a long naked tip`);
- assert(r.stats.leafyShoots>=r.stats.structuralTips);assert(r.stats.leaves>5000);assert(r.vertices.byteLength<256*1024*1024);
+ assert(r.stats.leafyShoots>=r.stats.structuralTips);assert(r.stats.leaves>5000);assert(r.vertices.byteLength<(SPECIES[type].region?320:256)*1024*1024);
  const root=r.rootSystem;assert(root&&root.stats.primary>=8);assert(root.stats.lateral>root.stats.primary);assert(root.stats.feeder>0);assert(root.stats.sinkers>0);
  for(const c of root.stats.connections){let parent=root.segments[c.parent];assert(parent.points.some(p=>p.every((v,i)=>v===c.start[i])),`${type} floating root attachment`)}
  assert(root.segments.some(s=>s.points.some(p=>p[1]<-.1)));assert(root.stats.depth<=cfg.rootDepth+.05);

@@ -6,7 +6,7 @@ const sub=(a,b)=>a.map((v,i)=>v-b[i]),dot=(a,b)=>a.reduce((s,v,i)=>s+v*b[i],0),l
 const arclength=p=>p.slice(1).reduce((s,v,i)=>s+length(sub(v,p[i])),0);
 function onPolyline(point,points){return points.slice(1).some((b,i)=>{const a=points[i],v=sub(b,a),w=sub(point,a),t=dot(w,v)/dot(v,v);return t>=-1e-7&&t<=1+1e-7&&length(w.map((x,k)=>x-v[k]*t))<1e-7})}
 function span(a,k){const p=a.records.flatMap(r=>r.points.map(v=>v[k]));return Math.max(...p)-Math.min(...p)}
-for(const type of ['willow','oak','pine','birch']){
+for(const type of ['willow','oak','pine','birch','sweetthorn','marula','wildolive','yellowwood']){
  const cfg={...base,type},a=buildTreeArchitecture(cfg);assert.deepEqual(a,buildTreeArchitecture(cfg));assert.notDeepEqual(a.records,buildTreeArchitecture({...cfg,seed:2848}).records);
  assert(Math.abs(span(a,1)-cfg.height)<1e-7);assert(a.records.flatMap(r=>r.points.flat()).every(Number.isFinite));
  for(const r of a.records){
@@ -40,7 +40,7 @@ for(const distance of [8,25,65]){
 }
 const macro=cameraDepthRange(.03,.06);assert(macro.near<.001&&macro.far>.03);
 console.log('Millimetre root-contact depth separation and macro camera clipping passed');
-for(const type of ['willow','oak','pine','birch']){
+for(const type of ['willow','oak','pine','birch','sweetthorn','marula','wildolive','yellowwood']){
  const a=buildTreeArchitecture({...base,type,seed:999999,height:5,levels:5,maturity:1,spread:1.6});
  for(const r of a.records)for(const p of r.points)assert(p[1]>=0,'Extreme seed grew a canopy branch beneath the soil');
 }

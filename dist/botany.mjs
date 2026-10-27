@@ -1,11 +1,13 @@
-import {buildFruit,FRUIT_NOTES} from './fruit.mjs?v=10';
-import {shootGrowth,leafDevelopment,FOLIAGE_REFERENCES} from './foliage-growth.mjs?v=10';
-import {buildTreeArchitecture,ARCHITECTURE_NOTES} from './architecture.mjs?v=10';
-import {woodTube,woodRadius} from './wood.mjs?v=10';
-import {buildRootSystem,ROOT_PROFILES} from './roots.mjs?v=10';
+import {SOUTH_AFRICAN_SPECIES} from './south-africa.mjs?v=11';
+import {buildFruit,FRUIT_NOTES} from './fruit.mjs?v=11';
+import {shootGrowth,leafDevelopment,FOLIAGE_REFERENCES} from './foliage-growth.mjs?v=11';
+import {buildTreeArchitecture,ARCHITECTURE_NOTES} from './architecture.mjs?v=11';
+import {woodTube,woodRadius} from './wood.mjs?v=11';
+import {buildRootSystem,ROOT_PROFILES} from './roots.mjs?v=11';
 // All geometry uses metres. Traits are a morphological model, not a growth simulator.
 export {ARCHITECTURE_NOTES,FOLIAGE_REFERENCES,FRUIT_NOTES};
 export const SPECIES = {
+ ...SOUTH_AFRICAN_SPECIES,
  oak: {name:'English oak',latin:'Quercus robur',family:'Fagaceae',leaf:[.05,.15],length:.09,petiole:[.002,.006],width:.34,bud:.005,veins:6,rows:10,twig:[.23,.19,.12],leafColor:[.11,.23,.045],fall:[.40,.23,.055],source:'https://www.worldfloraonline.org/taxon/wfo-0000292858',habit:'Broad, irregular crown; sturdy, sinuous limbs.',traits:['Alternate leaves; rounded lobes and basal auricles','Short petiole · 2–6 mm','Clustered terminal buds; stalked acorns'],range:'Blade length 50–150 mm; modeled within that typical range.',limitations:'Lobe number, pubescence and acorn form vary. Juvenile oaks can retain dead leaves; that variability is not simulated.'},
  willow:{name:'Weeping willow',latin:'Salix babylonica',family:'Salicaceae',leaf:[.075,.15],length:.11,petiole:[.003,.006],width:.075,bud:.003,veins:15,rows:8,twig:[.34,.31,.075],leafColor:[.25,.35,.10],fall:[.61,.48,.085],source:'https://plants.ces.ncsu.edu/plants/salix-babylonica/',habit:'Low forks and spreading boughs; slender hanging shoots.',traits:['Alternate, lanceolate leaves with fine serrations','Glaucous lower surface; short petioles','Appressed single-scale lateral buds; no terminal bud'],range:'Blade length 75–150 mm; blade width varies with length.',limitations:'The spring study models a female specimen. Many cultivated weeping willows are hybrids; this is not a model of every cultivar.'},
  pine:{name:'Scots pine',latin:'Pinus sylvestris',family:'Pinaceae',leaf:[.038,.089],length:.06,petiole:[.002,.004],width:.001,bud:.01,veins:0,rows:6,twig:[.32,.23,.10],leafColor:[.12,.25,.19],fall:[.12,.25,.19],source:'https://plants.ces.ncsu.edu/plants/pinus-sylvestris/',habit:'Whorled scaffold branches; irregular crown with maturity.',traits:['Two twisted needles per fascicle, with a basal sheath','Evergreen foliage; orange-red upper bark','Scaly seed cones; spring candles and pollen cones'],range:'Needle length 38–89 mm; widths are modeled at 1–2 mm.',limitations:'Needle cohorts are simplified. Cone development spans more than one season; cone stages and scale counts are illustrative rather than a complete developmental sequence.'},
@@ -21,6 +23,10 @@ export function bladeWidth(type,t,side=1){
   const lobes=.72+.28*Math.cos((t-.08)*Math.PI*10+side*.14);
   return envelope*lobes+.24*Math.exp(-Math.pow((t-.055)/.035,2));
  }
+ if(type==='sweetthorn')return Math.pow(Math.sin(Math.PI*t),.40)*(1-.12*t);
+ if(type==='marula')return Math.pow(Math.sin(Math.PI*Math.pow(t,.88)),.74);
+ if(type==='wildolive')return Math.pow(Math.sin(Math.PI*t),.85);
+ if(type==='yellowwood')return Math.pow(Math.sin(Math.PI*t),.38);
  if(type==='birch'){let e=t<.30?t/.30:Math.pow((1-t)/.70,1.35);let tooth=(1-Math.abs((t*16%1)*2-1))*.13+(1-Math.abs((t*32%1)*2-1))*.055;return e*(.82+tooth)}
  return Math.pow(Math.sin(Math.PI*Math.pow(t,.78)),.9)*(1+.04*(1-Math.abs((t*32%1)*2-1)));
 }
@@ -32,17 +38,18 @@ class Mesh {
 }
 export function buildSpecimen(cfg,{hidden=false,preview=true}={}){
  const sp=SPECIES[cfg.type],random=seeded(cfg.seed),R=(a,b)=>a+(b-a)*random(),m=new Mesh(),fine=cfg.view!=='tree',mature=cfg.maturity??.6;
- if(!preview)m.preview={push(){}};let rootSystem=null;let inspectFocus=null,inspectDistance=null,woodStats={tubes:0,collars:0,rootFlares:0};let records=[],leaves=0,fascicles=0,buds=0,flowers=0,fruits=0,petioles=0,stats={fruitDetails:[],organGrowth:[],leafLengths:[],petioleLengths:[],fascicleSizes:[],leafNodes:0,terminalBuds:0};
+ if(!preview)m.preview={push(){}};let rootSystem=null;let inspectFocus=null,inspectDistance=null,woodStats={tubes:0,collars:0,rootFlares:0};let records=[],leaves=0,fascicles=0,buds=0,flowers=0,fruits=0,petioles=0,stats={compoundLeaves:0,pinnae:0,compoundRecords:[],spinePairs:0,oppositePairs:[],fruitDetails:[],organGrowth:[],leafLengths:[],petioleLengths:[],fascicleSizes:[],leafNodes:0,terminalBuds:0};
  function surfaceQuad(a,b,c,d,n,col,kind=0,phase=0,uv=[[0,0],[0,1],[1,0],[1,1]],fl=[0,0,0,0]){let cr=cross(sub(b,a),sub(c,a));if(cr[0]*n[0]+cr[1]*n[1]+cr[2]*n[2]<0){m.tri(a,c,b,n,col,kind,phase,[fl[0],fl[2],fl[1]],[uv[0],uv[2],uv[1]]);m.tri(c,d,b,n,col,kind,phase,[fl[2],fl[3],fl[1]],[uv[2],uv[3],uv[1]])}else{m.tri(a,b,c,n,col,kind,phase,[fl[0],fl[1],fl[2]],[uv[0],uv[1],uv[2]]);m.tri(c,b,d,n,col,kind,phase,[fl[2],fl[1],fl[3]],[uv[2],uv[1],uv[3]])}}
  function tube(points,r0,r1,col,kind=0,sides=6,ridge=0){if(kind===0){let downward=points[0][1]>points.at(-1)[1]&&points.at(-1)[1]<.05;let root=points[0][1]<.01&&r0>.04,collar=!root&&!downward&&points[0][1]>.1&&r0>.007;let result=woodTube(m,points,r0,r1,cfg.type,{fine:['wood','bark','roots','fruit'].includes(cfg.view),macro:cfg.view==='bark',maturity:mature,treeHeight:cfg.height,root,collar,preview,cap:['wood','bark','roots','fruit'].includes(cfg.view)});woodStats.tubes++;woodStats.collars+=Number(collar);woodStats.rootFlares+=Number(root);return result}let rings=[],distance=0;for(let j=0;j<points.length;j++){if(j)distance+=Math.hypot(...sub(points[j],points[j-1]));let d=norm(sub(points[Math.min(j+1,points.length-1)],points[Math.max(0,j-1)])),[u,v]=frame(d),t=j/(points.length-1),radius=r0*(1-t)+r1*t;let rr=[];for(let k=0;k<=sides;k++){let a=k/sides*Math.PI*2,flute=1+ridge*(.5+.5*Math.sin(a*9+distance*.5));let n=add(mul(u,Math.cos(a)),mul(v,Math.sin(a)));rr.push({p:add(points[j],mul(n,radius*flute)),n,uv:[k/sides,distance]})}rings.push(rr)}for(let j=0;j<rings.length-1;j++)for(let k=0;k<sides;k++){let a=rings[j][k],b=rings[j+1][k],c=rings[j][k+1],d=rings[j+1][k+1];let n=norm(add(a.n,c.n));surfaceQuad(a.p,b.p,c.p,d.p,n,col,kind,0,[a.uv,b.uv,c.uv,d.uv]);m.preview.push({pts:[a.p,b.p,d.p,c.p],n,c:col,kind,phase:0})}}
  function solid(p,dir,len,width,col,kind=.3,scales=false){let [u,v]=frame(dir),sides=fine?12:4,rows=fine?(scales?10:6):2;let rings=[];for(let j=0;j<=rows;j++){let t=j/rows,rr=Math.sin(Math.PI*t)*width*(1-.3*t);rings.push(Array.from({length:sides+1},(_,k)=>{let a=k/sides*6.283,scale=scales?1+.15*Math.sin(k*2.4+j*3.3):1;return add(add(p,mul(dir,len*t)),mul(add(mul(u,Math.cos(a)),mul(v,Math.sin(a))),rr*scale))}))}for(let j=0;j<rows;j++)for(let k=0;k<sides;k++){let a=rings[j][k],b=rings[j+1][k],c=rings[j][k+1],d=rings[j+1][k+1];let n=norm(cross(sub(b,a),sub(c,a))),shade=scales?.74+.26*((j+k)%3)/2:1,co=col.map(x=>x*shade);surfaceQuad(a,b,c,d,n,co,kind);m.preview.push({pts:[a,b,d,c],n,c:co,kind,phase:0})}}
  function bud(p,dir,terminal=false){if(cfg.type==='willow'&&terminal)return;let len=sp.bud*R(.8,1.2),col=cfg.type==='pine'?[.34,.17,.065]:[.24,.12,.055];if(fine)solid(p,dir,len,len*.27,col,.3,cfg.type!=='willow');else{let [u,v]=frame(dir),a=add(p,mul(u,len*.25)),b=add(p,add(mul(u,-len*.15),mul(v,len*.22))),c=add(p,add(mul(u,-len*.15),mul(v,-len*.22))),top=add(p,mul(dir,len));for(let pts of [[a,b,top],[b,c,top],[c,a,top],[a,c,b]]){let n=norm(cross(sub(pts[1],pts[0]),sub(pts[2],pts[0])));m.tri(...pts,n,col,.3);if(preview)m.preview.push({pts,n,c:col,kind:.3,phase:0})}}buds++;if(terminal)stats.terminalBuds++}
- function lamina(p,axis,len,phase,kind=1,expansion=1){
-  let [side,up]=frame(axis),twist=R(-.12,.12),rows=fine?96:sp.rows,width=len*sp.width,fold=R(.06,.13)+(1-expansion)*.24,flutterScale=len/cfg.leafSize,color=cfg.season==='autumn'?sp.fall:sp.leafColor;
+ function lamina(p,axis,len,phase,kind=1,expansion=1,compoundPart=false,planeNormal=null){
+  let [side,up]=planeNormal?[norm(cross(axis,planeNormal)),planeNormal]:frame(axis);if(sp.region&&!planeNormal){const roll=R(-1.1,1.1),old=side;side=add(mul(side,Math.cos(roll)),mul(up,Math.sin(roll)));up=add(mul(up,Math.cos(roll)),mul(old,-Math.sin(roll)));}let twist=R(-.12,.12),rows=fine?(compoundPart?24:96):sp.rows,width=len*sp.width,fold=R(.06,.13)+(1-expansion)*.24,flutterScale=len/cfg.leafSize,color=cfg.season==='autumn'?sp.fall:sp.leafColor;
   let tint=R(.93,1.07)*(cfg.season==='spring'?1.10:1)*(1+(1-expansion)*.12),col=color.map(x=>x*tint);
-  const point=(t,x,underside=false)=>{let w=bladeWidth(cfg.type,t,x<0?-1:1)*width;let center=add(p,add(mul(axis,len*t),mul(up,len*(-.12*t*t+.035*Math.sin(t*6.28)))));let mid=Math.exp(-Math.pow(x/.045,2))*(1-t*.65),f=((t-Math.abs(x)*.13-x*x*.06)*sp.veins)%1,dist=Math.min(Math.abs(f),1-Math.abs(f)),vein=Math.exp(-Math.pow(dist/.045,2)),relief=(underside?-.00015-.00018*mid-.00004*vein:.000025*mid+.000008*vein);return add(center,add(mul(side,x*w),mul(up,Math.abs(x)*w*fold+twist*t*x*w+relief)))};
-  if(!fine){const edgeSamples=cfg.type==='willow'?6:10,boundary=[];for(let j=0;j<edgeSamples;j++){let t=j/edgeSamples;boundary.push([t,-1])}for(let j=edgeSamples;j>0;j--){let t=j/edgeSamples;boundary.push([t,1])}const center=point(.5,0);for(let i=0;i<boundary.length;i++){let [t,x]=boundary[i],[tt,xx]=boundary[(i+1)%boundary.length],a=point(t,x),b=point(tt,xx),n=norm(cross(sub(a,center),sub(b,center)));for(let [p,uv,fl]of [[center,[.5,.5],.5],[a,[x*.5+.5,t],t],[b,[xx*.5+.5,tt],tt]])m.v(p,n,col,kind,phase,fl*flutterScale,uv)}}else{
-  const columns=fine?8:2;
+  const point=(t,x,underside=false)=>{let w=bladeWidth(cfg.type,t,x<0?-1:1)*width;let center=add(p,add(mul(axis,len*t),mul(up,len*(-.12*t*t+.035*Math.sin(t*6.28)))));let mid=Math.exp(-Math.pow(x/.045,2))*(1-t*.65),f=((t-Math.abs(x)*.13-x*x*.06)*sp.veins)%1,dist=Math.min(Math.abs(f),1-Math.abs(f)),vein=sp.veins?Math.exp(-Math.pow(dist/.045,2)):0,relief=(underside?-.00015-.00018*mid-.00004*vein:.000025*mid+.000008*vein)*(cfg.type==='sweetthorn'?.26:1);return add(center,add(mul(side,x*w),mul(up,Math.abs(x)*w*fold+twist*t*x*w+relief-(cfg.type==='wildolive'?w*.20*Math.pow(Math.abs(x),8):0))))};
+  if(!fine&&sp.region){const pts=[point(0,0),point(.48,-1),point(1,0),point(.48,1)],uv=[[.5,0],[0,.48],[.5,1],[1,.48]];for(const i of [0,2,1,0,3,2])m.v(pts[i],up,col,kind,phase,uv[i][1]*flutterScale,uv[i]);
+  }else if(!fine){const edgeSamples=cfg.type==='sweetthorn'?4:cfg.type==='willow'?6:10,boundary=[];for(let j=0;j<edgeSamples;j++){let t=j/edgeSamples;boundary.push([t,-1])}for(let j=edgeSamples;j>0;j--){let t=j/edgeSamples;boundary.push([t,1])}const center=point(.5,0);for(let i=0;i<boundary.length;i++){let [t,x]=boundary[i],[tt,xx]=boundary[(i+1)%boundary.length],a=point(t,x),b=point(tt,xx),n=norm(cross(sub(a,center),sub(b,center)));for(let [p,uv,fl]of [[center,[.5,.5],.5],[a,[x*.5+.5,t],t],[b,[xx*.5+.5,tt],tt]])m.v(p,n,col,kind,phase,fl*flutterScale,uv)}}else{
+  const columns=fine?(compoundPart?4:8):2;
   function normalAt(t,x,underside){let dx=sub(point(t,Math.min(1,x+.002),underside),point(t,Math.max(-1,x-.002),underside)),dt=sub(point(Math.min(.9999,t+.001),x,underside),point(Math.max(.0001,t-.001),x,underside));let n=norm(cross(dx,dt));if(Math.hypot(...n)<.5)n=up;return underside?mul(n,-1):n}
   for(let back=0;back<(fine?2:1);back++)for(let j=0;j<rows;j++)for(let k=0;k<columns;k++){let t=j/rows,s=(j+1)/rows,x=k/columns*2-1,y=(k+1)/columns*2-1,coords=[[t,x],[s,x],[t,y],[s,y]],pts=coords.map(([t,x])=>point(t,x,!!back)),ns=coords.map(([t,x])=>normalAt(t,x,!!back)),indices=back?[0,1,2,2,1,3]:[0,2,1,2,3,1];for(let q of indices){let [tt,xx]=coords[q];m.v(pts[q],ns[q],col,back?1.02:kind,phase,tt*flutterScale,[xx*.5+.5,tt])}}
   }
@@ -51,10 +58,49 @@ export function buildSpecimen(cfg,{hidden=false,preview=true}={}){
   // The software preview uses the same lobed/serrated outline at lower shading fidelity.
   let outline=[];for(let j=0;j<=rows;j+=fine?2:1)outline.push(point(j/rows,-1));for(let j=rows;j>=0;j-=fine?2:1)outline.push(point(j/rows,1));let veins=[];if(fine){veins.push(Array.from({length:25},(_,j)=>point(j/24,0)));for(let k=1;k<=sp.veins;k++){let t=.08+k/(sp.veins+1)*.72;for(let sign of [-1,1])veins.push(Array.from({length:9},(_,j)=>point(Math.min(.98,t+j/8*.16),sign*j/8)))}}m.preview.push({pts:outline,n:up,c:col,kind,phase,veins,size:len});leaves++;stats.leafLengths.push(len);
  }
+ function compoundCard(p,axis,len,phase,pairs){
+  let [side,up]=frame(axis);const roll=R(-1.05,1.05),old=side;side=add(mul(side,Math.cos(roll)),mul(up,Math.sin(roll)));up=add(mul(up,Math.cos(roll)),mul(old,-Math.sin(roll)));const L=len*16,W=len*5.5,col=(cfg.season==='autumn'?sp.fall:sp.leafColor).map(c=>c*R(.93,1.07)),kind=1.20+pairs*.01;
+  const point=(t,x)=>add(add(p,mul(axis,L*t)),add(mul(side,x*W),mul(up,L*.10*Math.sin(t*Math.PI)*x*x))),uv=[[0,0],[0,1],[1,0],[1,1]],pts=uv.map(([x,t])=>point(t,x*2-1));
+  for(const i of [0,2,1,2,3,1])m.v(pts[i],up,col,kind,phase,uv[i][1]*L/cfg.leafSize,uv[i]);
+  if(preview)for(let j=0;j<pairs;j++)for(const hand of [-1,1]){const t=.16+j*.66/(pairs-1),outline=[point(t,hand*.025),point(t-.04,hand*.6),point(t+.10,hand*.97),point(t+.15,hand*.6)];m.preview.push({pts:outline,n:up,c:col,kind:1,phase,size:len});}
+  const count=pairs*36;leaves+=count;stats.leafLengths.push(len);stats.compoundLeaves++;stats.pinnae+=pairs*2;stats.compoundRecords.push({length:L,pinnae:pairs*2,leaflets:count,pairs,terminalLeaflet:false,lod:'cutout'});
+ }
+ function compoundLeaf(p,axis,len,phase,expansion=1){
+  if(!fine&&sp.compound==='bipinnate'){compoundCard(p,axis,len,phase,Math.floor(R(3,6)));return;}
+  let [side,up]=frame(axis);const roll=R(cfg.view==='leaf'?-.15:-.95,cfg.view==='leaf'?.15:.95),old=side;side=add(mul(side,Math.cos(roll)),mul(up,Math.sin(roll)));up=add(mul(up,Math.cos(roll)),mul(old,-Math.sin(roll)));const bipinnate=sp.compound==='bipinnate',pairs=bipinnate?Math.floor(R(3,5)):Math.floor(R(4,7)),L=bipinnate?len*16:Math.max(.09,Math.min(.25,len*4.7)),start=add(p,mul(axis,L*.10)),end=add(p,mul(axis,L)),before=leaves;
+  const stem=(a,b,r)=>fine?tube([a,b],r,r*.55,sp.twig,.2,5):petioleRibbon(a,b,r,sp.twig);
+  stem(p,end,bipinnate?.00025:.0006);petioles++;stats.petioleLengths.push((sp.petiole[0]+sp.petiole[1])*.5);let pinnae=0;
+  for(let k=0;k<pairs;k++){
+   const t=.15+.85*k/Math.max(1,pairs-1),q=mix(start,end,t);
+   for(let sign of [-1,1]){
+    const d=norm(add(mul(side,sign),mul(axis,.22))),size=len*(.80+.20*Math.sin(Math.PI*(k+.5)/pairs));
+    if(bipinnate){const PL=len*5*(.88+.12*Math.sin(k)),tip=add(q,mul(d,PL)),lp=Math.floor(R(7,11));stem(q,tip,.00016);pinnae++;
+     for(let j=0;j<lp;j++)for(let hand of [-1,1]){const pos=mix(q,tip,.13+.83*j/(lp-1)),leafAxis=norm(add(mul(axis,hand),mul(d,.18))),leafLen=Math.max(sp.leaf[0]*expansion,Math.min(sp.leaf[1]*expansion,size*(.92+.08*Math.sin(j))));lamina(pos,leafAxis,leafLen,phase+k*.7+j*.13,1,expansion,true,up);}
+     // Petiolar/pinna glands are represented in the close organ study.
+     if(fine)solid(add(q,mul(up,.0002)),up,.00045,.00024,[.18,.24,.07],.3);
+    }else{const stalk=add(q,mul(d,.003));stem(q,stalk,.0003);lamina(stalk,d,Math.max(sp.leaf[0]*expansion,size),phase+k*.7,1,expansion,true,up);}
+   }
+  }
+  if(!bipinnate)lamina(end,axis,len,phase+4,1,expansion,true,up);
+  stats.compoundLeaves++;stats.pinnae+=pinnae;stats.compoundRecords.push({length:L,pinnae,leaflets:leaves-before,pairs,terminalLeaflet:!bipinnate});
+ }
+ function leafOrgan(base,ax,len,phase,expansion=1){
+  if(sp.compound){compoundLeaf(base,ax,len,phase,expansion);return;}
+  const pl=R(...sp.petiole)*(.55+.45*expansion),end=add(base,mul(ax,pl));fine?tube([base,end],.00045,.0003,sp.twig,.2,4):petioleRibbon(base,end,.0004,sp.twig);petioles++;stats.petioleLengths.push(pl);lamina(end,ax,len,phase,1,expansion);
+ }
+ function spines(p,axis,out){const [side]=frame(axis),len=R(.018,.045);for(let hand of [-1,1])solid(p,norm(add(mul(side,hand),mul(axis,.18))),len,len*.036,[.62,.61,.49],.3);stats.spinePairs++;}
  function needle(p,axis,len,phase){let [u,v]=frame(axis),flutterScale=len/cfg.leafSize,width=R(.0005,.0009),rows=fine?18:3,col=sp.leafColor.map(x=>x*R(.9,1.1));for(let j=0;j<rows;j++){let t=j/rows,s=(j+1)/rows;function row(t){let a=t*.9,off=add(mul(u,Math.cos(a)),mul(v,Math.sin(a))),center=add(add(p,mul(axis,t*len)),mul(v,t*t*len*.15));return[add(center,mul(off,-width*(1-t*.9))),add(center,mul(off,width*(1-t*.9)))]}let a=row(t),b=row(s),n=norm(cross(sub(a[1],a[0]),sub(b[0],a[0])));surfaceQuad(a[0],b[0],a[1],b[1],n,col,1.1,phase,[[0,t],[0,s],[1,t],[1,s]],[t,s,t,s].map(x=>x*flutterScale))}m.preview.push({pts:[p,add(add(p,mul(axis,len)),mul(v,len*.15)),add(p,mul(u,width*2))],n:v,c:col,kind:1.1,phase,size:len});leaves++;stats.leafLengths.push(len)}
  function reproductive(p,dir,{fruit=true,flower=true}={}){
   if(!cfg.reproductive)return;let [u]=frame(dir);
   function addFruit(axis,stage,offset=[0,0,0]){const detail=buildFruit(m,cfg,{base:add(p,offset),axis,fine,stage,seed:Math.floor(R(1,999999))});stats.fruitDetails.push(detail);fruits++;}
+  if(SOUTH_AFRICAN_SPECIES[cfg.type]){
+   const fruitSeason=cfg.type==='wildolive'?['autumn','winter'].includes(cfg.season):['summer','autumn'].includes(cfg.season);
+   if(fruit&&fruitSeason)addFruit(norm([.12,-1,.08]),cfg.type==='marula'?'developing':cfg.type==='sweetthorn'&&cfg.season==='autumn'?'released':'mature');
+   if(flower&&((cfg.type==='sweetthorn'&&cfg.season==='summer')||(cfg.type==='wildolive'&&['spring','summer'].includes(cfg.season))||(cfg.type==='marula'&&cfg.season==='spring'))){
+    const col=cfg.type==='sweetthorn'?[.74,.58,.035]:cfg.type==='marula'?[.42,.14,.15]:[.72,.73,.51],heads=cfg.type==='sweetthorn'?3:2;
+    for(let k=0;k<heads;k++){const tip=add(p,add(mul(u,(k-1)*.011),[0,.014,0]));fine?tube([p,tip],.00035,.0002,sp.twig,.2,5):petioleRibbon(p,tip,.0003,sp.twig);solid(tip,[0,1,0],.009,.0045,col,.3,true);flowers++;}
+   }return;
+  }
   if(fruit&&cfg.type==='oak'&&['summer','autumn'].includes(cfg.season)){
    const count=fine?2:1;for(let k=0;k<count;k++)addFruit(norm([.12+(k?-.24:0),-1,.08]),cfg.season==='summer'?'developing':'mature',[k*.008,0,0]);
   }
@@ -73,16 +119,17 @@ export function buildSpecimen(cfg,{hidden=false,preview=true}={}){
  stats.terminalTips=0;stats.coveredTips=0;stats.tipGaps=[];stats.leafyShoots=0;stats.apicalContinuations=0;
  function petioleRibbon(base,end,radius,col){const d=norm(sub(end,base)),[u,v]=frame(d),side=mul(u,radius);surfaceQuad(sub(base,side),sub(end,side),add(base,side),add(end,side),v,col,.2)}
 
- function foliage(rec){let points=rec.points,d=norm(sub(points.at(-1),points.at(-2))),n=cfg.view==='shoot'?Math.round(14+cfg.density*.15):foliageNodes??Math.round(16+cfg.density*.25),leafPhase=R(0,6.28),growth=shootGrowth(cfg,rec.id??rec.phase*1000),shootLength=points.slice(1).reduce((sum,p,i)=>sum+Math.hypot(...sub(p,points[i])),0),endNode=1-Math.min(.003,.0015/Math.max(.001,shootLength));const at=t=>{let a=t*(points.length-1),i=Math.min(points.length-2,Math.floor(a));return mix(points[i],points[i+1],a-i)};
+ function foliage(rec){let points=rec.points,d=norm(sub(points.at(-1),points.at(-2))),n=cfg.view==='shoot'?(sp.compound?Math.round(3+cfg.density*.035):Math.round(14+cfg.density*.15)):foliageNodes??Math.round(16+cfg.density*.25),leafPhase=R(0,6.28),growth=shootGrowth(cfg,rec.id??rec.phase*1000),shootLength=points.slice(1).reduce((sum,p,i)=>sum+Math.hypot(...sub(p,points[i])),0),endNode=1-Math.min(.003,Math.min(.0015,sp.leaf[0]*.18)/Math.max(.001,shootLength));const at=t=>{let a=t*(points.length-1),i=Math.min(points.length-2,Math.floor(a));return mix(points[i],points[i+1],a-i)};
   if(cfg.type==='oak'){bud(points.at(-1),d,true);for(let k=0;k<3;k++){let a=k*2.094;bud(add(points.at(-1),[.002*Math.cos(a),-.003,.002*Math.sin(a)]),norm(add(d,[Math.cos(a)*.5,0,Math.sin(a)*.5])),true)}}else if(cfg.type!=='willow')bud(points.at(-1),d,true);
-  for(let i=0;i<n;i++){let t=.12+(endNode-.12)*Math.pow(i/(n-1),.72),p=at(t),a=i*2.399963+rec.phase,pi=Math.min(points.length-2,Math.floor(t*(points.length-1))),localTang=norm(sub(points[pi+1],points[pi])),[u,v]=frame(localTang),out=norm(add(mul(u,Math.cos(a)),mul(v,Math.sin(a))));let ax=norm(add(mul(localTang,.35),mul(out,.95)));
+  for(let i=0;i<n;i++){let t=n===1?endNode:cfg.type==='marula'?.60+(endNode-.60)*i/(n-1):.12+(endNode-.12)*Math.pow(i/(n-1),.72),p=at(t),a=(cfg.type==='wildolive'?i*Math.PI*.5:i*2.399963)+rec.phase,pi=Math.min(points.length-2,Math.floor(t*(points.length-1))),localTang=norm(sub(points[pi+1],points[pi])),[u,v]=frame(localTang),out=norm(add(mul(u,Math.cos(a)),mul(v,Math.sin(a))));let ax=norm(add(mul(localTang,.35),mul(out,.95)));
    if(cfg.type==='willow')ax=norm(add(ax,[0,-.65,0]));
    let base=add(p,mul(out,rec.r0*(1-t)+rec.r1*t));stats.leafNodes++;if(fine||cfg.season==='winter'||i%5===0)bud(base,norm(add(mul(localTang,.8),mul(out,.2))));
-   if(hidden||(cfg.season==='winter'&&cfg.type!=='pine'))continue;
-   const development=leafDevelopment(cfg,sp,growth,i/(n-1),i);let len=development.length;stats.organGrowth.push({...development,shoot:stats.leafyShoots});
-   if(cfg.type==='pine'){let sheathEnd=add(base,mul(ax,.003));fine?tube([base,sheathEnd],.001,.0007,[.28,.20,.10],.2,5):petioleRibbon(base,sheathEnd,.0008,[.28,.20,.10]);for(let k=0;k<2;k++){needle(sheathEnd,norm(add(ax,mul(u,k? .13:-.13))),len,leafPhase+i)}fascicles++;stats.fascicleSizes.push(2)}else{let pl=R(...sp.petiole)*(.55+.45*development.expansion),end=add(base,mul(ax,pl));fine?tube([base,end],.00045,.0003,sp.twig,.2,4):petioleRibbon(base,end,.0004,sp.twig);petioles++;stats.petioleLengths.push(pl);lamina(end,ax,len,leafPhase+i,1,development.expansion);if(cfg.type==='willow'&&cfg.season==='spring'&&i<2){solid(base,out,.004,.001,[.29,.36,.09],.3)}}
+   if(cfg.type==='sweetthorn'&&(fine||i%2===0))spines(base,localTang,out);
+   if(hidden||(cfg.season==='winter'&&cfg.type!=='pine'&&!sp.evergreen))continue;
+   const development=leafDevelopment(cfg,sp,growth,i/Math.max(1,n-1),i);let len=development.length;stats.organGrowth.push({...development,shoot:stats.leafyShoots});
+   if(cfg.type==='pine'){let sheathEnd=add(base,mul(ax,.003));fine?tube([base,sheathEnd],.001,.0007,[.28,.20,.10],.2,5):petioleRibbon(base,sheathEnd,.0008,[.28,.20,.10]);for(let k=0;k<2;k++){needle(sheathEnd,norm(add(ax,mul(u,k? .13:-.13))),len,leafPhase+i)}fascicles++;stats.fascicleSizes.push(2)}else{leafOrgan(base,ax,len,leafPhase+i,development.expansion);if(cfg.type==='wildolive'){const otherBase=add(p,mul(out,-(rec.r0*(1-t)+rec.r1*t))),otherAxis=norm(add(mul(localTang,.35),mul(out,-.95)));leafOrgan(otherBase,otherAxis,len*R(.97,1.03),leafPhase+i+.15,development.expansion);stats.oppositePairs.push({node:i,axis:a});}if(cfg.type==='willow'&&cfg.season==='spring'&&i<2){solid(base,out,.004,.001,[.29,.36,.09],.3)}}
   }
-  stats.leafyShoots++;if(rec.terminal){stats.terminalTips++;if(!hidden&&(cfg.type==='pine'||cfg.season!=='winter')){stats.coveredTips++;stats.tipGaps.push(Math.hypot(...sub(points.at(-1),at(endNode))))}}
+  stats.leafyShoots++;if(rec.terminal){stats.terminalTips++;if(!hidden&&(cfg.type==='pine'||sp.evergreen||cfg.season!=='winter')){stats.coveredTips++;stats.tipGaps.push(Math.hypot(...sub(points.at(-1),at(endNode))))}}
   if(rec.fruit||fine)reproductive(at(.83),d,{fruit:cfg.type!=='pine'||fine});
  }
  // Skeleton: alternate lateral shoots on angiosperms; whorled scaffolds on pine.
@@ -101,18 +148,19 @@ export function buildSpecimen(cfg,{hidden=false,preview=true}={}){
   }
   let focusT=cfg.barkPosition??.44,at=focusT*(main.length-1),i=Math.min(main.length-2,Math.floor(at)),p=mix(main[i],main[i+1],at-i),radius=woodRadius(rad,part==='branch'?.018:.145,focusT);inspectFocus=add(p,[0,0,radius+.003]);inspectDistance=cfg.view==='bark'?.21:null;
  }else if(cfg.view==='fruit'){
-  const twig=[[-.032,.027,.002],[0,.025,0],[.032,.028,-.002]];tube(twig,.003,.002,sp.twig,0);const detail=buildFruit(m,cfg,{base:twig[1],axis:norm([.08,-1,.08]),fine:true});stats.fruitDetails.push(detail);fruits=1;inspectFocus=detail.focus;inspectDistance=detail.inspectDistance;
+  const twig=[[-.032,.027,.002],[0,.025,0],[.032,.028,-.002]];if(!(cfg.type==='marula'&&cfg.fruitStage!=='developing'))tube(twig,.003,.002,sp.twig,0);const detail=buildFruit(m,cfg,{base:twig[1],axis:norm([.08,-1,.08]),fine:true});stats.fruitDetails.push(detail);fruits=1;inspectFocus=detail.focus;inspectDistance=detail.inspectDistance;
  }else if(cfg.view==='leaf'||cfg.view==='surface'){
   // Leaf study remains at natural scale; its UV surface supports a close material study.
-  if(cfg.type==='pine'){let p=[0,0,0],axis=norm([.15,1,0]);tube([[0,-.006,0],p],.001,.0007,[.28,.20,.1],.2,8);needle(p,norm(add(axis,[-.12,0,0])),cfg.leafSize,1);needle(p,norm(add(axis,[.12,0,0])),cfg.leafSize,1);fascicles=1;stats.fascicleSizes=[2]}else{let pl=(sp.petiole[0]+sp.petiole[1])*.5;let p=[0,pl,0];tube([[0,0,0],p],.0005,.0003,sp.twig,.2,8);petioles=1;stats.petioleLengths=[pl];lamina(p,[0,1,0],cfg.leafSize,1)}
+  if(cfg.type==='pine'){let p=[0,0,0],axis=norm([.15,1,0]);tube([[0,-.006,0],p],.001,.0007,[.28,.20,.1],.2,8);needle(p,norm(add(axis,[-.12,0,0])),cfg.leafSize,1);needle(p,norm(add(axis,[.12,0,0])),cfg.leafSize,1);fascicles=1;stats.fascicleSizes=[2]}else if(sp.compound&&cfg.view==='leaf'){compoundLeaf([0,0,0],[0,1,0],cfg.leafSize,1);}else{let pl=(sp.petiole[0]+sp.petiole[1])*.5;let p=[0,pl,0];tube([[0,0,0],p],.0005,.0003,sp.twig,.2,8);petioles=1;stats.petioleLengths=[pl];lamina(p,[0,1,0],cfg.leafSize,1)}
  }else if(cfg.view==='shoot'){
   const len=cfg.type==='willow'?.55:.34,dir=cfg.type==='willow'?norm([.3,-1,0]):norm([.15,1,0]);let start=cfg.type==='willow'?[0,.55,0]:[0,0,0];let r=rec(path(start,dir,len,cfg.type==='willow'?-.3:0,.025,14),.003,.0007,4);r.terminal=true;foliage(r);tube(r.points,r.r0,r.r1,sp.twig,.2,10);
  }else{
   const h=cfg.height,architecture=buildTreeArchitecture(cfg),baseRadius=architecture.baseRadius;records=architecture.records;stats.architecture=architecture.stats;stats.apicalContinuations=architecture.stats.apicalContinuations;
-  const tips=records.filter(r=>r.children===0),shootCount=tips.length,requestedExtras=Math.max(0,Math.min(4,Math.round(cfg.shoots??3))),targetNodes=cfg.type==='pine'?Math.min(70000,26000+cfg.density*650):Math.min(cfg.type==='willow'?62000:49000,(cfg.type==='willow'?18000:16000)+cfg.density*(cfg.type==='willow'?540:430)),extras=Math.min(requestedExtras,Math.max(0,Math.floor(targetNodes/(shootCount*4))-1)),shootMultiplier=cfg.type==='pine'?1:1+extras;stats.structuralTips=shootCount;stats.sideShootsPerTip=cfg.type==='pine'?0:extras;foliageNodes=Math.max(4,Math.min(cfg.type==='pine'?64:42,Math.floor(targetNodes/(shootCount*shootMultiplier))));
+  const tips=records.filter(r=>r.children===0),shootCount=tips.length,requestedExtras=Math.max(0,Math.min(4,Math.round(cfg.shoots??3))),targetNodesRaw=sp.compound==='bipinnate'?6500+cfg.density*450:sp.compound==='pinnate'?9000+cfg.density*100:cfg.type==='pine'?Math.min(70000,26000+cfg.density*650):Math.min(cfg.type==='willow'?62000:49000,(cfg.type==='willow'?18000:16000)+cfg.density*(cfg.type==='willow'?540:430)),targetNodes=cfg.type==='wildolive'?(65000+cfg.density*950)*.5:cfg.type==='yellowwood'?(60000+cfg.density*950)*Math.min(2.8,Math.pow(cfg.height/10,1.5)):targetNodesRaw,extras=Math.min(requestedExtras,Math.max(0,Math.floor(targetNodes/(shootCount*4))-1)),shootMultiplier=cfg.type==='pine'?1:1+extras;stats.structuralTips=shootCount;stats.sideShootsPerTip=cfg.type==='pine'?0:extras;foliageNodes=Math.max(sp.compound?1:4,Math.min(cfg.type==='yellowwood'?200:cfg.type==='sweetthorn'?90:cfg.type==='pine'?64:cfg.type==='marula'?40:90,Math.floor(targetNodes/(shootCount*shootMultiplier))));
   for(let r of records){let col=sp.twig;if(r.depth<3){if(cfg.type==='birch')col=r.r0>.018?[.72,.71,.62]:sp.twig;else if(cfg.type==='pine')col=r.points[0][1]>h*.32?[.42,.20,.075]:[.23,.17,.12];else col=cfg.type==='willow'?[.25,.23,.17]:[.27,.23,.17]}
    if(cfg.type==='pine'&&r.children>0&&r.depth>0&&r.fruit){let i=Math.floor((r.points.length-1)*.72),d=norm(sub(r.points[i+1],r.points[i]));reproductive(r.points[i],d,{flower:false});}
    tube(r.points,r.r0,r.r1,col,0,r.depth===0?40:r.depth===1?14:r.depth===2?8:5,r.depth<2&&cfg.type!=='birch'?.10*mature:0);
+   if(cfg.type==='yellowwood'&&r.children>0&&r.depth>=2&&r.r0<.025)foliage({...r,fruit:false,terminal:false});
    if(r.children===0){r.terminal=true;foliage(r);if(cfg.type!=='pine'){for(let k=0;k<extras;k++){let t=.25+.55*(k+.5)/Math.max(1,extras),idx=Math.min(r.points.length-2,Math.floor(t*(r.points.length-1))),p=r.points[idx],d=norm(sub(r.points[idx+1],p)),[u,v]=frame(d),a=r.phase+k*2.399963,radial=add(mul(u,Math.cos(a)),mul(v,Math.sin(a))),axis=norm(add(mul(d,.25),radial));if(cfg.type==='willow')axis=norm(add(mul(d,.65),add(mul(radial,.3),[0,-.4,0])));if(cfg.type==='birch')axis=norm(add(mul(d,.6),add(mul(radial,.4),[0,-.25,0])));let len=cfg.type==='willow'?Math.min(R(.35,.65),p[1]*.85):R(.20,.34),pts=path(p,axis,len,cfg.type==='willow'?-.8:.12,.025,3),shoot={points:pts,r0:.0018,r1:.00035,phase:a,fruit:random()<.05,terminal:true};tube(pts,.0018,.00035,sp.twig,.2,3);foliage(shoot)}}sampledShoots++}
   }
 

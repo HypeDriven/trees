@@ -13,7 +13,7 @@ for(const [type,species] of Object.entries(SPECIES)){
   assert(winter.stats.leaves>0,'Scots pine must retain winter foliage');
   assert(a.stats.fascicleSizes.every(n=>n===2));
   assert.equal(a.stats.leaves,a.stats.fascicles*2);
- }else assert.equal(winter.stats.leaves,0,`${type} should lose winter leaves`);
+ }else if(species.evergreen)assert(winter.stats.leaves>0,`${type} must retain evergreen foliage`);else assert.equal(winter.stats.leaves,0,`${type} should lose winter leaves`);
  if(type==='willow')assert.equal(a.stats.terminalBuds,0,'Willow lacks a true terminal bud');
  if(type==='oak')assert(a.stats.terminalBuds>=4,'Oak needs clustered terminal buds');
  const still=buildSpecimen({...cfg,reproductive:false});assert.equal(still.stats.flowers,0);assert.equal(still.stats.fruits,0);
@@ -22,7 +22,7 @@ for(const [type,species] of Object.entries(SPECIES)){
  if(type!=='pine'){
   let upper=0,lower=0;for(let i=9;i<leaf.vertices.length;i+=14){if(leaf.vertices[i]===1)upper++;if(Math.abs(leaf.vertices[i]-1.02)<.001)lower++}
   assert(upper>0&&lower>0,'Finite blade needs separate upper and lower faces');
-  assert(leaf.bounds.max[1]-leaf.bounds.min[1]<.18,'Anatomy must remain at natural scale');
+  assert(leaf.bounds.max[1]-leaf.bounds.min[1]<(species.compound?.33:.18),'Anatomy must remain at natural scale');
  }
  console.log(`${type}: seeded geometry, natural dimensions, winter behavior, and organ anatomy passed`);
 }

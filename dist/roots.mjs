@@ -1,7 +1,11 @@
-import {woodTube,woodRadius} from './wood.mjs?v=10';
+import {woodTube,woodRadius} from './wood.mjs?v=11';
 const add=(a,b)=>a.map((v,i)=>v+b[i]),sub=(a,b)=>a.map((v,i)=>v-b[i]),mul=(a,s)=>a.map(v=>v*s),cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],norm=a=>mul(a,1/(Math.hypot(...a)||1));
 function seeded(seed){return()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 export const ROOT_PROFILES={
+ sweetthorn:{primaries:8,spread:.47,depth:2.2,lateral:.14,sinkers:4,tap:true},
+ marula:{primaries:9,spread:.45,depth:2.1,lateral:.15,sinkers:4,tap:true},
+ wildolive:{primaries:10,spread:.49,depth:1.2,lateral:.15,sinkers:4,tap:true},
+ yellowwood:{primaries:9,spread:.38,depth:1.8,lateral:.19,sinkers:5,tap:true},
  oak:{primaries:8,spread:.40,depth:1.5,lateral:.18,sinkers:5,tap:true},
  willow:{primaries:11,spread:.50,depth:.75,lateral:.11,sinkers:2,tap:false},
  pine:{primaries:8,spread:.40,depth:1.3,lateral:.18,sinkers:4,tap:true},
