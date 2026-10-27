@@ -15,7 +15,7 @@ const young=generate({fruitStage:'developing',coneOpening:1});assert(young.stats
 assert.deepEqual(closed.vertices,generate({}).vertices,'Cone geometry must reproduce from the recipe seed');
 closed=null;
 for(const type of Object.keys(SPECIES)){
- const r=generate({type,leafSize:SPECIES[type].length,fruitStage:type==='willow'?'released':'mature'}),f=r.stats.fruitDetails[0];assert(r.vertices.every(Number.isFinite));assert(r.stats.fruits>0);assert(r.bounds.max[1]-r.bounds.min[1]<.16,'Fruit study must stay at natural scale');
+ const r=generate({type,leafSize:SPECIES[type].length,fruitStage:type==='willow'?'released':'mature'}),f=r.stats.fruitDetails[0];assert(r.vertices.every(Number.isFinite));assert(r.stats.fruits>0);assert(r.bounds.max[1]-r.bounds.min[1]<(SPECIES[type].fruitStudySpan??.16),'Fruit study must stay at natural scale');
  if(type==='oak'){assert(f.cupCoverage>=.25&&f.cupCoverage<=1/3);assert(f.scales>=80);}
  if(type==='willow'){assert(f.capsules>=30);assert(f.silkyHairs>=300);assert.equal(f.seeds,f.capsules);}
  if(type==='birch'){assert(f.bracts>=60);assert(f.wingedSeeds>0);const release=generate({type,fruitStage:'released'});assert(release.stats.fruitDetails[0].bracts<f.bracts,'Released birch catkins should partially disintegrate');}

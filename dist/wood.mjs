@@ -9,6 +9,10 @@ export function barkSample(type,uv,age=.65,zone=0){
  if(zone>.075&&type!=='pine'){let pores=woodNoise(x*950,y*750);return {height:(pores-.5)*.00005,dark:smooth(.8,1,pores)*.20,roughness:.60,color:coarse}}
  if(type==='birch'&&zone>.03&&zone<.05){let row=Math.floor(y*115),u=fract(x*42+hash(row,1)*2),v=fract(y*115),line=(1-smooth(.055,.14,Math.abs(v-.5)))*(1-smooth(.12,.36,Math.abs(u-.5)));let diamond=Math.abs(Math.sin(x*95+y*25))*Math.abs(Math.sin(x*95-y*25));let fissure=(1-smooth(.012,.04,diamond))*age*age;return{height:-.00017*line-.0012*fissure+(coarse-.5)*.00012,dark:Math.max(line*.78,fissure*.72),roughness:.50+coarse*.16,color:coarse}}
  if(type==='pine'){let upper=smooth(0,.06,zone),young=smooth(.06,.08,zone),cell=woodCell(x*mix(52,105,upper)+warp*.3,y*mix(24,85,upper)+coarse*.3),crack=1-smooth(.018,.11,cell[0]),pores=woodNoise(x*950,y*750);height=mix(((1-crack)*(.65+.35*cell[1])-.25*crack)*mix(.004,.0012,upper)*(.3+.7*age),(pores-.5)*.00005,young);dark=mix(crack*.80,smooth(.8,1,pores)*.20,young);rough=mix(mix(.85,.66,upper),.60,young);
+ }else if(type==='baobab'){let seam=Math.pow(.5+.5*Math.sin(x*38+woodNoise(x*2,y*3)*4),20),mottle=woodNoise(x*8,y*7);height=(mottle-.5)*.0007*age-seam*.0020*age;dark=seam*.26;rough=.68;
+ }else if(type==='fevertree'){let powder=woodNoise(x*420,y*390),flake=woodNoise(x*35,y*29);height=(powder-.5)*.00009+(flake-.5)*.00016*age;dark=smooth(.75,.95,flake)*.12;rough=.88;
+ }else if(type==='sausagetree'){let cell=woodCell(x*36+warp*.35,y*31+coarse*.2),edge=1-smooth(.025,.18,cell[0]);height=(.30-edge)*.0017*age;dark=edge*.33;rough=.77;
+ }else if(type==='karee'){let cell=woodCell(x*65+warp*.5,y*19+coarse*.3),crack=1-smooth(.018,.11,cell[0]),groove=Math.pow(.5+.5*Math.sin(x*410+warp*4),10);height=(.3-Math.max(crack,groove*.6))*.0044*age;dark=crack*.76;rough=.87;
  }else if(type==='marula'){let cell=woodCell(x*24+warp*.35,y*28+coarse*.30),edge=1-smooth(.018,.14,cell[0]);height=(.30-edge)*.0036*age;dark=edge*.48;rough=.82;
  }else if(type==='sweetthorn'){let cell=woodCell(x*42+warp*.35,y*18+coarse*.3),edge=1-smooth(.02,.12,cell[0]),groove=Math.pow(.5+.5*Math.sin(x*430+warp*4),10)*.65,crack=Math.max(edge,groove);height=(.34-crack)*.006*age;dark=crack*.87;rough=.90;
  }else if(type==='wildolive'){let cell=woodCell((x+Math.sin(y*7)*.008)*65+warp*.3,y*16+coarse*.3),crack=1-smooth(.018,.12,cell[0]);height=(.3-crack)*.0045*age+(coarse-.5)*.0012*age;dark=crack*.75;rough=.84;
@@ -29,13 +33,13 @@ function interpolatePath(points,t){let x=t*(points.length-1),i=Math.min(points.l
 export function woodTube(mesh,points,r0,r1,type,{fine=false,macro=false,maturity=.65,root=false,collar=false,preview=true,cap=false,zone:forceZone,treeHeight=10}={}){
  const isTwig=r0<.007,white=type==='birch'&&r0>.018;
  let zone=forceZone??(type==='pine'?pineBarkStyle(points[0][1],r0,treeHeight).zone:isTwig?.08:white?.04:0),age=Math.max(.04,Math.min(1,maturity*(isTwig?.10:.35+.65*Math.min(1,r0/.09))));
- const southern={sweetthorn:[[.20,.17,.135],[.34,.17,.10]],marula:[[.40,.38,.33],[.34,.30,.22]],wildolive:[[.29,.29,.24],[.30,.29,.20]],yellowwood:[[.33,.31,.26],[.25,.29,.17]]}[type];
+ const southern={baobab:[[.40,.37,.34],[.36,.34,.28]],fevertree:[[.43,.46,.19],[.40,.36,.20]],sausagetree:[[.37,.34,.28],[.34,.29,.21]],karee:[[.25,.235,.19],[.35,.19,.12]],sweetthorn:[[.20,.17,.135],[.34,.17,.10]],marula:[[.40,.38,.33],[.34,.30,.22]],wildolive:[[.29,.29,.24],[.30,.29,.20]],yellowwood:[[.33,.31,.26],[.25,.29,.17]]}[type];
  const base=zone===.04?[.70,.69,.62]:zone===.06?[.43,.20,.075]:zone===.08?(type==='willow'?[.34,.30,.095]:[.24,.15,.09]):type==='birch'?[.24,.22,.19]:type==='willow'?[.24,.22,.18]:[.27,.235,.19];
  let sides=macro?(preview?112:224):fine?96:r0>.14?56:r0>.035?24:r0>.007?10:5,steps=macro?(preview?90:160):fine?80:Math.max(points.length-1,r0>.04?32:points.length-1),rings=[],arc=0,previousU=null;
  const phase=points[0][0]*.37+points[0][2]*.53,uvOffset=points[0][1];
  for(let j=0;j<=steps;j++){
   let t=j/steps,p=interpolatePath(points,t),before=interpolatePath(points,Math.max(0,t-.0003)),after=interpolatePath(points,Math.min(1,t+.0003)),axis=norm(sub(after,before));if(j)arc+=Math.hypot(...sub(p,rings[j-1].center));
-  let u=previousU?norm(sub(previousU,mul(axis,dot(previousU,axis)))):norm(cross(axis,Math.abs(axis[1])>.94?[1,0,0]:[0,1,0]));if(Math.hypot(...u)<.9)u=norm(cross(axis,[0,0,1]));previousU=u;let v=norm(cross(u,axis)),r=woodRadius(r0,r1,t),localAge=age*(.3+.7*Math.sqrt(r/r0)),collarBump=collar?.28*Math.exp(-Math.pow((arc-r0*2.6)/Math.max(.01,r0*1.3),2)):0,ring=[];
+  let u=previousU?norm(sub(previousU,mul(axis,dot(previousU,axis)))):norm(cross(axis,Math.abs(axis[1])>.94?[1,0,0]:[0,1,0]));if(Math.hypot(...u)<.9)u=norm(cross(axis,[0,0,1]));previousU=u;let v=norm(cross(u,axis)),r=woodRadius(r0,r1,t)*(type==='baobab'&&points[0][1]<.01&&r0>.45?1+.18*Math.sin(Math.PI*t):1),localAge=age*(.3+.7*Math.sqrt(r/r0)),collarBump=collar?.28*Math.exp(-Math.pow((arc-r0*2.6)/Math.max(.01,r0*1.3),2)):0,ring=[];
   const pineStyle=type==='pine'?pineBarkStyle(p[1],r,treeHeight):null,ringZone=forceZone??pineStyle?.zone??zone,ringBase=pineStyle?.color??(southern?southern[0].map((c,i)=>mix(c,southern[1][i],1-smooth(.003,.025,r))):base);
   for(let k=0;k<=sides;k++){
    let a=k/sides*Math.PI*2,n=add(mul(u,Math.cos(a)),mul(v,Math.sin(a))),uv=[a*r+phase,arc+uvOffset],surface=barkSample(type,uv,localAge,ringZone),rootFlare=root?.38*Math.exp(-arc/Math.max(.08,r0*2))*(.6+.4*Math.cos(a*5+phase)):0,rr=r*(1+collarBump+rootFlare)+surface.height*Math.min(1,r/.02);
@@ -50,6 +54,10 @@ export function woodTube(mesh,points,r0,r1,type,{fine=false,macro=false,maturity
  return {rings:steps+1,sides,quadCount,zone,age,collar,root};
 }
 export const WOOD_NOTES={
+ baobab:{text:'Smooth grey-brown bark with shallow winding seams, soft folded relief and fine mottling; the mature bole has a swollen contour.',source:'https://pza.sanbi.org/adansonia-digitata'},
+ fevertree:{text:'A yellow-green surface with fine powder-like grain and shallow flaking. Young axes blend into this palette as their red-brown outer layer sheds.',source:'https://pza.sanbi.org/vachellia-xanthophloea'},
+ sausagetree:{text:'Grey-brown bark, comparatively smooth on young axes and shallowly flaky on mature sections; relief uses low irregular plates.',source:'https://pza.sanbi.org/kigelia-africana'},
+ karee:{text:'Coarse dark grey-brown mature bark has winding longitudinal fissures. Fine young stems blend toward reddish brown.',source:'https://pza.sanbi.org/searsia-lancea'},
  sweetthorn:{text:'Dark mature bark has irregular fissured plates with a rusty undertone; finer reddish young axes share a continuous radius-based palette.',source:'https://pza.sanbi.org/vachellia-karroo'},
  marula:{text:'Grey-brown bark breaks into irregular flaking disks with paler mottling. Broad plate relief differs from the narrow strip bark of yellowwood.',source:'https://apps.worldagroforestry.org/treedb2/AFTPDFS/Sclerocarya_birrea_ssp._caffra.PDF'},
  wildolive:{text:'Grey, rough mature bark has winding longitudinal furrows and fine irregular flakes. Young axes blend gradually into the same grey-olive palette.',source:'https://pza.sanbi.org/olea-europaea-subsp-africana'},

@@ -5,6 +5,10 @@ const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),smooth=(a,b,x)=>{let t=clamp((x-a
 const frame=d=>{const u=norm(cross(d,Math.abs(d[1])>.94?[1,0,0]:[0,1,0]));return[u,norm(cross(u,d))]};
 const hash=x=>{const v=Math.sin(x*127.1+311.7)*43758.5453;return v-Math.floor(v)};
 export const FRUIT_NOTES={
+ baobab:{name:'Velvety woody capsule',source:'https://apps.worldagroforestry.org/treedb2/speciesprofile.php?Spid=143',text:'A pendant ovoid capsule with a woody shell and dense yellow-brown surface hairs. The capsule is indehiscent: it stays closed. Curved stalk, shell mottling, apical scar and fine surface fuzz are modeled.'},
+ fevertree:{name:'Segmented seed pod',source:'https://apps.worldagroforestry.org/treedb/AFTPDFS/Acacia_xanthophloea.PDF',text:'A flattened, lightly curved pale brown pod with constrictions between seeds. The valves and edge sutures are separate geometry; the release study reveals the enclosed brown seeds.'},
+ sausagetree:{name:'Pendant sausage fruit',source:'https://pza.sanbi.org/kigelia-africana',text:'A long grey-brown woody fruit supported by a rope-like hanging stalk. The closed shell has irregular coarse grain, lenticel-like flecks and an apical scar. Seed release through decay is not represented by opening valves.'},
+ karee:{name:'Small drupe panicle',source:'https://pza.sanbi.org/searsia-lancea',text:'A branching female fruit cluster with small, slightly flattened drupes, ripening yellowish to brown. Each drupe has its own stalk, glossy skin and a small scar.'},
  sweetthorn:{name:'Curved seed pod',source:'https://pza.sanbi.org/vachellia-karroo',text:'Flat, sickle-shaped pods develop from green to dry brown. Two finite-thickness valves carry seed bulges and raised sutures; release separates the valves to reveal compressed seeds.'},
  marula:{name:'Detached marula drupe',source:'https://pza.sanbi.org/sclerocarya-birrea',text:'A female tree bears green, round to oval drupes. Final yellow ripening normally takes place after the fruit falls. The ripe study is detached; the whole-tree model retains green fruit. Skin mottling, fine pores and an apical scar are modeled.'},
  wildolive:{name:'Wild olive drupe',source:'https://pza.sanbi.org/sites/default/files/info_library/oleaeuropafric.pdf',text:'Small fleshy drupes ripen from green to purple-black. The surface has fine pale speckles, a short stalk, basal calyx and a small apical point. This is the small wild fruit, not a large cultivated olive.'},
@@ -15,7 +19,7 @@ export const FRUIT_NOTES={
  birch:{name:'Fruiting catkin',source:'https://plants.ces.ncsu.edu/plants/betula-pendula/',text:'A pendant cylindrical fruiting catkin, with overlapping three-lobed bracts and small winged nutlets. These are not woody pine scales.'}
 };
 
-export function buildFruit(mesh,cfg,{base=[0,0,0],axis=[0,-1,0],fine=false,stage=cfg.fruitStage??'mature',seed=cfg.seed??2847}={}){
+export function buildFruit(mesh,cfg,{base=[0,0,0],axis=[0,-1,0],fine=false,attached=['tree','shoot'].includes(cfg.view),stage=cfg.fruitStage??'mature',seed=cfg.seed??2847}={}){
  axis=norm(axis);const [u,v]=frame(axis),rnd=(i,a,b)=>mix(a,b,hash(seed+i*1.73)),type=cfg.type;
  const details={type,stage,scales:0,capsules:0,bracts:0,wingedSeeds:0,silkyHairs:0,seeds:0,seedPairs:0,scaleRecords:[]};let focus=null;
  function tri(a,b,c,na,nb,nc,col,kind,uv,phase=0){const geometric=cross(sub(b,a),sub(c,a));if(length(geometric)<1e-15)return;let colors=Array.isArray(col[0])?col:[col,col,col];if(dot(geometric,add(add(na,nb),nc))<0){[b,c]=[c,b];[nb,nc]=[nc,nb];[uv[1],uv[2]]=[uv[2],uv[1]];[colors[1],colors[2]]=[colors[2],colors[1]]}for(const [i,p,n,tex]of [[0,a,na,uv[0]],[1,b,nb,uv[1]],[2,c,nc,uv[2]]])mesh.v(p,n,colors[i],kind,phase,0,tex);}
@@ -77,9 +81,9 @@ export function buildFruit(mesh,cfg,{base=[0,0,0],axis=[0,-1,0],fine=false,stage
    for(let sign of [-1,1]){patch((s,x)=>add(add(q,mul(d,len*s)),add(mul(side,x*width*Math.sin(Math.PI*s)),mul(n,sign*width*Math.sin(Math.PI*s)*(opened?1+s*2.5:1)))),fine?16:3,fine?8:2,young?[.30,.36,.12]:opened?[.39,.29,.16]:[.29,.34,.13],.38,fine?.000055:0,[width*2,len],i);}
    details.capsules++;if(opened&&fine){lathe(add(q,mul(d,len*.62)),d,.0011,s=>.00014*Math.sin(Math.PI*s),[.29,.20,.10],.34,6,8);details.seeds++;}if(opened){for(let k=0;k<(fine?10:2);k++){const z=k*GOLD+i,dir=norm(add(d,[Math.cos(z)*.8,Math.sin(z)*.35,Math.sin(z)*.8])),origin=add(q,mul(d,len*.7)),[edge]=frame(dir),hair=rnd(k+i+9,.003,.006);patch((s,x)=>add(add(origin,mul(dir,hair*s)),add(mul(edge,x*.000012),mul(n,Math.sin(s*4+i)*hair*.15*s))),fine?8:2,1,[.73,.72,.60],.44,0,[.000024,hair],i);details.silkyHairs++;}}
   }details.length=L;focus=add(add(p,mul(axis,L*.5)),mul(u,.003));
- }else if(type==='sweetthorn'){
-  const L=rnd(1,.08,.135)*(stage==='developing'?.70:1),W=rnd(2,.0035,.0045),p=stalk(.009,.0005),count=Math.floor(rnd(3,7,12)),opened=stage==='released',col=stage==='developing'?[.23,.32,.10]:[.34,.23,.12];
-  const center=t=>add(add(p,mul(axis,L*t)),mul(u,L*.20*Math.sin(Math.PI*t))),width=t=>W*Math.pow(Math.sin(Math.PI*t),.38)*(1-.12*Math.cos(t*count*TAU)),gap=t=>opened?L*.075*Math.sin(Math.PI*t):0;
+ }else if(type==='sweetthorn'||type==='fevertree'){
+  const fever=type==='fevertree',L=rnd(1,fever?.065:.08,fever?.13:.135)*(stage==='developing'?.70:1),W=rnd(2,fever?.0045:.0035,fever?.006:.0045),p=stalk(.009,.0005),count=Math.floor(rnd(3,7,12)),opened=stage==='released',col=stage==='developing'?[.23,.32,.10]:(fever?[.46,.35,.17]:[.34,.23,.12]);
+  const center=t=>add(add(p,mul(axis,L*t)),mul(u,L*(fever?.07:.20)*Math.sin(Math.PI*t))),width=t=>W*Math.pow(Math.sin(Math.PI*t),.38)*(1-(fever?.25:.12)*Math.cos(t*count*TAU)),gap=t=>opened?L*.075*Math.sin(Math.PI*t):0;
   for(const sign of [-1,1]){
    patch((t,x)=>{const seedBulge=.0008*Math.pow(.5+.5*Math.cos((t-.04)*count*TAU),4)*(1-x*x),round=(1-x*x)*.00055;return add(center(t),add(mul(u,x*width(t)),mul(v,sign*(round+seedBulge+gap(t)))));},fine?100:14,fine?12:4,(t,x)=>col.map(c=>c*(.90+.10*Math.sin(t*count*TAU)**2+.06*Math.abs(x))),.36,fine?.00024:0,[W*2,L],seed);
    // Both longitudinal sutures remain distinct raised geometric strips.
@@ -87,6 +91,20 @@ export function buildFruit(mesh,cfg,{base=[0,0,0],axis=[0,-1,0],fine=false,stage
   }
   if(opened)for(let k=0;k<count;k++){const t=.09+.82*(k+.5)/count,q=add(center(t),mul(v,-gap(t)*.5)),d=norm(add(axis,mul(u,.25)));lathe(q,d,.006,s=>.0018*Math.pow(Math.sin(Math.PI*s),.6),[.27,.21,.12],.34,fine?24:5,fine?18:6);details.seeds++;}
   details.length=L;details.valves=2;details.sutures=2;details.opening=opened?1:0;focus=add(center(.52),mul(v,gap(.52)+.0014));
+ }else if(type==='baobab'||type==='sausagetree'){
+  const sausage=type==='sausagetree',young=stage==='developing',L=rnd(1,sausage?.32:.13,sausage?.65:.25)*(young?.62:1),r=L*(sausage?.105:.29),stalkLength=attached?rnd(2,sausage?.70:.18,sausage?1.35:.35):rnd(2,sausage?.45:.08,sausage?.75:.14),stalkRadius=sausage?.003:.0015;
+  const center=t=>add(add(base,mul(axis,stalkLength*t)),add(mul(u,stalkLength*.018*Math.sin(t*Math.PI*1.7)),mul(v,stalkLength*.012*Math.sin(t*Math.PI*2))));
+  patch((t,x)=>{const angle=(x+1)*Math.PI;return add(center(t),add(mul(u,Math.cos(angle)*stalkRadius),mul(v,Math.sin(angle)*stalkRadius)));},fine?80:10,fine?16:6,[.29,.245,.15],.36,0,[TAU*stalkRadius,stalkLength],seed);
+  const p=center(1),col=young?[.29,.35,.15]:sausage?[.37,.34,.27]:[.43,.34,.19],shape=t=>Math.pow(Math.sin(Math.PI*t),sausage?.25:.54)*(sausage?(1-.06*t):(.94+.16*Math.sin(t*Math.PI)));
+  const shell=(t,angle)=>{const wave=sausage?Math.sin(angle*17+t*9)*.00035:.0002*Math.sin(angle*23+t*12),grain=(Math.sin(angle*73+t*119+seed)+Math.sin(angle*151-t*87+seed))*(fine?(sausage?.00018:.00006):.000025),rr=Math.max(0,r*shape(t)+Math.sin(Math.PI*t)*(wave+grain));return add(add(p,mul(axis,L*t)),add(add(mul(u,Math.cos(angle)*rr),mul(v,Math.sin(angle)*rr)),mul(u,sausage?L*.025*Math.sin(Math.PI*t):0)));};
+  patch((t,x)=>shell(t,(x+1)*Math.PI),fine?144:12,fine?96:12,(t,x)=>{const spot=hash(Math.floor(t*180)*151+Math.floor((x+1)*150)+seed);return col.map(c=>c*(.92+.09*Math.sin(t*31+x*7)+(spot>.94?.08:0)));},sausage?.395:.405,0,[TAU*r,L],seed);
+  lathe(add(p,mul(axis,L*.996)),axis,L*.008,t=>r*.08*Math.sin(Math.PI*t),[.24,.20,.13],.36,8,12);
+  if(!sausage&&fine){const hairs=640;for(let k=0;k<hairs;k++){const t=.03+.94*(k+.5)/hairs,a=k*GOLD,q=shell(t,a),normal=norm(add(mul(u,Math.cos(a)),mul(v,Math.sin(a)))),edge=norm(cross(normal,axis)),tip=add(q,add(mul(normal,rnd(k+8,.00045,.00085)),mul(axis,.0003)));patch((s,x)=>add(add(q,mul(sub(tip,q),s)),mul(edge,x*.000018*(1-s))),2,1,[.58,.49,.31],.405,0,[.000036,.0008],k);}details.surfaceHairs=hairs;}
+  details.length=L;details.stalkLength=stalkLength;details.woodyShell=true;details.indehiscent=true;details.capsules=sausage?0:1;details.largeFruits=sausage?1:0;focus=shell(.52,0);
+ }else if(type==='karee'){
+  const young=stage==='developing',L=.0048,count=fine?18:7,p=stalk(.010,.00045),col=young?[.30,.35,.13]:[.45,.34,.14];
+  for(let k=0;k<count;k++){const t=(k+.5)/count,a=k*GOLD,out=add(mul(u,Math.cos(a)),mul(v,Math.sin(a))),origin=add(p,mul(axis,.025*t)),tip=add(origin,add(mul(out,.006+.011*Math.sin(Math.PI*t)),mul(axis,.004))),dir=norm(sub(tip,origin)),len=length(sub(tip,origin));lathe(origin,dir,len,s=>.00025*(1-.35*s),[.30,.25,.13],.36,fine?8:2,5);lathe(tip,axis,L,s=>L*.55*Math.pow(Math.sin(Math.PI*s),.48),col.map(c=>c*rnd(k+9,.91,1.09)),.34,fine?28:6,fine?24:8);lathe(add(tip,mul(axis,L*.98)),axis,.00016,s=>.00023*Math.sin(Math.PI*s),[.23,.17,.10],.34,5,8);}
+  details.length=L;details.drupes=count;details.panicleLength=.035;focus=add(p,mul(u,.012));
  }else if(type==='marula'||type==='wildolive'){
   const young=stage==='developing',olive=type==='wildolive',L=olive?rnd(1,.008,.012):rnd(1,.032,.042),r=L*(olive?.43:.49),p=stalk(olive?.006:.012,olive?.0004:.0009),col=young?(olive?[.28,.35,.12]:[.30,.40,.13]):olive?[.055,.036,.075]:[.72,.56,.16];
   lathe(p,axis,L,t=>r*Math.pow(Math.sin(Math.PI*t),.52)*(1-.07*t),(t,x)=>{const fleck=hash(Math.floor(t*170)*197+Math.floor(x*240)+seed),mottle=.90+.10*Math.sin(t*37+x*16);return col.map((c,i)=>c*mottle+(fleck>.93?(olive?.06:.035):0)+(young?0:i===0?.008:0));},.34,fine?96:10,fine?96:14);
@@ -108,5 +126,5 @@ export function buildFruit(mesh,cfg,{base=[0,0,0],axis=[0,-1,0],fine=false,stage
    if(fine&&i%(released?2:3)===0){const nut=add(q,mul(out,.00035));lathe(nut,axis,.0018,s=>.0005*Math.sin(Math.PI*s),[.31,.20,.095],.34,8,10);for(let sign of [-1,1])wing(nut,norm(add(mul(side,sign),mul(axis,.15))),.00075,.0022,young?[.40,.43,.19]:[.55,.42,.24]);details.wingedSeeds++;}
   }details.length=L;focus=add(add(p,mul(axis,L*.5)),mul(u,.003));
  }
- return{...details,focus,inspectDistance:type==='pine'?.038:type==='sweetthorn'?.028:type==='marula'?.030:type==='oak'?.028:.018};
+ return{...details,focus,inspectDistance:type==='baobab'?.060:type==='sausagetree'?.070:type==='fevertree'?.028:type==='karee'?.016:type==='pine'?.038:type==='sweetthorn'?.028:type==='marula'?.030:type==='oak'?.028:.018};
 }

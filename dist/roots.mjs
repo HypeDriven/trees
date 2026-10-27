@@ -1,7 +1,11 @@
-import {woodTube,woodRadius} from './wood.mjs?v=11';
+import {woodTube,woodRadius} from './wood.mjs?v=12';
 const add=(a,b)=>a.map((v,i)=>v+b[i]),sub=(a,b)=>a.map((v,i)=>v-b[i]),mul=(a,s)=>a.map(v=>v*s),cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],norm=a=>mul(a,1/(Math.hypot(...a)||1));
 function seeded(seed){return()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 export const ROOT_PROFILES={
+ baobab:{primaries:8,spread:.62,depth:1.3,lateral:.12,sinkers:3,tap:false},
+ fevertree:{primaries:11,spread:.50,depth:1.0,lateral:.10,sinkers:3,tap:false},
+ sausagetree:{primaries:9,spread:.50,depth:1.5,lateral:.16,sinkers:4,tap:true},
+ karee:{primaries:10,spread:.48,depth:1.2,lateral:.17,sinkers:4,tap:true},
  sweetthorn:{primaries:8,spread:.47,depth:2.2,lateral:.14,sinkers:4,tap:true},
  marula:{primaries:9,spread:.45,depth:2.1,lateral:.15,sinkers:4,tap:true},
  wildolive:{primaries:10,spread:.49,depth:1.2,lateral:.15,sinkers:4,tap:true},
@@ -24,7 +28,7 @@ export function buildRootSystem(mesh,cfg,{preview=false,study=false,baseRadius}=
   const steps=order===0?24:12,handed=random()<.5?-1:1,turnA=handed*R(.4,.95),turnB=handed*(random()<.38?1:-1)*R(.75,1.4),phase=R(0,6.28),wave=R(.08,.23),descent=R(.055,.085),points=[[...start]];let p=start,prev=0;
   for(let j=1;j<=steps;j++){
    const t=Math.pow(j/steps,1.25),travel=len*t,step=travel-prev,a=az+turnA*smooth(travel/(base*.9+len*.065))+turnB*smooth((t-.18)/.78)+wave*Math.sin(t*8+phase)*Math.sin(t*Math.PI),undulation=Math.sin(t*7+phase)*Math.sin(t*Math.PI);
-   const y=order===0?start[1]*Math.exp(-travel/Math.max(.025,base*.9))-depth*profile.lateral*(1-Math.exp(-travel/(base*3+len*.22)))+depth*.018*undulation:start[1]-depth*descent*t+depth*.018*undulation;
+   const y=order===0?start[1]*Math.exp(-travel/Math.max(.025,base*.9))-depth*profile.lateral*(1-Math.exp(-travel/(base*3+len*.22)))-base*(cfg.type==='baobab'?.40:0)*(1-Math.exp(-travel/Math.max(.01,base*.6)))+depth*.018*undulation:start[1]-depth*descent*t+depth*.018*undulation;
    p=[p[0]+Math.cos(a)*step,boundedY(y),p[2]+Math.sin(a)*step];points.push(p);prev=travel;
   }return points;
  }
@@ -43,7 +47,7 @@ export function buildRootSystem(mesh,cfg,{preview=false,study=false,baseRadius}=
  // Unequal angular gaps and sector vigour replace the equally spaced spokes.
  const gaps=Array.from({length:profile.primaries},()=>R(.48,1.55)),total=gaps.reduce((a,b)=>a+b,0);let angle=rotation;
  for(let k=0;k<profile.primaries;k++){
-  angle+=gaps[k]/total*Math.PI*2;const a=angle,start=[Math.cos(a)*base*.28,base*R(.20,.39),Math.sin(a)*base*.28],vigor=1+.23*Math.cos(a-sectorPhase);
+  angle+=gaps[k]/total*Math.PI*2;const a=angle,start=[Math.cos(a)*base*.28,base*(cfg.type==='baobab'?R(.03,.10):R(.20,.39)),Math.sin(a)*base*.28],vigor=1+.23*Math.cos(a-sectorPhase);
   branch(start,a+R(-.20,.20),spread*R(.58,.98)*vigor,base*R(.29,.50),0);
  }
  for(let k=0;k<profile.sinkers;k++){
