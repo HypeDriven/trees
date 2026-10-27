@@ -13,3 +13,5 @@
 .project-links{display:flex;gap:16px;margin-top:12px}.project-links a{color:#647d57;text-decoration:none}.project-links a:hover{text-decoration:underline}
 
 .growth-references{display:flex;flex-direction:column;gap:8px;margin:16px 0}
+
+.fruit-panel{border-top:1px solid var(--line);margin-top:20px}.fruit-panel .botany-button{margin-top:14px}.fruit-panel #fruit-controls{margin-top:18px}@media(max-width:800px){.fruit-panel{grid-column:1/-1}}

@@ -27,14 +27,16 @@ WebGPU and WebGL2 use vein relief, tertiary venation, a fine procedural cellular
 Surface amplitudes, blade thickness, cellular pattern and roughness are illustrative estimates, not measurements or scans. Cellular structure, stomatal anatomy, physiology, root hairs, disease and complete growth histories are not modeled. The tool is not a scientifically validated digital twin. The species field notes link botanical sources and explain these limits.
 
 ## Workflow and exports
-- Whole-tree, shoot, leaf, leaf surface, wood, bark and exposed-root inspection views. Wood/bark can inspect representative trunk, branch-junction or branch sections.
+- Whole-tree, shoot, leaf, leaf surface, wood, bark, exposed-root and fruit inspection views. Wood/bark can inspect representative trunk, branch-junction or branch sections.
 - Seeded regeneration, season, crown, physical organ length and wind controls.
 - Pointer/touch orbit, zoom, auto orbit and foliage toggle.
-- JSON recipe import/export. Old recipes migrate to natural leaf lengths and receive defaults for missing study controls. Version 4 records canopy and root-system parameters. Version 5 uses the revised species architecture; version 6 adds developmental leaf sizing, continuous pine bark and winding roots; older recipes retain their parameters and regenerate with the current shape model. New recipes use the `starhermit-trees` identifier; existing `silva-tree` recipes remain importable.
+- JSON recipe import/export. Old recipes migrate to natural leaf lengths and receive defaults for missing study controls. Version 4 records canopy and root-system parameters. Version 5 uses the revised species architecture; version 6 adds developmental leaf sizing, continuous pine bark and winding roots; version 7 adds detailed reproductive structures and fruit-stage/cone-opening parameters; older recipes retain their parameters and regenerate with the current shape model. New recipes use the `starhermit-trees` identifier; existing `silva-tree` recipes remain importable.
 - ZIP with a still OBJ, MTL and recipe. OBJ includes RGB vertex colors. Procedural surface shaders and wind are not baked into OBJ; exact material appearance requires porting the shaders.
 - PNG snapshot.
 
 ## Checks
+
+- `node tests/fruit.mjs`: separate spiral scales, physical scale opening, finite scale thickness, natural organ sizes, attachment, seed pairs, capsules, bracts and staged anatomy.
 
 - `node tests/growth-bark-roots.mjs`: shoot/season-dependent leaf development, pine junction colour continuity and winding, irregular root networks.
 - `node tests/architecture.mjs`: deterministic species silhouettes, connected forks, tangent-continuous apices, crown scaling and root-contact depth precision.
@@ -81,3 +83,13 @@ Habit references: [willow](https://plants.ces.ncsu.edu/plants/salix-babylonica/)
 Development references: [Betula pendula shoot development](https://pmc.ncbi.nlm.nih.gov/articles/PMC4242242/), [Scots pine needle elongation](https://pubmed.ncbi.nlm.nih.gov/28008084/), and [Quercus robur rhythmic shoot growth](https://academic.oup.com/treephys/article-abstract/26/2/229/1676814). Mature-length ranges are constraints on expanded potential sizes, not lower limits for young expanding leaves.
 
 Pine colour now follows a common continuous height field on the trunk and branches. Plate scale, relief and roughness blend continuously toward the upper crown and fine twigs. The former whole-branch orange preset and basal whole-trunk preset are removed. This palette and its transition heights are artistic material estimates. Vertex colours carry the gradual blend into OBJ exports.
+
+## Fruit and cone detail
+
+`dist/fruit.mjs` builds Scots pine cones, English oak acorns, female willow fruiting catkins and silver birch fruiting catkins. Fruit study displays these reference structures independently of the whole-tree season or the flowers/fruit toggle. Frame fruit restores the camera; Surface detail (Scale surface for pine) focuses a small patch for close inspection. Developing, mature and seed-release stages are representative snapshots. Cone opening is an independent drying parameter, not an automatic season change.
+
+Pine cone studies have 88 individually modeled, overlapping scales in a golden-angle spiral. Each includes an inner blade, a rhombic exposed face, a transverse keel, a small blunt dorsal boss, an underside and a finite rim. Smaller basal/apical scales follow an ovoid envelope. Open cones expose internal scale blades and sample pairs of winged seeds. Geometric grooves, per-scale colour/weathering and physical-UV procedural fibres, pores, fine splits and dielectric roughness support the close-up. Whole trees use reduced tessellation and attach mature cones to older branching axes behind the terminal extension; spring terminal shoots retain the schematic pollen and seed-cone stages. No sharp protective spine is added to the Scots pine scale.
+
+Acorns have an ovoid shell, apical scar, long stalk and individual cup scales covering approximately 30% of the nut. Willow fruiting catkins have paired capsule valves, small seeds and silky hairs in the release study. Birch catkins have overlapping three-lobed bracts and two-winged nutlets; the release study partially disintegrates the bracts.
+
+References: [Scots pine cone morphology](https://www.treesandshrubsonline.org/articles/pinus/pinus-sylvestris/), [Scots pine reproductive structures](https://plants.ces.ncsu.edu/plants/pinus-sylvestris/), [English oak](https://plants.ces.ncsu.edu/plants/quercus-robur/), [weeping willow](https://plants.ces.ncsu.edu/plants/salix-babylonica/), and [silver birch](https://plants.ces.ncsu.edu/plants/betula-pendula/). Scale counts, microgeometry amplitudes, stages, tissue thickness and material coefficients are illustrative rather than calibrated botanical measurements. Separate parts intersect; this is not a watertight Boolean model, reproductive physiology simulation, or scanned anatomical specimen. OBJ includes the geometric details and vertex colours with a separate fruit material; shader microdetail is not baked into textures.
