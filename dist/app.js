@@ -1,10 +1,10 @@
-import {bipinnateCoverage} from './compound-lod.mjs?v=13';
-import {cameraDepthRange} from './camera-range.mjs?v=13';
-import {uploadGeometry} from './mesh-buffers.mjs?v=13';
-import {ROOT_PROFILES,ROOT_REFERENCE} from './roots.mjs?v=13';
-import {WOOD_NOTES} from './wood.mjs?v=13';
-import { buildSpecimen, SPECIES, ARCHITECTURE_NOTES, FOLIAGE_REFERENCES, FRUIT_NOTES } from './botany.mjs?v=13';
-import {SOUTH_AFRICAN_PRESETS,SOUTH_AFRICAN_REFERENCES} from './south-africa.mjs?v=13';
+import {bipinnateCoverage} from './compound-lod.mjs?v=14';
+import {cameraDepthRange} from './camera-range.mjs?v=14';
+import {uploadGeometry} from './mesh-buffers.mjs?v=14';
+import {ROOT_PROFILES,ROOT_REFERENCE} from './roots.mjs?v=14';
+import {WOOD_NOTES} from './wood.mjs?v=14';
+import { buildSpecimen, SPECIES, ARCHITECTURE_NOTES, FOLIAGE_REFERENCES, FRUIT_NOTES } from './botany.mjs?v=14';
+import {SOUTH_AFRICAN_PRESETS,SOUTH_AFRICAN_REFERENCES} from './south-africa.mjs?v=14';
 const SPECIES_IDS=['oak','willow','pine','birch','sweetthorn','marula','wildolive','yellowwood','baobab','fevertree','sausagetree','karee','jacaranda','monkeytail','eucalyptus'];
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const defaults={height:10,spread:1,levels:4,density:68,shoots:3,rootSpread:1,rootDepth:1.5,rootBranching:3,fineRoots:true,leafSize:.09,maturity:.65,reproductive:true,view:'tree',surfacePosition:.55,lightAngle:25,woodPart:'junction',fruitStage:'mature',coneOpening:.45,barkPosition:.44,wind:1.2,gust:.6,direction:55,seed:2847,type:'oak',season:'summer'};
@@ -38,12 +38,21 @@ struct In { @location(0) p:vec3f, @location(1) n:vec3f, @location(2) c:vec3f, @l
 struct Out { @builtin(position) p:vec4f, @location(0) world:vec3f, @location(1) n:vec3f, @location(2) c:vec3f, @location(3) kind:f32, @location(4) light:vec4f, @location(5) uv:vec2f, @location(6) wood:vec2f };
 fn windPosition(v:In)->vec3f { var p=v.p; if(v.kind>=0.0&&v.kind<1.5){let h=max(p.y-u.opts.x*.045,0.0)/(u.opts.x*.955); let t=u.eye.w;let gust=1.0+u.wind.y*(sin(t*.7)+sin(t*1.3+p.x*.2))*.5;let sway=(sin(t*1.1-p.y*.35)+.35*sin(t*2.3+p.z*.5))*u.wind.x*gust;let bend=h*h*.28*sway*select(1.0,.15,u.opts.y==13.0);p.x+=bend*cos(u.wind.z);p.z+=bend*sin(u.wind.z);if(v.kind>.5){let f=sin(t*7.0+v.phase+p.x*1.5)*v.flutter*u.opts.w*.08*u.wind.x*gust;p.y+=f;p.x+=f*.6;}}return p; }
 @vertex fn vs(v:In)->Out { var o:Out;let p=windPosition(v);o.p=u.vp*vec4f(p,1);o.world=p;o.n=v.n;o.c=v.c;o.kind=v.kind;o.light=u.light*vec4f(p,1);o.uv=v.uv;o.wood=vec2f(v.phase,v.flutter);return o; }
+fn jacarandaPinnaScale(t:f32)->f32{return (.66+.34*sin(3.14159265*t))*(1.0-.56*pow(t,1.7));}
 fn bipinnateCoverage(uv:vec2f,pairs:f32,leafletPairs:f32,terminal:bool)->f32 {
- let x=abs(uv.x-.5)*2.0;let step=.66/(pairs-1.0);let slope=select(.10,.05,terminal);let row=round((uv.y-.16-x*slope)/step);let center=.16+row*step+x*slope;
- if(uv.y>select(.95,.999,terminal)||uv.y<.03||x>.98){return 0.0;}if(x<.004){return 1.0;}
- if(terminal&&uv.y>.835&&x<.12){let z=(uv.y-.84)/.14;let cell=round(z*15.0);let dy=(z-cell/15.0)/.024;let dx=(x-.055)/.050;if(cell>=0.0&&cell<=15.0&&dx*dx+dy*dy<1.0){return 1.0;}}
+ let x=abs(uv.x-.5)*2.0;
+ if(terminal){
+  if(uv.y<.03||uv.y>.997){return 0.0;}if(x<.0035&&uv.y<.985){return 1.0;}
+  if(uv.y>=.84&&x<.13){let z=(uv.y-.84)/.145;let cell=round(z*13.0);let s=cell/13.0;let scale=(.60+.40*sin(3.14159265*s))*(1.0-.40*s*s);let dx=(x-.055*scale)/(.050*scale);let dy=(z-s)/.028;if(cell>=0.0&&cell<=13.0&&dx*dx+dy*dy<1.0){return 1.0;}}
+  let step=.66/(pairs-1.0);let row=round((uv.y-.16-x*.07)/step);if(row<0.0||row>=pairs){return 0.0;}
+  let scale=jacarandaPinnaScale(row/(pairs-1.0));let px=x/scale;let center=.16+row*step+x*.07;if(px<.94&&abs(uv.y-center)<.0015){return 1.0;}
+  let spacing=.8/(leafletPairs-1.0);let column=round((px-.10)/spacing);let s=column/(leafletPairs-1.0);let leafScale=(.62+.38*sin(3.14159265*s))*(1.0-.28*s*s);let dx=(px-(.10+column*spacing))/min(.035,spacing*.35);let dy=(abs(uv.y-center)-.015*leafScale)/(.013*leafScale);
+  return select(0.0,1.0,column>=0.0&&column<leafletPairs&&dx*dx+dy*dy<1.0);
+ }
+ let step=.66/(pairs-1.0);let row=round((uv.y-.16-x*.10)/step);let center=.16+row*step+x*.10;
+ if(uv.y>.95||uv.y<.03||x>.98){return 0.0;}if(x<.004){return 1.0;}
  if(row<0.0||row>=pairs){return 0.0;}if(x<.94&&abs(uv.y-center)<.0015){return 1.0;}
- let spacing=.8/(leafletPairs-1.0);let column=round((x-.10)/spacing);let dx=(x-(.10+column*spacing))/min(.035,spacing*.35);let dy=(abs(uv.y-center)-select(.041,.015,terminal))/select(select(.034,.0272,leafletPairs>9.0),.013,terminal);
+ let spacing=.8/(leafletPairs-1.0);let column=round((x-.10)/spacing);let dx=(x-(.10+column*spacing))/min(.035,spacing*.35);let dy=(abs(uv.y-center)-.041)/select(.034,.0272,leafletPairs>9.0);
  return select(0.0,1.0,column>=0.0&&column<leafletPairs&&dx*dx+dy*dy<1.0);
 }
 fn cardCoverage(uv:vec2f,kind:f32)->f32{let jac=kind>1.40;let fever=kind>1.30&&!jac;let pairs=select(round((kind-select(1.20,1.30,fever))*100.0),round((kind-1.40)*100.0)+6.0,jac);return bipinnateCoverage(uv,pairs,select(select(9.0,13.0,fever),16.0,jac),jac);}
@@ -195,12 +204,21 @@ vec3 fruitMaterial(vec2 p,float kind,float seed) {
 float woodSpec(vec3 n,vec3 l,vec3 v,float rough){vec3 h=normalize(l+v);float nl=max(dot(n,l),.001);float nv=max(dot(n,v),.001);float nh=max(dot(n,h),0.0);float vh=max(dot(v,h),0.0);float a=pow(clamp(rough,.2,.95),2.0);float a2=a*a;float distribution=a2/(3.14159*pow(nh*nh*(a2-1.0)+1.0,2.0));float k=pow(rough+1.0,2.0)/8.0;float geometry=nv/(nv*(1.0-k)+k)*nl/(nl*(1.0-k)+k);float fresnel=.035+.965*pow(1.0-vh,5.0);return distribution*geometry*fresnel*nl/max(4.0*nv*nl,.001);}
 
 
+float jacarandaPinnaScale(float t){return (.66+.34*sin(3.14159265*t))*(1.-.56*pow(t,1.7));}
 float bipinnateCoverage(vec2 uv,float pairs,float leafletPairs,bool terminal){
- float x=abs(uv.x-.5)*2.,step=.66/(pairs-1.),slope=terminal?.05:.10,row=floor((uv.y-.16-x*slope)/step+.5),center=.16+row*step+x*slope;
- if(uv.y>(terminal?.999:.95)||uv.y<.03||x>.98)return 0.;if(x<.004)return 1.;
- if(terminal&&uv.y>.835&&x<.12){float z=(uv.y-.84)/.14,cell=floor(z*15.+.5),dy=(z-cell/15.)/.024,dx=(x-.055)/.050;if(cell>=0.&&cell<=15.&&dx*dx+dy*dy<1.)return 1.;}
+ float x=abs(uv.x-.5)*2.;
+ if(terminal){
+  if(uv.y<.03||uv.y>.997)return 0.;if(x<.0035&&uv.y<.985)return 1.;
+  if(uv.y>=.84&&x<.13){float z=(uv.y-.84)/.145,cell=floor(z*13.+.5),s=cell/13.,scale=(.60+.40*sin(3.14159265*s))*(1.-.40*s*s),dx=(x-.055*scale)/(.050*scale),dy=(z-s)/.028;if(cell>=0.&&cell<=13.&&dx*dx+dy*dy<1.)return 1.;}
+  float step=.66/(pairs-1.),row=floor((uv.y-.16-x*.07)/step+.5);if(row<0.||row>=pairs)return 0.;
+  float scale=jacarandaPinnaScale(row/(pairs-1.)),px=x/scale,center=.16+row*step+x*.07;if(px<.94&&abs(uv.y-center)<.0015)return 1.;
+  float spacing=.8/(leafletPairs-1.),column=floor((px-.10)/spacing+.5),s=column/(leafletPairs-1.),leafScale=(.62+.38*sin(3.14159265*s))*(1.-.28*s*s),dx=(px-(.10+column*spacing))/min(.035,spacing*.35),dy=(abs(uv.y-center)-.015*leafScale)/(.013*leafScale);
+  return column>=0.&&column<leafletPairs&&dx*dx+dy*dy<1.?1.:0.;
+ }
+ float step=.66/(pairs-1.),row=floor((uv.y-.16-x*.10)/step+.5),center=.16+row*step+x*.10;
+ if(uv.y>.95||uv.y<.03||x>.98)return 0.;if(x<.004)return 1.;
  if(row<0.||row>=pairs)return 0.;if(x<.94&&abs(uv.y-center)<.0015)return 1.;
- float spacing=.8/(leafletPairs-1.),column=floor((x-.10)/spacing+.5),dx=(x-(.10+column*spacing))/min(.035,spacing*.35),dy=(abs(uv.y-center)-(terminal?.015:.041))/(terminal?.013:leafletPairs>9.?.0272:.034);
+ float spacing=.8/(leafletPairs-1.),column=floor((x-.10)/spacing+.5),dx=(x-(.10+column*spacing))/min(.035,spacing*.35),dy=(abs(uv.y-center)-.041)/(leafletPairs>9.?.0272:.034);
  return column>=0.&&column<leafletPairs&&dx*dx+dy*dy<1.?1.:0.;
 }
 float cardCoverage(vec2 uv,float kind){bool jac=kind>1.40,fever=kind>1.30&&!jac;float pairs=jac?round((kind-1.40)*100.)+6.:round((kind-(fever?1.30:1.20))*100.);return bipinnateCoverage(uv,pairs,jac?16.:fever?13.:9.,jac);}
@@ -224,12 +242,21 @@ float hX=dFdx(heightField),hY=dFdy(heightField);if(vKind<.13||(vKind>.315&&vKind
 vec3 c=base*(.4+.72*max(nd,0.)*(.25+.75*visibility));if(vKind>.5&&vKind<1.5){c+=base*vec3(.8,1.05,.45)*pow(max(-nd,0.),1.5)*.44*visibility;c*=.68+.32*smoothstep(1.,height,vWorld.y);vec3 view=normalize(eye.xyz-vWorld);vec3 halfway=normalize(view+sun);float nV=max(dot(n,view),.001),nL=max(dot(n,sun),.001),nH=max(dot(n,halfway),0.),vH=max(dot(view,halfway),0.),alpha=pow(clamp(wax,.18,.8),2.),a2=alpha*alpha,distribution=a2/(3.14159*pow(nH*nH*(a2-1.)+1.,2.)),k=pow(wax+1.,2.)/8.,geometry=nV/(nV*(1.-k)+k)*nL/(nL*(1.-k)+k),fresnel=.035+.965*pow(1.-vH,5.),spec=distribution*geometry*fresnel/max(4.*nV*nL,.001);c+=vec3(1.,.96,.86)*spec*nL*visibility*.85;}if(vKind>1.5){float r=length(vWorld.xz);c=base*(.83+.17*visibility)*(1.-.3*exp(-r*r*.8));float a=1.-smoothstep(0.,.025,abs(fract(vWorld.x*.25+.5)-.5));float b=1.-smoothstep(0.,.025,abs(fract(vWorld.z*.25+.5)-.5));c-=vec3(.013)*(a+b)*exp(-r*.055);}if(vKind<.13||(vKind>.315&&vKind<.45))c+=vec3(.96,.93,.86)*woodSpec(n,sun,normalize(eye.xyz-vWorld),wax)*visibility;c=mix(c,vec3(.81,.84,.76),1.-exp(-length(vWorld-eye.xyz)*.008));outColor=vec4(pow(max(c,vec3(0)),vec3(1./2.2)),1);}`;
 const depthFS=`#version 300 es
 precision highp float;in vec2 vUV;in float vKind;
+float jacarandaPinnaScale(float t){return (.66+.34*sin(3.14159265*t))*(1.-.56*pow(t,1.7));}
 float bipinnateCoverage(vec2 uv,float pairs,float leafletPairs,bool terminal){
- float x=abs(uv.x-.5)*2.,step=.66/(pairs-1.),slope=terminal?.05:.10,row=floor((uv.y-.16-x*slope)/step+.5),center=.16+row*step+x*slope;
- if(uv.y>(terminal?.999:.95)||uv.y<.03||x>.98)return 0.;if(x<.004)return 1.;
- if(terminal&&uv.y>.835&&x<.12){float z=(uv.y-.84)/.14,cell=floor(z*15.+.5),dy=(z-cell/15.)/.024,dx=(x-.055)/.050;if(cell>=0.&&cell<=15.&&dx*dx+dy*dy<1.)return 1.;}
+ float x=abs(uv.x-.5)*2.;
+ if(terminal){
+  if(uv.y<.03||uv.y>.997)return 0.;if(x<.0035&&uv.y<.985)return 1.;
+  if(uv.y>=.84&&x<.13){float z=(uv.y-.84)/.145,cell=floor(z*13.+.5),s=cell/13.,scale=(.60+.40*sin(3.14159265*s))*(1.-.40*s*s),dx=(x-.055*scale)/(.050*scale),dy=(z-s)/.028;if(cell>=0.&&cell<=13.&&dx*dx+dy*dy<1.)return 1.;}
+  float step=.66/(pairs-1.),row=floor((uv.y-.16-x*.07)/step+.5);if(row<0.||row>=pairs)return 0.;
+  float scale=jacarandaPinnaScale(row/(pairs-1.)),px=x/scale,center=.16+row*step+x*.07;if(px<.94&&abs(uv.y-center)<.0015)return 1.;
+  float spacing=.8/(leafletPairs-1.),column=floor((px-.10)/spacing+.5),s=column/(leafletPairs-1.),leafScale=(.62+.38*sin(3.14159265*s))*(1.-.28*s*s),dx=(px-(.10+column*spacing))/min(.035,spacing*.35),dy=(abs(uv.y-center)-.015*leafScale)/(.013*leafScale);
+  return column>=0.&&column<leafletPairs&&dx*dx+dy*dy<1.?1.:0.;
+ }
+ float step=.66/(pairs-1.),row=floor((uv.y-.16-x*.10)/step+.5),center=.16+row*step+x*.10;
+ if(uv.y>.95||uv.y<.03||x>.98)return 0.;if(x<.004)return 1.;
  if(row<0.||row>=pairs)return 0.;if(x<.94&&abs(uv.y-center)<.0015)return 1.;
- float spacing=.8/(leafletPairs-1.),column=floor((x-.10)/spacing+.5),dx=(x-(.10+column*spacing))/min(.035,spacing*.35),dy=(abs(uv.y-center)-(terminal?.015:.041))/(terminal?.013:leafletPairs>9.?.0272:.034);
+ float spacing=.8/(leafletPairs-1.),column=floor((x-.10)/spacing+.5),dx=(x-(.10+column*spacing))/min(.035,spacing*.35),dy=(abs(uv.y-center)-.041)/(leafletPairs>9.?.0272:.034);
  return column>=0.&&column<leafletPairs&&dx*dx+dy*dy<1.?1.:0.;
 }
 float cardCoverage(vec2 uv,float kind){bool jac=kind>1.40,fever=kind>1.30&&!jac;float pairs=jac?round((kind-1.40)*100.)+6.:round((kind-(fever?1.30:1.20))*100.);return bipinnateCoverage(uv,pairs,jac?16.:fever?13.:9.,jac);}

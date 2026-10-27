@@ -1,10 +1,11 @@
-import {buildGardenFlowers} from './garden-flowers.mjs?v=13';
-import {SOUTH_AFRICAN_SPECIES} from './south-africa.mjs?v=13';
-import {buildFruit,FRUIT_NOTES} from './fruit.mjs?v=13';
-import {shootGrowth,leafDevelopment,FOLIAGE_REFERENCES} from './foliage-growth.mjs?v=13';
-import {buildTreeArchitecture,ARCHITECTURE_NOTES} from './architecture.mjs?v=13';
-import {woodTube,woodRadius} from './wood.mjs?v=13';
-import {buildRootSystem,ROOT_PROFILES} from './roots.mjs?v=13';
+import {jacarandaPinnaScale} from './compound-lod.mjs?v=14';
+import {buildGardenFlowers} from './garden-flowers.mjs?v=14';
+import {SOUTH_AFRICAN_SPECIES} from './south-africa.mjs?v=14';
+import {buildFruit,FRUIT_NOTES} from './fruit.mjs?v=14';
+import {shootGrowth,leafDevelopment,FOLIAGE_REFERENCES} from './foliage-growth.mjs?v=14';
+import {buildTreeArchitecture,ARCHITECTURE_NOTES} from './architecture.mjs?v=14';
+import {woodTube,woodRadius} from './wood.mjs?v=14';
+import {buildRootSystem,ROOT_PROFILES} from './roots.mjs?v=14';
 // All geometry uses metres. Traits are a morphological model, not a growth simulator.
 export {ARCHITECTURE_NOTES,FOLIAGE_REFERENCES,FRUIT_NOTES};
 export const SPECIES = {
@@ -24,7 +25,7 @@ export function bladeWidth(type,t,side=1){
   const lobes=.72+.28*Math.cos((t-.08)*Math.PI*10+side*.14);
   return envelope*lobes+.24*Math.exp(-Math.pow((t-.055)/.035,2));
  }
- if(type==='jacaranda')return Math.pow(Math.sin(Math.PI*Math.pow(t,.88)),.70);
+ if(type==='jacaranda')return Math.pow(Math.sin(Math.PI*Math.pow(t,.84)),.82)*(t>.76?Math.pow((1-t)/.24,.30):1);
  if(type==='monkeytail')return t<.82?(.88+.12*Math.sin(t*Math.PI))*(1+.015*Math.sin(t*150)):Math.pow((1-t)/.18,.70);
  if(type==='eucalyptus')return Math.pow(Math.sin(Math.PI*Math.pow(t,.85)),.92);
  if(type==='fevertree')return Math.pow(Math.sin(Math.PI*t),.43)*(1-.08*t);
@@ -67,10 +68,10 @@ export function buildSpecimen(cfg,{hidden=false,preview=true}={}){
   let outline=[];for(let j=0;j<=rows;j+=fine?2:1)outline.push(point(j/rows,-1));for(let j=rows;j>=0;j-=fine?2:1)outline.push(point(j/rows,1));let veins=[];if(fine){veins.push(Array.from({length:25},(_,j)=>point(j/24,0)));for(let k=1;k<=sp.veins;k++){let t=.08+k/(sp.veins+1)*.72;for(let sign of [-1,1])veins.push(Array.from({length:9},(_,j)=>point(Math.min(.98,t+j/8*.16),sign*j/8)))}}m.preview.push({pts:outline,n:up,c:col,kind,phase,veins,size:len});leaves++;stats.leafLengths.push(len);
  }
  function compoundCard(p,axis,len,phase,pairs){
-  let [side,up]=frame(axis);const roll=R(-1.05,1.05),old=side;side=add(mul(side,Math.cos(roll)),mul(up,Math.sin(roll)));up=add(mul(up,Math.cos(roll)),mul(old,-Math.sin(roll)));const L=len*(cfg.type==='jacaranda'?40:16),W=len*(cfg.type==='jacaranda'?10:5.5),col=(cfg.season==='autumn'?sp.fall:sp.leafColor).map(c=>c*R(.93,1.07)),kind=cfg.type==='jacaranda'?1.40+(pairs-6)*.01:(cfg.type==='fevertree'?1.30:1.20)+pairs*.01;
+  let [side,up]=frame(axis);const roll=R(-1.05,1.05),old=side;side=add(mul(side,Math.cos(roll)),mul(up,Math.sin(roll)));up=add(mul(up,Math.cos(roll)),mul(old,-Math.sin(roll)));const L=len*(cfg.type==='jacaranda'?40:16),W=len*(cfg.type==='jacaranda'?12:5.5),col=(cfg.season==='autumn'?sp.fall:sp.leafColor).map(c=>c*R(.93,1.07)),kind=cfg.type==='jacaranda'?1.40+(pairs-6)*.01:(cfg.type==='fevertree'?1.30:1.20)+pairs*.01;
   const point=(t,x)=>add(add(p,mul(axis,L*t)),add(mul(side,x*W),mul(up,L*.10*Math.sin(t*Math.PI)*x*x))),uv=[[0,0],[0,1],[1,0],[1,1]],pts=uv.map(([x,t])=>point(t,x*2-1));
   for(const i of [0,2,1,2,3,1])m.v(pts[i],up,col,kind,phase,uv[i][1]*L/cfg.leafSize,uv[i]);
-  if(preview)for(let j=0;j<pairs;j++)for(const hand of [-1,1]){const t=.16+j*.66/(pairs-1),outline=[point(t,hand*.025),point(t-.04,hand*.6),point(t+.10,hand*.97),point(t+.15,hand*.6)];m.preview.push({pts:outline,n:up,c:col,kind:1,phase,size:len});}
+  if(preview){for(let j=0;j<pairs;j++)for(const hand of [-1,1]){const t=.16+j*.66/(pairs-1),scale=cfg.type==='jacaranda'?jacarandaPinnaScale(j/(pairs-1)):1,outline=cfg.type==='jacaranda'?[point(t,hand*.025),point(t-.025,hand*.48*scale),point(t+.07*scale,hand*.94*scale),point(t+.035+.07*scale,hand*.48*scale)]:[point(t,hand*.025),point(t-.04,hand*.6),point(t+.10,hand*.97),point(t+.15,hand*.6)];m.preview.push({pts:outline,n:up,c:col,kind:1,phase,size:len});}if(cfg.type==='jacaranda')m.preview.push({pts:[point(.84,0),point(.90,-.075),point(.997,0),point(.90,.075)],n:up,c:col,kind:1,phase,size:len});}
   const count=sp.terminalPinna?(pairs*2+1)*(2*sp.cardLeafletPairs+1):pairs*4*(sp.cardLeafletPairs??9);leaves+=count;stats.leafLengths.push(len);stats.compoundLeaves++;stats.pinnae+=pairs*2+(sp.terminalPinna?1:0);stats.compoundRecords.push({length:L,pinnae:pairs*2+(sp.terminalPinna?1:0),leaflets:count,leafletPairs:sp.cardLeafletPairs??9,pairs,terminalLeaflet:false,lod:'cutout'});
  }
  function radialLeaf(p,axis,len,phase,expansion){
@@ -83,15 +84,17 @@ export function buildSpecimen(cfg,{hidden=false,preview=true}={}){
  function compoundLeaf(p,axis,len,phase,expansion=1){
   if(['palmate','trifoliate'].includes(sp.compound)){radialLeaf(p,axis,len,phase,expansion);return;}
   if(!fine&&sp.compound==='bipinnate'){compoundCard(p,axis,len,phase,Math.floor(R(...(sp.pinnaPairs?[sp.pinnaPairs[0],sp.pinnaPairs[1]+1]:[3,6]))));return;}
-  let [side,up]=frame(axis);const roll=R(cfg.view==='leaf'?-.15:-.95,cfg.view==='leaf'?.15:.95),old=side;side=add(mul(side,Math.cos(roll)),mul(up,Math.sin(roll)));up=add(mul(up,Math.cos(roll)),mul(old,-Math.sin(roll)));const bipinnate=sp.compound==='bipinnate',pairs=bipinnate?Math.floor(R(...(sp.pinnaPairs?[sp.pinnaPairs[0],sp.pinnaPairs[1]+1]:[3,5]))):Math.floor(R(...(sp.leafPairs?[sp.leafPairs[0],sp.leafPairs[1]+1]:[4,7]))),L=bipinnate?len*(cfg.type==='jacaranda'?32:16):cfg.type==='sausagetree'?Math.max(.18,Math.min(.50,len*3.8)):Math.max(.09,Math.min(.25,len*4.7)),start=add(p,mul(axis,L*.10)),end=add(p,mul(axis,L)),before=leaves;
+  let [side,up]=frame(axis);const roll=R(cfg.view==='leaf'?-.15:-.95,cfg.view==='leaf'?.15:.95),old=side;side=add(mul(side,Math.cos(roll)),mul(up,Math.sin(roll)));up=add(mul(up,Math.cos(roll)),mul(old,-Math.sin(roll)));const bipinnate=sp.compound==='bipinnate',pairs=bipinnate?Math.floor(R(...(sp.pinnaPairs?[sp.pinnaPairs[0],sp.pinnaPairs[1]+1]:[3,5]))):Math.floor(R(...(sp.leafPairs?[sp.leafPairs[0],sp.leafPairs[1]+1]:[4,7]))),L=bipinnate?len*(cfg.type==='jacaranda'?40:16):cfg.type==='sausagetree'?Math.max(.18,Math.min(.50,len*3.8)):Math.max(.09,Math.min(.25,len*4.7)),start=add(p,mul(axis,L*.10)),end=add(p,mul(axis,L*(cfg.type==='jacaranda'?.84:1))),before=leaves;
   const stem=(a,b,r)=>fine?tube([a,b],r,r*.55,sp.twig,.2,5):petioleRibbon(a,b,r,sp.twig);
-  stem(p,end,bipinnate?.00025:.0006);petioles++;stats.petioleLengths.push((sp.petiole[0]+sp.petiole[1])*.5);let pinnae=0;
+  stem(p,end,bipinnate?.00025:.0006);petioles++;stats.petioleLengths.push((sp.petiole[0]+sp.petiole[1])*.5);let pinnae=0,pinnaRecords=[];
   for(let k=0;k<pairs+(sp.terminalPinna?1:0);k++){
-   const terminalPinna=!!sp.terminalPinna&&k===pairs,t=.15+.85*k/Math.max(1,pairs-1),q=terminalPinna?end:mix(start,end,t);
+   const jac=cfg.type==='jacaranda',terminalPinna=!!sp.terminalPinna&&k===pairs,position=k/Math.max(1,pairs-1),t=.15+.85*position,q=terminalPinna?end:jac?add(p,mul(axis,L*(.16+.66*position))):mix(start,end,t);
    for(let sign of (terminalPinna?[1]:[-1,1])){
-    const d=terminalPinna?axis:norm(add(mul(side,sign),mul(axis,.22))),size=len*(.80+.20*Math.sin(Math.PI*(k+.5)/pairs));
-    if(bipinnate){const PL=len*(cfg.type==='jacaranda'?10:5)*(.88+.12*Math.sin(k)),tip=add(q,mul(d,PL)),lp=Math.floor(R(...(sp.leafletPairs?[sp.leafletPairs[0],sp.leafletPairs[1]+1]:[7,11])));stem(q,tip,.00016);pinnae++;
-     for(let j=0;j<lp;j++)for(let hand of [-1,1]){const pos=mix(q,tip,.13+.83*j/(lp-1)),leafAxis=norm(add(mul(terminalPinna?side:axis,hand),mul(d,.18))),leafLen=Math.max(sp.leaf[0]*expansion,Math.min(sp.leaf[1]*expansion,size*(.92+.08*Math.sin(j))));lamina(pos,leafAxis,leafLen,phase+k*.7+j*.13,1,expansion,true,up);}
+    const d=terminalPinna?axis:norm(add(mul(side,sign),mul(axis,jac?.28+.28*position:.22))),size=len*(.80+.20*Math.sin(Math.PI*(k+.5)/pairs));
+    if(bipinnate){const PL=jac?(terminalPinna?L*.16:len*12*jacarandaPinnaScale(position)*R(.96,1.04)):len*5*(.88+.12*Math.sin(k)),pinnaAt=s=>add(q,add(mul(d,PL*s),mul(axis,jac?PL*.08*Math.sin(Math.PI*s):0))),tip=pinnaAt(1),lp=jac?Math.max(7,Math.min(20,Math.round(9+11*(terminalPinna?.55:jacarandaPinnaScale(position))))):Math.floor(R(...(sp.leafletPairs?[sp.leafletPairs[0],sp.leafletPairs[1]+1]:[7,11]))),pinnaSide=norm(cross(d,up));
+     if(jac&&fine)tube(Array.from({length:6},(_,j)=>pinnaAt(j/5)),.00016,.00008,sp.twig,.2,5);else stem(q,tip,.00016);pinnae++;
+     if(jac)pinnaRecords.push({position:terminalPinna?1:position,length:PL,leafletPairs:lp,terminal:terminalPinna,start:q,tip});
+     for(let j=0;j<lp;j++)for(let hand of [-1,1]){const s=jac?.10+.84*j/(lp-1):.13+.83*j/(lp-1),pos=pinnaAt(s+(jac?hand*.003:0)),leafAxis=jac?norm(add(mul(pinnaSide,hand),mul(d,.18+.15*s))):norm(add(mul(axis,hand),mul(d,.18))),taper=jac?(.60+.40*Math.sin(Math.PI*s))*(1-.35*s*s):1,leafLen=Math.max(sp.leaf[0]*expansion,Math.min(sp.leaf[1]*expansion,size*(.92+.08*Math.sin(j))*taper));lamina(pos,leafAxis,leafLen,phase+k*.7+j*.13,1,expansion,true,up);}
      if(sp.terminalPinna)lamina(tip,d,Math.max(sp.leaf[0]*expansion,len*.78),phase+k,1,expansion,true,up);
      // Petiolar/pinna glands are represented in the close organ study.
      if(fine&&!sp.terminalPinna)solid(add(q,mul(up,.0002)),up,.00045,.00024,[.18,.24,.07],.3);
@@ -99,7 +102,7 @@ export function buildSpecimen(cfg,{hidden=false,preview=true}={}){
    }
   }
   if(!bipinnate)lamina(end,axis,len,phase+4,1,expansion,true,up);
-  stats.compoundLeaves++;stats.pinnae+=pinnae;stats.compoundRecords.push({length:L,pinnae,leaflets:leaves-before,pairs,terminalLeaflet:!bipinnate});
+  stats.compoundLeaves++;stats.pinnae+=pinnae;stats.compoundRecords.push({length:L,pinnae,leaflets:leaves-before,pairs,terminalLeaflet:!bipinnate,...(cfg.type==='jacaranda'?{pinnaRecords}:{} )});
  }
  function leafOrgan(base,ax,len,phase,expansion=1){
   if(sp.compound){compoundLeaf(base,ax,len,phase,expansion);return;}

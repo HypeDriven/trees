@@ -9,10 +9,17 @@ const build=(type,view,changes={})=>buildSpecimen({...GARDEN_PRESETS[type],seaso
 const jac=build('jacaranda','leaf'),leaf=jac.stats.compoundRecords[0];
 assert.equal(leaf.pinnae,leaf.pairs*2+1,'Jacaranda requires an unpaired terminal pinna');
 assert.equal(jac.stats.spinePairs,0);
+const lateralPinnae=leaf.pinnaRecords.filter(p=>!p.terminal),middle=lateralPinnae.filter(p=>p.position>.25&&p.position<.5),distal=lateralPinnae.filter(p=>p.position>.9);
+for(let i=0;i<lateralPinnae.length;i+=2)assert.equal(lateralPinnae[i].leafletPairs,lateralPinnae[i+1].leafletPairs,'Paired pinnae should have correlated leaflet counts');
+assert(Math.max(...distal.map(p=>p.length))<Math.min(...middle.map(p=>p.length))*.5,'Distal pinnae must taper the full compound leaf');
+assert(jac.stats.leafLengths.some(l=>l<.004)&&jac.stats.leafLengths.some(l=>l>.006),'Pinnules should vary within the natural range');
+const maskWidth=(lo,hi)=>{let width=0;for(let y=lo;y<hi;y+=.001)for(let x=.5;x<1;x+=.001)if(bipinnateCoverage(x,y,12,16,true))width=Math.max(width,(x-.5)*2);return width;};
+assert(maskWidth(.76,.89)<maskWidth(.34,.55)*.65,'Whole-tree and exported masks must have a tapered apex, not a rectangular ladder');
+
 let terminalZ=[];
-for(let i=0;i<jac.vertices.length;i+=14)if(jac.vertices[i+1]>leaf.length+.015&&jac.vertices[i+9]>.9)terminalZ.push(jac.vertices[i+2]);
+for(let i=0;i<jac.vertices.length;i+=14)if(jac.vertices[i+1]>leaf.length*.86&&jac.vertices[i+1]<leaf.length*.97&&jac.vertices[i+9]>.9)terminalZ.push(jac.vertices[i+2]);
 assert(Math.max(...terminalZ)-Math.min(...terminalZ)>.006,'Terminal pinna needs spreading lateral leaflets, not an axial spike');
-assert(bipinnateCoverage(.527,.923,12,16,true)>bipinnateCoverage(.527,.923,12,16,false),'Cutout geometry must also resolve the terminal pinna');
+assert(maskWidth(.9,.98)>.025,'Cutout geometry must resolve the terminal pinna');
 const spring=build('jacaranda','shoot',{season:'spring'}),summer=build('jacaranda','shoot');
 assert(spring.stats.flowers>0&&summer.stats.flowers===0);
 assert(summer.stats.oppositePairs.length>0);assert.equal(summer.stats.compoundLeaves,summer.stats.oppositePairs.length*2);
