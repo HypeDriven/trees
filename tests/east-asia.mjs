@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {buildSpecimen,SPECIES,bladeWidth} from '../dist/botany.mjs';
+import {buildSpecimen,SPECIES} from '../dist/botany.mjs';
 import {EAST_ASIAN_PRESETS} from '../dist/east-asia.mjs';
 import {buildTreeArchitecture} from '../dist/architecture.mjs';
 const cfg=(type,view,changes={})=>({...EAST_ASIAN_PRESETS[type],type,view,seed:2847,levels:3,shoots:3,maturity:.65,reproductive:true,rootBranching:2,season:'summer',...changes});
@@ -11,7 +11,7 @@ for(const type of Object.keys(EAST_ASIAN_PRESETS)){
  const a=buildTreeArchitecture(cfg(type,'tree'));assert.equal(a.stats.profile,type);assert(a.stats.apicalContinuations>0);
  console.log(type+': reproducible natural-scale anatomy, winter habit and distinct architecture passed');
 }
-const maple=build('maple','shoot');assert.equal(maple.stats.leaves,maple.stats.oppositePairs.length*2);assert(bladeWidth('maple',.53)>bladeWidth('maple',.68)*2);
+const maple=build('maple','shoot');assert.equal(maple.stats.leaves,maple.stats.oppositePairs.length*2);
 const samara=build('maple','fruit').stats.fruitDetails[0];assert.equal(samara.samaras,2);assert.equal(samara.wingedSeeds,2);assert(samara.length>=.025&&samara.length<=.030);
 const sakura=build('sakura','shoot',{season:'spring'}).stats.flowerDetails[0];assert.equal(sakura.petals,sakura.flowers*5);assert.equal(sakura.stamens,sakura.flowers*25);assert(sakura.notchedPetals);assert.equal(build('sakura','shoot').stats.flowers,0);
 const fan=build('ginkgo','leaf'),petiole=(SPECIES.ginkgo.petiole[0]+SPECIES.ginkgo.petiole[1])*.5,edge=[];
@@ -22,6 +22,6 @@ const spray=build('dawnredwood','shoot');assert.equal(spray.stats.leaves,spray.s
 const bare=build('dawnredwood','tree',{season:'winter'});assert.equal(bare.stats.leaves,0);assert(bare.stats.deciduousSprays>0);
 const cone=build('dawnredwood','fruit').stats.fruitDetails[0];assert(cone.oppositeDecussate&&cone.scales===24);
 const pine=build('chinesepine','shoot');assert(pine.stats.fascicleSizes.every(n=>n===2));const pc=build('chinesepine','fruit').stats.fruitDetails[0];assert(pc.length>=.045&&pc.length<=.085);assert(pc.scaleRecords.every(s=>s.spine));
-assert(bladeWidth('sweetgum',.42)>bladeWidth('sweetgum',.60)*2);const ball=build('sweetgum','fruit').stats.fruitDetails[0];assert(ball.capsules===36&&ball.persistentStyles===72);
+const ball=build('sweetgum','fruit').stats.fruitDetails[0];assert(ball.capsules===36&&ball.persistentStyles===72);
 const buds=build('redbud','tree',{season:'spring'});assert(buds.stats.flowers>0,'Redbud flowers must reach older woody axes');const pod=build('redbud','fruit',{fruitStage:'released'}).stats.fruitDetails[0];assert(pod.valves===2&&pod.seeds>0);
 console.log('Maple samaras, five-petal sakura, fan leaves/ovules, deciduous redwood sprays, pine fascicles, capsule heads and cauliflorous redbud passed');

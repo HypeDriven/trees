@@ -38,8 +38,20 @@ export function bipinnateCoverage(x,y,pairs=4,leafletPairs=9,terminal=false){
 
 // Opposite simple leaves on a deciduous branchlet: not a compound leaf.
 export function redwoodSprayCoverage(x,y){
- const u=Math.abs(x-.5)*2,step=.84/31,row=Math.round((y-.08-u*.03)/step),center=.08+row*step+u*.03;
- if(y<.035||y>.985)return 0;if(u<.006&&y<.95)return 1;if(row<0||row>31)return 0;
- const scale=bipinnatePinnaScale(row/31,true),s=u/scale,width=.0065*Math.pow(Math.max(0,Math.sin(Math.PI*s)),.55)*(1-.18*s);
+ const u=Math.abs(x-.5)*2,step=.74/23,row=Math.round((y-.08-u*.12)/step),center=.08+row*step+u*.12;
+ if(y<.035||y>.985)return 0;if(u<.006&&y<.95)return 1;if(row<0||row>23)return 0;
+ const scale=bipinnatePinnaScale(row/23,true),s=u/scale,width=.013*Math.pow(Math.max(0,Math.sin(Math.PI*s)),.55)*(1-.18*s);
  return s>=.02&&s<.96&&Math.abs(y-center)<width?1:0;
+}
+
+// Twelve two-needle fascicles projected onto one cohort card. Distances are
+// fractions of needle length, so the silhouettes remain about 1.2 mm wide
+// for a 100 mm needle. A crossed pair of cards represents twenty-four fascicles.
+export function pineSprayCoverage(x,y){
+ const p=[(x-.5)*2*.85,y*1.8];
+ for(let j=0;j<12;j++)for(let k=0;k<2;k++){
+  const sign=j%2?1:-1,a=[0,(.05+j*.032)*1.8],b=[sign*(.60+k*.035),a[1]+.75+k*.04],d=b.map((v,i)=>v-a[i]),q=p.map((v,i)=>v-a[i]),t=Math.max(0,Math.min(1,(q[0]*d[0]+q[1]*d[1])/(d[0]*d[0]+d[1]*d[1]))),width=.006*(1-.8*Math.pow(t,8));
+  if(Math.hypot(q[0]-d[0]*t,q[1]-d[1]*t)<width)return 1;
+ }
+ return 0;
 }

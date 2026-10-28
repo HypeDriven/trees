@@ -24,13 +24,13 @@ export function buildEastAsianOrgan(mesh,cfg,{mode='fruit',base=[0,0,0],axis=[0,
    const count=fine?5:4,top=add(base,mul(d,.004));rod(base,top,.00065);
    for(let k=0;k<count;k++){const a=k*GOLD,q=add(top,add(mul(u,Math.cos(a)*.015),mul(v,Math.sin(a)*.015))),face=norm(add(mul(d,.25),add(mul(u,Math.cos(a)*.6),mul(v,Math.sin(a)*.6)))),[a0,b0]=frame(face);rod(top,q,.00045,[.43,.23,.16]);
     if(!fine){
-     for(let j=0;j<5;j++){const theta=j*TAU/5,outward=add(mul(a0,Math.cos(theta)),mul(b0,Math.sin(theta))),side=norm(cross(face,outward)),L=.014,ps=[q,add(q,add(mul(outward,L*.55),mul(side,-L*.45))),add(q,mul(outward,L)),add(q,add(mul(outward,L*.55),mul(side,L*.45)))];for(const n of[0,1,2,0,2,3])mesh.v(ps[n],face,[.94,.60,.73],.305,seed*.013,0,[n%2*.01,n>1?.014:0]);}
-     mesh.preview.push({pts:Array.from({length:10},(_,i)=>{const a=i*Math.PI/5,r=i%2?.006:.014;return add(q,add(mul(a0,Math.cos(a)*r),mul(b0,Math.sin(a)*r)));}),n:face,c:[.94,.60,.73],kind:.305,phase:0});
+     for(let j=0;j<5;j++){const theta=j*TAU/5,outward=add(mul(a0,Math.cos(theta)),mul(b0,Math.sin(theta))),side=norm(cross(face,outward)),L=.014,ps=[q,add(q,add(mul(outward,L*.55),mul(side,-L*.45))),add(q,mul(outward,L)),add(q,add(mul(outward,L*.55),mul(side,L*.45)))];for(const n of[0,1,2,0,2,3])mesh.v(ps[n],face,[.92,.78,.81],.305,seed*.013,0,[n%2*.01,n>1?.014:0]);}
+     mesh.preview.push({pts:Array.from({length:10},(_,i)=>{const a=i*Math.PI/5,r=i%2?.006:.014;return add(q,add(mul(a0,Math.cos(a)*r),mul(b0,Math.sin(a)*r)));}),n:face,c:[.92,.78,.81],kind:.305,phase:0});
      const r=.0017,ps=[add(q,mul(a0,r)),add(q,add(mul(a0,-r),mul(b0,r))),add(q,add(mul(a0,-r),mul(b0,-r)))];for(const p of ps)mesh.v(p,face,[.70,.50,.20],.3,0,0,[0,0]);out.petals+=5;out.flowers++;continue;
     }
 
     seedBody(add(q,mul(face,-.003)),face,.004,.0023,[.45,.23,.19],.3);
-    for(let j=0;j<5;j++){const theta=j*TAU/5,outward=add(mul(a0,Math.cos(theta)),mul(b0,Math.sin(theta))),side=norm(cross(face,outward)),L=R(k*9+j,.012,.016);petal(q,outward,side,L,L*.48,(t)=>[.88,.60+.20*t,.66+.17*t],true);out.petals++;petal(add(q,mul(face,-.001)),outward,side,.004,.001,[.30,.36,.13]);}
+    for(let j=0;j<5;j++){const theta=j*TAU/5,outward=add(mul(a0,Math.cos(theta)),mul(b0,Math.sin(theta))),side=norm(cross(face,outward)),L=R(k*9+j,.012,.016);petal(q,outward,side,L,L*.48,(t)=>[.92,.73+.15*t,.76+.13*t],true);out.petals++;petal(add(q,mul(face,-.001)),outward,side,.004,.001,[.30,.36,.13]);}
     for(let j=0;j<(fine?25:8);j++){const theta=j*GOLD,tip=add(q,add(mul(face,.0055),add(mul(a0,Math.cos(theta)*.0034),mul(b0,Math.sin(theta)*.0034))));rod(q,tip,.000055,[.77,.64,.40],.3);if(fine)seedBody(tip,face,.00065,.00025,[.72,.51,.17],.3);out.stamens++;}
     rod(q,add(q,mul(face,.0068)),.00014,[.57,.64,.27],.3);out.flowers++;
    }
@@ -66,9 +66,9 @@ export function buildEastAsianOrgan(mesh,cfg,{mode='fruit',base=[0,0,0],axis=[0,
   if(released)for(let k=0;k<8;k++){const q=add(center(.1+.8*k/7),mul(v,-.0015));seedBody(q,d,.005,.0018,[.21,.13,.065]);out.seeds++;}out.valves=2;out.length=L;out.sutures=2;focus=add(center(.5),mul(v,gap+.0009));
  }else if(type==='dawnredwood'){
   const L=R(1,.018,.025)*(young?.7:1),radius=L*.41,p=add(base,mul(d,.025)),opening=released?.004:.0008;rod(base,p,.0008);seedBody(p,d,L,radius*.78,[.25,.16,.09],.32);
-  const layers=fine?6:4;for(let row=0;row<layers;row++)for(let hand=0;hand<4;hand++){
-   const t=.12+.76*row/(layers-1),a=hand*TAU/4+(row%2)*Math.PI/4,radial=add(mul(u,Math.cos(a)),mul(v,Math.sin(a))),side=add(mul(u,-Math.sin(a)),mul(v,Math.cos(a))),r=radius*Math.sin(Math.PI*t)+opening,q=add(p,add(mul(d,L*t),mul(radial,r)));
-   patch((s,x)=>{const yy=(s-.5)*L*.22,xx=x*L*.20*Math.pow(Math.sin(Math.PI*s),.40),depression=-.0011*Math.exp(-Math.pow(x/.5,2)-Math.pow((s-.5)/.25,2)),lip=.00035*Math.sin(s*9+x*4);return add(q,add(mul(d,yy),add(mul(side,xx),mul(radial,depression+lip))));},fine?20:3,fine?16:3,young?[.30,.36,.13]:[.36,.23,.13],.32,fine?.00045:.00025,[L*.4,L*.22]);out.scales++;if(row===3&&hand===0)focus=q;
+  const layers=fine?12:8;for(let row=0;row<layers;row++)for(let hand=0;hand<2;hand++){
+   const t=.12+.76*row/(layers-1),a=hand*Math.PI+(row%2)*Math.PI/2,radial=add(mul(u,Math.cos(a)),mul(v,Math.sin(a))),side=add(mul(u,-Math.sin(a)),mul(v,Math.cos(a))),r=radius*Math.sin(Math.PI*t)+opening,q=add(p,add(mul(d,L*t),mul(radial,r)));
+   patch((s,x)=>{const yy=(s-.5)*L*.17,angle=x*.88*Math.pow(Math.sin(Math.PI*s),.32),depression=-.00075*Math.exp(-Math.pow(x/.5,2)-Math.pow((s-.5)/.25,2)),lip=.00020*Math.sin(s*9+x*4);return add(q,add(mul(d,yy),add(mul(side,Math.sin(angle)*r),mul(radial,(Math.cos(angle)-1)*r+depression+lip))));},fine?20:3,fine?16:3,young?[.30,.36,.13]:[.36,.23,.13],.32,fine?.00045:.00025,[L*.4,L*.22]);out.scales++;out.scaleRecords.push({pair:row,hand,azimuth:a,height:t,peltate:true});if(row===5&&hand===0)focus=q;
   }out.length=L;out.oppositeDecussate=true;out.opening=released?1:0;if(released){out.wingedSeeds=4;for(let k=0;k<4;k++)wingedSeed(add(p,add(mul(d,L*(.30+.12*k)),add(mul(v,radius+opening*.75),mul(u,(k-1.5)*.002)))),d,.004,.0014);}
  }else if(type==='sweetgum'){
   const D=R(1,.022,.030)*(young?.7:1),radius=D*.38,p=add(base,mul(d,.035));rod(base,p,.00085);seedBody(p,d,D,radius,young?[.29,.36,.12]:[.29,.20,.12]);const center=add(p,mul(d,D*.5)),count=fine?36:14;

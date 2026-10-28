@@ -12,11 +12,11 @@ depth=re.search(r'const depthFS=`(.*?)`;',s,re.S)[1]
 actual_shadow=c.program(vertex_shader=vs,fragment_shader=depth.replace('#version 300 es','#version 330').replace('precision highp float;',''))
 root=Path(__file__).resolve().parent.parent
 w,h=192,320
-kinds=[1.23,1.34,1.41,1.46,1.48,1.49]
-js=f"""import {{bipinnateCoverage,redwoodSprayCoverage}} from {json.dumps((root/'dist/compound-lod.mjs').as_uri())};
+kinds=[1.23,1.34,1.41,1.46,1.48,1.49,1.195]
+js=f"""import {{bipinnateCoverage,redwoodSprayCoverage,pineSprayCoverage}} from {json.dumps((root/'dist/compound-lod.mjs').as_uri())};
 const kinds={json.dumps(kinds)},w={w},h={h},a=new Uint8Array(kinds.length*w*h);let i=0;
 for(const kind of kinds){{const jac=kind>1.4,fever=kind>1.3&&!jac,pairs=jac?Math.round((kind-1.4)*100)+6:Math.round((kind-(fever?1.3:1.2))*100);
-for(let y=0;y<h;y++)for(let x=0;x<w;x++)a[i++]=kind>1.485?redwoodSprayCoverage((x+.5)/w,(y+.5)/h):bipinnateCoverage((x+.5)/w,(y+.5)/h,pairs,jac?16:fever?13:9,jac);}}
+for(let y=0;y<h;y++)for(let x=0;x<w;x++)a[i++]=kind<1.2?pineSprayCoverage((x+.5)/w,(y+.5)/h):kind>1.485?redwoodSprayCoverage((x+.5)/w,(y+.5)/h):bipinnateCoverage((x+.5)/w,(y+.5)/h,pairs,jac?16:fever?13:9,jac);}}
 process.stdout.write(Buffer.from(a));"""
 expected=np.frombuffer(subprocess.run(['node','--input-type=module','-e',js],cwd=root,stdout=subprocess.PIPE,check=True).stdout,dtype='u1').reshape(len(kinds),h,w)
 results=[]
@@ -34,4 +34,4 @@ for shader in [fs,depth]:
   outputs.append(actual)
  results.append(np.array(outputs))
 assert np.array_equal(*results),'Colour and shadow silhouettes must match'
-print('Thorn-tree, jacaranda and dawn-redwood colour/shadow masks match exported opacity textures')
+print('Thorn-tree, jacaranda, pine and dawn-redwood colour/shadow masks match exported opacity textures')

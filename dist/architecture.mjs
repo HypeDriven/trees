@@ -1,6 +1,6 @@
-import {EAST_ASIAN_CROWNS,EAST_ASIAN_SPECIES} from './east-asia.mjs?v=15';
-import {buildXerophytaArchitecture} from './garden-species.mjs?v=15';
-import {SOUTH_AFRICAN_CROWNS,SOUTH_AFRICAN_SPECIES} from './south-africa.mjs?v=15';
+import {EAST_ASIAN_CROWNS,EAST_ASIAN_SPECIES} from './east-asia.mjs?v=16';
+import {buildXerophytaArchitecture} from './garden-species.mjs?v=16';
+import {SOUTH_AFRICAN_CROWNS,SOUTH_AFRICAN_SPECIES} from './south-africa.mjs?v=16';
 // Species-biased crown architecture in metres. An illustrative habit model,
 // not a simulation of growth, reaction wood, competition or branch mechanics.
 const add=(a,b)=>a.map((v,i)=>v+b[i]),sub=(a,b)=>a.map((v,i)=>v-b[i]),mul=(a,s)=>a.map(v=>v*s),dot=(a,b)=>a.reduce((s,v,i)=>s+v*b[i],0),norm=a=>mul(a,1/(Math.hypot(...a)||1)),mix=(a,b,t)=>add(mul(a,1-t),mul(b,t));
@@ -79,10 +79,10 @@ export function buildTreeArchitecture(cfg){
   const points=sweep(attachment.point,start,end,len,bend,phase,depth<=2?18:10),taper=depth===levels?.10:role==='scaffold'?.26:.22;
   const r=record(points,radius,Math.min(radius*.72,Math.max(.00008,radius*taper)),depth,parent,t,role,phase);
   if(depth>=levels)return r;
-  const count=south?(depth===1?(type==='wildolive'?6:4):3):depth===1?(type==='willow'?(dense?7:6):(dense?6:5)):type==='willow'?(dense?5:4):(dense?4:3);
-  const offset=R(-.18,.18),vigor=R(.88,1.14);
+  const paired=type==='maple'||type==='dawnredwood',count=paired?(depth===1?5:3):south?(depth===1?(type==='wildolive'?6:4):3):depth===1?(type==='willow'?(dense?7:6):(dense?6:5)):type==='willow'?(dense?5:4):(dense?4:3);
+  const offset=R(-.18,.18),vigor=R(.88,1.14),pairSites=paired?[.34+R(-.005,.005),.74+R(-.005,.005)]:[];
   for(let k=0;k<count;k++){
-   const continuation=k===count-1,node=continuation?1:clamp(.23+.65*(k+.35+R(-.13,.13))/(count-1),.16,.91),at=sampleBranch(points,node),[u,v]=frame(at.direction),a=phase+offset+k*2.399963+R(-.22,.22),side=add(mul(u,Math.cos(a)),mul(v,Math.sin(a)));
+   const continuation=k===count-1,node=continuation?1:paired?pairSites[Math.floor(k/2)]:clamp(.23+.65*(k+.35+R(-.13,.13))/(count-1),.16,.91),at=sampleBranch(points,node),[u,v]=frame(at.direction),a=phase+offset+(paired?Math.floor(k/2)*Math.PI/2+(k%2)*Math.PI:k*2.399963)+R(paired?-.035:-.22,paired?.035:.22),side=add(mul(u,Math.cos(a)),mul(v,Math.sin(a)));
    let nd,ratio;
    if(continuation){nd=at.direction;ratio=type==='willow'?.50:.36;}
    else if(type==='willow'){

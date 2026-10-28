@@ -20,6 +20,8 @@ export function leafDevelopment(cfg,species,shoot,node,index=0){
  const variation=1+.045*Math.sin(shoot.phase+node*4)+.06*(hash(shoot.seed+index*.73)-.5);
  const matureLength=clamp(cfg.leafSize*shoot.vigor*profile*variation,...species.leaf);
  const start=(cfg.type==='pine'||cfg.type==='chinesepine')?.76:cfg.season==='spring'?.68:.82,minimum=cfg.type==='willow'?.28:cfg.type==='birch'?.35:.32;
- const expansion=shoot.active?1-(1-minimum)*smooth(start,1,node):1;
+ const tipExpansion=shoot.active?1-(1-minimum)*smooth(start,1,node):1,seasonExpansion=species.earlyBloom&&cfg.season==='spring'?springPhenology(cfg).expansion:1,expansion=tipExpansion*seasonExpansion;
  return{length:matureLength*expansion,matureLength,expansion,node,cohort:(cfg.type==='pine'||cfg.type==='chinesepine')?(node>.76?'current':'retained'):(shoot.active?'growing':'set')};
 }
+
+export function springPhenology(cfg){const progress=clamp(cfg.springProgress??.78,0,1);return{progress,leafPresence:smooth(.28,.70,progress),expansion:smooth(.22,.94,progress),bloom:1-smooth(.62,1,progress)};}
