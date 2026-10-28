@@ -1,4 +1,4 @@
-import {EAST_ASIAN_SPECIES} from './east-asia.mjs?v=19';
+import {EAST_ASIAN_SPECIES} from './east-asia.mjs?v=20';
 // Physical-scale procedural wood. Relief amplitudes are illustrative, not scans.
 const add=(a,b)=>a.map((x,i)=>x+b[i]),sub=(a,b)=>a.map((x,i)=>x-b[i]),mul=(a,s)=>a.map(x=>x*s),dot=(a,b)=>a.reduce((s,x,i)=>s+x*b[i],0),cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],norm=a=>mul(a,1/(Math.hypot(...a)||1));
 const fract=x=>x-Math.floor(x),mix=(a,b,t)=>a+(b-a)*t,smooth=(a,b,x)=>{let t=Math.max(0,Math.min(1,(x-a)/(b-a)));return t*t*(3-2*t)};
@@ -72,7 +72,7 @@ export function woodTube(mesh,points,r0,r1,type,{fine=false,macro=false,focusT=.
  const base=zone===.04?[.70,.69,.62]:zone===.06?[.43,.20,.075]:zone===.08?(type==='willow'?[.34,.30,.095]:[.24,.15,.09]):type==='birch'?[.24,.22,.19]:type==='willow'?[.24,.22,.18]:[.27,.235,.19];
  const wholeGum=type==='eucalyptus'&&!fine&&!macro;
  const pathLength=points.slice(1).reduce((s,p,i)=>s+Math.hypot(...sub(p,points[i])),0),halfSpan=Math.min(.5,.145/Math.max(.001,pathLength)),t0=macro?Math.max(0,focusT-halfSpan):0,t1=macro?Math.min(1,focusT+halfSpan):1;
- let sides=macro?(r0<.04?320:512):fine?96:root&&r0>.14?80:wholeGum?(r0>.14?40:r0>.035?16:r0>.007?8:5):r0>.14?72:r0>.035?24:r0>.007?10:5,steps=macro?224:fine?96:root&&r0>.14?120:Math.max(points.length-1,r0>.04?(wholeGum?24:32):points.length-1),rings=[],arc=0,previousU=null;
+ let sides=macro?(r0<.04?320:512):fine?96:type==='monkeytail'?24:root&&r0>.14?80:wholeGum?(r0>.14?40:r0>.035?16:r0>.007?8:5):r0>.14?72:r0>.035?24:r0>.007?10:5,steps=macro?224:fine?96:root&&r0>.14?120:Math.max(points.length-1,r0>.04?(wholeGum?24:32):points.length-1),rings=[],arc=0,previousU=null;
  const denseSteps=steps,samples=macro?[...new Set([...Array.from({length:33},(_,i)=>i/32),...Array.from({length:steps+1},(_,i)=>t0+(t1-t0)*i/steps)].map(v=>Math.round(v*1e10)/1e10))].sort((a,b)=>a-b):Array.from({length:steps+1},(_,i)=>i/steps);steps=samples.length-1;
  const phase=points[0][0]*.37+points[0][2]*.53,uvOffset=points[0][1];
  for(let j=0;j<=steps;j++){

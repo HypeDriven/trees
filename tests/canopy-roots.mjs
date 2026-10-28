@@ -3,7 +3,7 @@ import {buildSpecimen,SPECIES} from '../dist/botany.mjs';
 const base={height:10,spread:1,levels:3,density:68,shoots:3,seed:2847,season:'summer',maturity:.65,reproductive:false,rootSpread:1,rootDepth:1.2,rootBranching:2,fineRoots:true};
 for(const type of Object.keys(SPECIES)){
  const cfg={...base,...(type==='monkeytail'?{height:1.1,rootDepth:.25}:{}),type,view:'tree',leafSize:SPECIES[type].length};let r=buildSpecimen(cfg,{preview:false});
- assert(r.stats.apicalContinuations>0);assert.equal(r.stats.coveredTips,r.stats.terminalTips,`${type} skipped living terminal foliage`);assert(r.stats.terminalTips>0);
+ if(type==='monkeytail'){assert.equal(r.stats.rosettes.length,r.stats.branches);assert(r.stats.rosettes.every(c=>c.closedCrown));}else assert(r.stats.apicalContinuations>0);assert.equal(r.stats.coveredTips,r.stats.terminalTips,`${type} skipped living terminal foliage`);assert(r.stats.terminalTips>0);
  assert(r.stats.tipGaps.every(gap=>gap<SPECIES[type].leaf[0]*.25),`${type} left a long naked tip`);
  assert(r.stats.leafyShoots>=r.stats.structuralTips);assert(r.stats.leaves>(type==='monkeytail'?12:5000));assert(r.vertices.byteLength<(SPECIES[type].region?320:256)*1024*1024);
  const root=r.rootSystem;assert(root&&root.stats.primary>=8);assert(root.stats.lateral>root.stats.primary);assert(root.stats.feeder>0);assert(root.stats.sinkers>0);

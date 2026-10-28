@@ -26,7 +26,7 @@ const source=fs.readFileSync(require('node:path').join(__dirname,'../dist/app.js
  for(const[u,v]of tex.slice(90,96)){assert(u>=0&&u<=1/9+1e-6);assert(v>=0&&v<=.25+1e-6,'Redwood sprays need their own opacity row');}
  for(const[u,v]of tex.slice(96,102)){assert(u>=5/9-1e-6&&u<=6/9+1e-6);assert(v>=0&&v<=.25+1e-6,'Pine cohorts need their own atlas cell');}
  assert(obj.includes('f 1/1/1 2/2/2 3/3/3'));assert(mask.some(v=>v===0)&&mask.some(v=>v===255));
- const recipe=JSON.parse(files['recipe.json']);assert.equal(recipe.version,15);assert.equal(recipe.parameters.type,'sweetthorn');assert.equal(recipe.parameters.shootStage,'extending');
+ const recipe=JSON.parse(files['recipe.json']);assert.equal(recipe.version,16);assert.equal(recipe.parameters.type,'sweetthorn');assert.equal(recipe.parameters.shootStage,'extending');
  // Actual ZIP builder must preserve binary PNG bytes rather than text-encode them.
  vm.runInContext(source.slice(source.indexOf('function zipDownload('),source.indexOf('\n',source.indexOf('function zipDownload('))),context);
  vm.runInContext("zipDownload({'tiny.png':new Uint8Array([137,80,78,71,255,0])})",context);

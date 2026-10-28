@@ -1,8 +1,8 @@
 // A depth-buffered material renderer for leaf and shoot studies when neither
 // WebGPU nor WebGL2 is available. It uses the actual curved specimen triangles;
 // UV detail and wind share the same moving vertex positions, including veins.
-import {barkSample} from './wood.mjs?v=19';
-import {createLeafSurfaceTexture,LEAF_ANATOMY} from './leaf-anatomy.mjs?v=19';
+import {barkSample} from './wood.mjs?v=20';
+import {createLeafSurfaceTexture,LEAF_ANATOMY} from './leaf-anatomy.mjs?v=20';
 const norm=a=>{const l=Math.hypot(...a)||1;return a.map(v=>v/l);};
 const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
 const dot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
