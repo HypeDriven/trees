@@ -1,7 +1,14 @@
-import {woodTube,woodRadius} from './wood.mjs?v=14';
+import {woodTube,woodRadius} from './wood.mjs?v=15';
 const add=(a,b)=>a.map((v,i)=>v+b[i]),sub=(a,b)=>a.map((v,i)=>v-b[i]),mul=(a,s)=>a.map(v=>v*s),cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],norm=a=>mul(a,1/(Math.hypot(...a)||1));
 function seeded(seed){return()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 export const ROOT_PROFILES={
+ maple:{primaries:10,spread:.48,depth:1.4,lateral:.14,sinkers:4,tap:true},
+ sakura:{primaries:11,spread:.52,depth:.8,lateral:.10,sinkers:3,tap:false},
+ ginkgo:{primaries:9,spread:.43,depth:1.5,lateral:.15,sinkers:5,tap:true},
+ dawnredwood:{primaries:12,spread:.46,depth:1,lateral:.10,sinkers:4,tap:false},
+ chinesepine:{primaries:8,spread:.43,depth:1.5,lateral:.17,sinkers:4,tap:true},
+ sweetgum:{primaries:9,spread:.45,depth:1.4,lateral:.15,sinkers:4,tap:true},
+ redbud:{primaries:8,spread:.45,depth:1.3,lateral:.18,sinkers:4,tap:true},
  jacaranda:{primaries:10,spread:.50,depth:1.3,lateral:.14,sinkers:4,tap:true},
  monkeytail:{primaries:18,spread:.28,depth:.25,lateral:.27,sinkers:3,tap:false,fibrous:true},
  eucalyptus:{primaries:10,spread:.52,depth:1.7,lateral:.17,sinkers:5,tap:true},

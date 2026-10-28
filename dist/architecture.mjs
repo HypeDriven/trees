@@ -1,5 +1,6 @@
-import {buildXerophytaArchitecture} from './garden-species.mjs?v=14';
-import {SOUTH_AFRICAN_CROWNS,SOUTH_AFRICAN_SPECIES} from './south-africa.mjs?v=14';
+import {EAST_ASIAN_CROWNS,EAST_ASIAN_SPECIES} from './east-asia.mjs?v=15';
+import {buildXerophytaArchitecture} from './garden-species.mjs?v=15';
+import {SOUTH_AFRICAN_CROWNS,SOUTH_AFRICAN_SPECIES} from './south-africa.mjs?v=15';
 // Species-biased crown architecture in metres. An illustrative habit model,
 // not a simulation of growth, reaction wood, competition or branch mechanics.
 const add=(a,b)=>a.map((v,i)=>v+b[i]),sub=(a,b)=>a.map((v,i)=>v-b[i]),mul=(a,s)=>a.map(v=>v*s),dot=(a,b)=>a.reduce((s,v,i)=>s+v*b[i],0),norm=a=>mul(a,1/(Math.hypot(...a)||1)),mix=(a,b,t)=>add(mul(a,1-t),mul(b,t));
@@ -8,7 +9,7 @@ const frame=d=>{let u=norm(cross(d,Math.abs(d[1])>.9?[1,0,0]:[0,1,0]));return[u,
 function seeded(seed){return()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 
 export const ARCHITECTURE_NOTES={
- ...Object.fromEntries(Object.entries(SOUTH_AFRICAN_SPECIES).map(([key,sp])=>[key,sp.habit])),
+ ...Object.fromEntries(Object.entries({...SOUTH_AFRICAN_SPECIES,...EAST_ASIAN_SPECIES}).map(([key,sp])=>[key,sp.habit])),
  willow:'Short, leaning trunk; unequal spreading boughs turn through broad arcs into long, winding, pendulous sprays. This models a weeping willow habit, not a corkscrew cultivar.',
  oak:'Short stout trunk divides into unequal, sinuous scaffold limbs, with broad lateral forks, upward recovery and an irregular rounded crown.',
  pine:'A dominant, gently wandering leader carries irregular branch whorls. Maturity opens the lower crown and broadens the upper crown; lateral branches recover into upturned shoots.',
@@ -26,7 +27,7 @@ export function sampleBranch(points,t){
 export function buildTreeArchitecture(cfg){
  if(cfg.type==='monkeytail')return buildXerophytaArchitecture(cfg);
  const random=seeded(cfg.seed^0x391a6d27),R=(a,b)=>a+(b-a)*random(),type=cfg.type,h=cfg.height,m=clamp(cfg.maturity??.65,0,1),levels=clamp(Math.round(cfg.levels),2,5),dense=(cfg.shoots??3)>=2;
- const south=SOUTH_AFRICAN_CROWNS[type];
+ const south=EAST_ASIAN_CROWNS[type]??SOUTH_AFRICAN_CROWNS[type],pineLike=type==='pine'||type==='chinesepine';
  const records=[],baseRadius=h*(south?.radius??(type==='oak'||type==='willow'?.025:type==='pine'?.015:.012)),azimuth=R(0,Math.PI*2),bias=R(.12,.25),crownPhase=R(0,6.283);
  const radial=a=>[Math.cos(a),0,Math.sin(a)],radiusAt=(r,t)=>r.r1+(r.r0-r.r1)*Math.pow(1-t,.88);
  // Correlated, low-frequency bending produces continuous arcs instead of
@@ -52,10 +53,16 @@ export function buildTreeArchitecture(cfg){
    bend=depth===1?.42:depth===2?.32:.22;
   }else if(type==='oak'){
    const [u]=frame(start);end=norm(add(add(mul(start,.45),mul(u,R(-.6,.6))),[0,R(.3,.75),0]));bend=.48+.17*m;
-  }else if(type==='pine'){
+  }else if(pineLike){
    end=norm(add(mul(out,.65),[0,depth===1?R(.22,.55):R(.55,1.1),0]));bend=depth===1?.16+.18*m:.20;
   }else if(south){
-   if(type==='jacaranda'){end=norm(add(mul(out,.9),[0,depth===1?R(.05,.30):R(-.05,.30),0]));bend=.42;}
+   if(type==='maple'){end=norm(add(mul(out,.70),[0,R(.25,.75),0]));bend=.35;}
+   else if(type==='sakura'){end=norm(add(mul(out,.90),[0,depth===1?R(.10,.42):R(-.25,.12),0]));bend=.44;}
+   else if(type==='ginkgo'){end=norm(add(mul(out,.65),[0,depth===1?R(.40,.85):R(.10,.40),0]));bend=.18;}
+   else if(type==='dawnredwood'){end=norm(add(mul(out,.9),[0,depth===1?R(-.16,.03):R(-.04,.16),0]));bend=.11;}
+   else if(type==='sweetgum'){end=norm(add(mul(out,.70),[0,R(.25,.65),0]));bend=.28;}
+   else if(type==='redbud'){end=norm(add(mul(out,.9),[0,R(.12,.42),0]));bend=.46;}
+   else if(type==='jacaranda'){end=norm(add(mul(out,.9),[0,depth===1?R(.05,.30):R(-.05,.30),0]));bend=.42;}
    else if(type==='eucalyptus'){const [side]=frame(start);end=norm(add(add(mul(out,.65),mul(side,R(-.35,.35))),[0,depth===1?R(.12,.45):R(-.35,.15),0]));bend=.46;}
    else if(type==='baobab'){const [side]=frame(start);end=norm(add(add(mul(out,.80),mul(side,R(-.40,.40))),[0,depth===1?R(.35,.75):R(.25,.65),0]));bend=.40+.15*m;}
    else if(type==='fevertree'){end=norm(add(mul(out,.95),[0,depth===1?R(-.02,.13):R(.04,.32),0]));bend=.36;}
@@ -93,12 +100,12 @@ export function buildTreeArchitecture(cfg){
 
  const trunkLen=h*(south?.trunk??(type==='willow'?R(.30,.37):type==='oak'?R(.34,.43):.98)),lean=south?.lean??(type==='willow'?R(.10,.19):type==='oak'?R(.035,.085):type==='birch'?R(.025,.065):R(.01,.035)*(1+m)),leanAxis=radial(azimuth);
  const trunk=record(sweep([0,0,0],[leanAxis[0]*lean*.2,1,leanAxis[2]*lean*.2],[leanAxis[0]*lean,1,leanAxis[2]*lean],trunkLen,south?.bend??(type==='oak'?.20:type==='willow'?.24:type==='birch'?.09:.045+.05*m),crownPhase,28),baseRadius,baseRadius*(south?.taper??(type==='willow'||type==='oak'?.38:.065)),0,null,0,'trunk');
- if(type==='pine'){
+ if(pineLike){
   const whorls=7,base=.24+.24*m;
   for(let w=0;w<whorls;w++){
    const heightT=base+(.95-base)*w/(whorls-1),count=3+Math.floor(R(0,2.999)),rotation=azimuth+w*R(.62,1.12);
    for(let k=0;k<count;k++){
-    const a=rotation+k*2*Math.PI/count+R(-.18,.18),t=heightT+R(-.012,.012),out=radial(a),sector=1+bias*Math.cos(a-crownPhase),cone=(1-t)*.65,matureCrown=.12+.22*Math.sin(Math.PI*(t-base)/(.99-base)),length=h*((1-m)*cone+m*matureCrown)*R(.78,1.16)*sector;
+    const a=rotation+k*2*Math.PI/count+R(-.18,.18),t=heightT+R(-.012,.012),out=radial(a),sector=1+bias*Math.cos(a-crownPhase),cone=(1-t)*.65,matureCrown=(type==='chinesepine'?.19:.12)+.22*Math.sin(Math.PI*(t-base)/(.99-base)),length=h*((1-m)*cone+m*matureCrown)*R(.78,1.16)*sector;
     limb(trunk,t,norm(add(out,[0,R(-.20,.16),0])),length,radiusAt(trunk,t)*R(.40,.54),1,a,'scaffold');
    }
   }
@@ -107,13 +114,13 @@ export function buildTreeArchitecture(cfg){
   for(let k=0;k<count;k++){
    const q=(k+.5)/count,a=azimuth+k*2.399963+R(-.24,.24),out=radial(a),sector=1+bias*Math.cos(a-crownPhase);
    const t=south?south.start+(1-south.start)*q+R(-.015,.015):type==='willow'?(k<3?.46+q*.5:.82+.17*(k-3)/(count-3)):type==='oak'?(k<3?.38+q:.75+.24*(k-3)/(count-3)):.25+q*.73+R(-.012,.012);
-   const up=south?south.up*R(.75,1.25):type==='willow'?R(.80,1.5):type==='oak'?R(.45,1.0):R(.85,1.25),length=h*(south?south.length*(type==='yellowwood'?(.65+.35*Math.sin(t*Math.PI))*R(.85,1.15):R(.82,1.15)):type==='willow'?R(.52,.73):type==='oak'?R(.42,.62):Math.sin(t*Math.PI)*R(.28,.35))*sector;
+   const up=south?south.up*R(.75,1.25):type==='willow'?R(.80,1.5):type==='oak'?R(.45,1.0):R(.85,1.25),length=h*(south?south.length*(['dawnredwood','ginkgo'].includes(type)?Math.pow(1-t,.62)*R(.88,1.12):type==='sweetgum'||type==='maple'?(.55+.45*Math.sin(t*Math.PI))*R(.88,1.12):type==='yellowwood'?(.65+.35*Math.sin(t*Math.PI))*R(.85,1.15):R(.82,1.15)):type==='willow'?R(.52,.73):type==='oak'?R(.42,.62):Math.sin(t*Math.PI)*R(.28,.35))*sector;
    limb(trunk,t,norm(add(out,[0,up,0])),length,radiusAt(trunk,t)*(type==='birch'?R(.40,.53):R(.55,.72)),1,a,'scaffold');
   }
  }
  // The main axis itself has a foliated continuation, without a naked pole
  // protruding beyond the crown. Broadleaf leaders divide at a low fork.
- const top=sampleBranch(trunk.points,1);limb(trunk,1,top.direction,h*(south?.leader??(type==='oak'?.42:type==='willow'?.50:.025)),trunk.r1*.90,type==='pine'||type==='birch'?Math.max(1,levels-1):1,azimuth+.8,'leader');
+ const top=sampleBranch(trunk.points,1);limb(trunk,1,top.direction,h*(south?.leader??(type==='oak'?.42:type==='willow'?.50:.025)),trunk.r1*.90,pineLike||type==='birch'?Math.max(1,levels-1):1,azimuth+.8,'leader');
 
  let maxY=0;for(const r of records)for(const p of r.points)maxY=Math.max(maxY,p[1]);const scale=h/maxY,spread=(cfg.spread??1)*(south?.spread??(type==='willow'?.56:type==='sweetthorn'?.50:type==='marula'?.72:type==='wildolive'?.85:type==='yellowwood'?.68:1));
  for(const r of records){r.points=r.points.map(p=>[p[0]*scale*spread,p[1]*scale,p[2]*scale*spread]);r.r0*=scale;r.r1*=scale;}

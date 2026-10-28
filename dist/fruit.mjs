@@ -1,3 +1,5 @@
+import {EAST_ASIAN_SPECIES} from './east-asia.mjs?v=15';
+import {buildEastAsianOrgan} from './east-asia-organs.mjs?v=15';
 // Geometric reproductive structures, in metres. Surface amplitudes and
 // developmental stages are illustrative; these are not scans or growth models.
 const add=(a,b)=>a.map((v,i)=>v+b[i]),sub=(a,b)=>a.map((v,i)=>v-b[i]),mul=(a,s)=>a.map(v=>v*s),dot=(a,b)=>a.reduce((s,v,i)=>s+v*b[i],0),cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],norm=a=>mul(a,1/(Math.hypot(...a)||1));
@@ -5,6 +7,7 @@ const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),smooth=(a,b,x)=>{let t=clamp((x-a
 const frame=d=>{const u=norm(cross(d,Math.abs(d[1])>.94?[1,0,0]:[0,1,0]));return[u,norm(cross(u,d))]};
 const hash=x=>{const v=Math.sin(x*127.1+311.7)*43758.5453;return v-Math.floor(v)};
 export const FRUIT_NOTES={
+ ...Object.fromEntries(Object.entries(EAST_ASIAN_SPECIES).map(([key,sp])=>[key,{name:key==='chinesepine'?'Woody seed cone':key==='ginkgo'?'Female fleshy-coated seed':key==='maple'?'Paired samaras':key==='dawnredwood'?'Decussate peltate cone':key==='sweetgum'?'Compound capsule head':key==='redbud'?'Two-valved seed pod':'Small cherry drupe',source:sp.source,text:sp.traits[2]+'. Geometric stages and micro-relief are representative, not scanned anatomy.'}])),
  jacaranda:{name:'Flattened woody capsule',source:'https://biodiversityadvisor.sanbi.org/search/detail/352061a0-edb2-43c9-b5b9-ed053ce81552',text:'A rounded, strongly flattened woody capsule with two finite-thickness valves. Release separates the valves to expose thin winged seeds. Older capsules can persist alongside new flowers.'},
  monkeytail:{name:'Bristly seed capsule',source:'https://pza.sanbi.org/xerophyta-retinervis',text:'An oblong capsule on a slender peduncle, with coarse brown emergences. The release study separates the three loculicidal sectors and shows sample small seeds; it does not simulate dispersal.'},
  eucalyptus:{name:'Woody gum-nut umbel',source:'https://hortflora.rbg.vic.gov.au/taxon/ad99bce8-5340-11e7-b82b-005056b0018f',text:'An umbel of small hemispherical woody capsules. Each has a thick raised rim, a recessed interior and four projecting valves. The release study opens the valve gaps and reveals sample seeds.'},
@@ -23,6 +26,7 @@ export const FRUIT_NOTES={
 };
 
 export function buildFruit(mesh,cfg,{base=[0,0,0],axis=[0,-1,0],fine=false,attached=['tree','shoot'].includes(cfg.view),stage=cfg.fruitStage??'mature',seed=cfg.seed??2847}={}){
+ if(EAST_ASIAN_SPECIES[cfg.type]&&cfg.type!=='chinesepine')return buildEastAsianOrgan(mesh,cfg,{mode:'fruit',base,axis,fine,stage,seed});
  axis=norm(axis);const [u,v]=frame(axis),rnd=(i,a,b)=>mix(a,b,hash(seed+i*1.73)),type=cfg.type;
  const details={type,stage,scales:0,capsules:0,bracts:0,wingedSeeds:0,silkyHairs:0,seeds:0,seedPairs:0,scaleRecords:[]};let focus=null;
  function tri(a,b,c,na,nb,nc,col,kind,uv,phase=0){const geometric=cross(sub(b,a),sub(c,a));if(length(geometric)<1e-15)return;let colors=Array.isArray(col[0])?col:[col,col,col];if(dot(geometric,add(add(na,nb),nc))<0){[b,c]=[c,b];[nb,nc]=[nc,nb];[uv[1],uv[2]]=[uv[2],uv[1]];[colors[1],colors[2]]=[colors[2],colors[1]]}for(const [i,p,n,tex]of [[0,a,na,uv[0]],[1,b,nb,uv[1]],[2,c,nc,uv[2]]])mesh.v(p,n,colors[i],kind,phase,0,tex);}
@@ -70,8 +74,8 @@ export function buildFruit(mesh,cfg,{base=[0,0,0],axis=[0,-1,0],fine=false,attac
    for(let valve=0;valve<4;valve++){const angle=valve*TAU/4,radial=add(mul(aa,Math.cos(angle)),mul(bb,Math.sin(angle))),edge=norm(cross(d,radial));patch((t,x)=>add(add(q,mul(d,L*(.76+.40*t))),add(mul(radial,r*(.78*(1-t)+(opened?.66:.18)*t)),mul(edge,x*r*.42*(1-t)))),fine?12:2,fine?8:1,col,.36,fine?.00013:0,[r,L*.4],valve);details.valves++;}
    if(opened&&fine){lathe(add(q,mul(d,L*.75)),d,.0007,t=>.00028*Math.sin(Math.PI*t),[.40,.29,.12],.34,5,6);details.seeds++;}details.capsules++;if(k===0)focus=add(add(q,mul(d,L)),mul(aa,r*.4));
   }details.length=L;details.raisedRims=count;details.projectingValves=true;
- }else if(type==='pine'){
-  const young=stage==='developing',L=young?rnd(1,.016,.024):rnd(1,.038,.062),radius=L*(young?.29:.28),p=stalk(rnd(2,.004,.008),L*.025),opening=young?0:stage==='released'?Math.max(.75,cfg.coneOpening??.45):clamp(cfg.coneOpening??.45,0,1),count=fine?88:55;
+ }else if(type==='pine'||type==='chinesepine'){
+  const chinese=type==='chinesepine',young=stage==='developing',L=young?rnd(1,.016,.024):rnd(1,chinese?.045:.038,chinese?.085:.062),radius=L*(chinese?.36:young?.29:.28),p=stalk(rnd(2,.004,.008),L*.025),opening=young?0:stage==='released'?Math.max(.75,cfg.coneOpening??.45):clamp(cfg.coneOpening??.45,0,1),count=fine?(chinese?80:88):(chinese?36:55);
   const coneRadius=t=>radius*Math.pow(Math.max(0,Math.sin(Math.PI*t)),.65)*(1.18-.34*t),core=L*.075;
   lathe(p,axis,L,t=>Math.max(core*Math.pow(Math.sin(Math.PI*t),.6),coneRadius(t)*mix(.88,.20,opening)),young?[.23,.29,.13]:[.18,.115,.065],.32,fine?40:8,fine?24:8);
   let focusScore=-Infinity;
@@ -80,14 +84,15 @@ export function buildFruit(mesh,cfg,{base=[0,0,0],axis=[0,-1,0],fine=false,attac
    function point(q,x){
     const width=q<.52?.35*q/.52:q<.75?.35+.65*(q-.52)/.23:(1-q)/.25,angle=theta+x*angleWidth*width,hinge=t*L-H*.44;
     const keel=Math.max(0,1-Math.abs(q-.76)/.15)*Math.pow(Math.max(0,1-Math.abs(x)),.40),umbo=Math.exp(-Math.pow((q-.77)/.065,2)-Math.pow(x/.24,2));
-    let r=inner+(rr-inner)*smooth(0,.61,q)+L*(.010*keel+.004*umbo-.002*x*x*width),z=t*L+(q-.44)*H;
+    let r=inner+(rr-inner)*smooth(0,.61,q)+L*((chinese?.018:.010)*keel+(chinese?.010:.004)*umbo-.002*x*x*width),z=t*L+(q-.44)*H;
     if(fine)r+=Math.sin(x*94+q*7+phase)*L*.00007*Math.sin(q*Math.PI);
     const dr=r-inner,dz=z-hinge;r=inner+dr*Math.cos(alpha)+dz*Math.sin(alpha);z=hinge-dr*Math.sin(alpha)+dz*Math.cos(alpha);
     return add(add(p,mul(axis,z)),add(mul(u,Math.cos(angle)*r),mul(v,Math.sin(angle)*r)));
    }
    const co=(young?[.25,.31,.15]:[.33,.225,.135]).map(c=>c*rnd(i+100,.83,1.13));const scaleColor=(q,x)=>{const scar=Math.exp(-Math.pow((q-.77)/.042,2)-Math.pow(x/.15,2)),wear=smooth(.82,1,q)*.12+smooth(.65,1,Math.abs(x))*.08;return co.map(c=>c*(1+wear-.40*scar));};patch(point,fine?24:3,fine?18:2,scaleColor,.32,thickness,[rr*angleWidth*2,H],phase);details.scales++;
    const face=point(.77,0),score=face[2]-Math.abs(t-.5)*L*.4;if(score>focusScore){focus=face;focusScore=score;}
-   if(fine)details.scaleRecords.push({t,azimuth:theta,hinge:add(p,mul(axis,t*L-H*.44)),face,thickness,keel:L*.010,umbo:L*.004,spine:false});
+   if(chinese&&fine&&!young){const outer=norm(add(mul(u,Math.cos(theta)),mul(v,Math.sin(theta))));lathe(point(.77,0),outer,L*.026,a=>L*.012*(1-a),co,.32,4,6);}
+   if(fine)details.scaleRecords.push({t,azimuth:theta,hinge:add(p,mul(axis,t*L-H*.44)),face,thickness,keel:L*.010,umbo:L*(chinese?.010:.004),spine:chinese});
    if(fine&&opening>.65&&t>.3&&t<.7&&i%13===0){const q=point(.23,0),side=add(mul(u,-Math.sin(theta)),mul(v,Math.cos(theta)));for(let s of [-1,1]){const seedPoint=add(q,mul(side,s*L*.035));lathe(seedPoint,axis,L*.05,a=>L*.022*Math.sin(Math.PI*a),[.20,.12,.06],.34,8,10);wing(seedPoint,axis,L*.022,L*.18,[.52,.39,.22]);details.wingedSeeds++;}details.seedPairs++;}
   }
   details.length=L;details.opening=opening;details.attachment=[...base];details.bodyBase=p;details.stalkLength=length(sub(p,base));

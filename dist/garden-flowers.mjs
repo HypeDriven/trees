@@ -31,7 +31,7 @@ export function buildGardenFlowers(mesh,cfg,{base=[0,0,0],axis=[0,1,0],fine=fals
   for(let k=0;k<count;k++){
    const a=k*GOLD,out=add(mul(u,Math.cos(a)),mul(v,Math.sin(a))),q=add(p,add(mul(out,.010),mul(axis,.003))),d=norm(add(axis,mul(out,.5))),[side,up]=frame(d);rod(p,q,.00035,[.38,.23,.15],.36);
    if(k<2){patch((t,x)=>{const angle=(x+1)*Math.PI,r=.0027*Math.sin(Math.PI*t)*(1-.45*t);return add(add(q,mul(d,.009*t)),add(mul(side,Math.cos(angle)*r),mul(up,Math.sin(angle)*r)));},fine?18:4,fine?14:6,[.33,.36,.16],.38,0,'tube');result.buds++;continue;}
-   const filaments=fine?40:14;
+   const filaments=fine?40:7;
    for(let j=0;j<filaments;j++){const angle=j*GOLD,r=.0035*Math.sqrt((j+.5)/filaments),origin=add(q,add(mul(side,Math.cos(angle)*r*.35),mul(up,Math.sin(angle)*r*.35))),tip=add(q,add(mul(d,.0045+rnd(j+k,.0,.002)),add(mul(side,Math.cos(angle)*r),mul(up,Math.sin(angle)*r))));rod(origin,tip,fine?.000055:.00009,[.76,.73,.57]);if(fine)rod(tip,add(tip,mul(d,.00035)),.00014,[.69,.63,.34]);result.stamens++;}result.flowers++;
   }
  }

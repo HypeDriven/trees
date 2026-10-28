@@ -8,7 +8,7 @@ export const FOLIAGE_REFERENCES=[
  ['Oak rhythmic shoot growth','https://academic.oup.com/treephys/article-abstract/26/2/229/1676814']
 ];
 export function shootGrowth(cfg,key=0){
- const seed=cfg.seed*.19+key*1.37,summerChance={willow:.72,birch:.48,oak:.20,pine:0,sweetthorn:.35,marula:.20,wildolive:.25,yellowwood:.15,baobab:.18,fevertree:.35,sausagetree:.28,karee:.35,jacaranda:.25,monkeytail:.20,eucalyptus:.35}[cfg.type];
+ const seed=cfg.seed*.19+key*1.37,summerChance={maple:.20,sakura:.25,ginkgo:.18,dawnredwood:.30,chinesepine:0,sweetgum:.25,redbud:.25,willow:.72,birch:.48,oak:.20,pine:0,sweetthorn:.35,marula:.20,wildolive:.25,yellowwood:.15,baobab:.18,fevertree:.35,sausagetree:.28,karee:.35,jacaranda:.25,monkeytail:.20,eucalyptus:.35}[cfg.type];
  return{seed,vigor:.84+.30*hash(seed+3),phase:hash(seed+8)*6.283,
   active:cfg.season==='spring'||(cfg.season==='summer'&&hash(seed+17)<summerChance)};
 }
@@ -19,7 +19,7 @@ export function leafDevelopment(cfg,species,shoot,node,index=0){
  const profile=cfg.type==='birch'?.92+.15*node:cfg.type==='oak'?.89+.16*Math.sin(Math.PI*node):cfg.type==='willow'?.96+.08*Math.sin(Math.PI*node):1;
  const variation=1+.045*Math.sin(shoot.phase+node*4)+.06*(hash(shoot.seed+index*.73)-.5);
  const matureLength=clamp(cfg.leafSize*shoot.vigor*profile*variation,...species.leaf);
- const start=cfg.type==='pine'?.76:cfg.season==='spring'?.68:.82,minimum=cfg.type==='willow'?.28:cfg.type==='birch'?.35:.32;
+ const start=(cfg.type==='pine'||cfg.type==='chinesepine')?.76:cfg.season==='spring'?.68:.82,minimum=cfg.type==='willow'?.28:cfg.type==='birch'?.35:.32;
  const expansion=shoot.active?1-(1-minimum)*smooth(start,1,node):1;
- return{length:matureLength*expansion,matureLength,expansion,node,cohort:cfg.type==='pine'?(node>.76?'current':'retained'):(shoot.active?'growing':'set')};
+ return{length:matureLength*expansion,matureLength,expansion,node,cohort:(cfg.type==='pine'||cfg.type==='chinesepine')?(node>.76?'current':'retained'):(shoot.active?'growing':'set')};
 }
