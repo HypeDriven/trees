@@ -1,4 +1,4 @@
-import {buildFlowers} from './flowers.mjs?v=17';
+import {buildFlowers} from './flowers.mjs?v=18';
 // Separate geometric flowers, seeds and fruit; dimensions in metres.
 const add=(a,b)=>a.map((v,i)=>v+b[i]),sub=(a,b)=>a.map((v,i)=>v-b[i]),mul=(a,s)=>a.map(v=>v*s),cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],norm=a=>mul(a,1/(Math.hypot(...a)||1));
 const frame=d=>{const u=norm(cross(d,Math.abs(d[1])>.94?[1,0,0]:[0,1,0]));return[u,norm(cross(u,d))]},TAU=Math.PI*2,GOLD=Math.PI*(3-Math.sqrt(5));

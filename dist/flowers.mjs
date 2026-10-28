@@ -1,4 +1,4 @@
-import {triangulateContour} from './leaf-shapes.mjs?v=17';
+import {triangulateContour} from './leaf-shapes.mjs?v=18';
 
 // Metres throughout. Species-level organ arrangements follow the references;
 // tissue thickness, pigment, pubescence and pollen relief remain illustrative.
