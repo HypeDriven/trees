@@ -1,4 +1,5 @@
-import {EAST_ASIAN_SPECIES} from './east-asia.mjs?v=20';
+import {createStemSurface} from './stem-attachment.mjs?v=21';
+import {EAST_ASIAN_SPECIES} from './east-asia.mjs?v=21';
 // Physical-scale procedural wood. Relief amplitudes are illustrative, not scans.
 const add=(a,b)=>a.map((x,i)=>x+b[i]),sub=(a,b)=>a.map((x,i)=>x-b[i]),mul=(a,s)=>a.map(x=>x*s),dot=(a,b)=>a.reduce((s,x,i)=>s+x*b[i],0),cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],norm=a=>mul(a,1/(Math.hypot(...a)||1));
 const fract=x=>x-Math.floor(x),mix=(a,b,t)=>a+(b-a)*t,smooth=(a,b,x)=>{let t=Math.max(0,Math.min(1,(x-a)/(b-a)));return t*t*(3-2*t)};
@@ -113,7 +114,7 @@ export function woodTube(mesh,points,r0,r1,type,{fine=false,macro=false,focusT=.
  }
  if(cap){for(let end of [0,steps]){let ring=rings[end],normal=mul(ring.axis,end?1:-1),radius=end?r1:r0,center=ring.center,wood=[.48,.35,.21];for(let k=0;k<sides;k++){let a=ring.points[k],b=ring.points[k+1],cr=cross(sub(a.p,center),sub(b.p,center)),order=dot(cr,normal)>0?[a,b]:[b,a];let ca=k/sides*Math.PI*2,cb=(k+1)/sides*Math.PI*2;mesh.v(center,normal,wood,.12,age,radius,[0,0]);for(let q of order){let a0=q===a?ca:cb;mesh.v(q.p,normal,wood,.12,age,radius,[Math.cos(a0)*radius,Math.sin(a0)*radius])}if(preview)mesh.preview.push({pts:[center,a.p,b.p],n:normal,c:wood,kind:.12,phase:0})}}}
  let study=null;if(macro){const ring=rings.reduce((best,r)=>Math.abs(r.t-focusT)<Math.abs(best.t-focusT)?r:best,rings[0]),q=ring.points.reduce((best,q)=>q.p[2]>best.p[2]?q:best,ring.points[0]);study={focus:[...q.p],center:[...ring.center],normal:[...q.n],radius:q.r,pattern:BARK_PROFILES[type][0],length:pathLength*(t1-t0),circumference:Math.PI*2*q.r,axialSpacing:pathLength*(t1-t0)/denseSteps,circumferentialSpacing:Math.PI*2*q.r/sides,rings:steps+1,sides,depth:BARK_GEOMETRY[type]*age};}
- return {rings:steps+1,sides,quadCount,zone,age,collar,root,study};
+ return {rings:steps+1,sides,quadCount,zone,age,collar,root,study,surface:createStemSurface(rings)};
 }
 export const WOOD_NOTES={
  ...Object.fromEntries(Object.entries(EAST_ASIAN_SPECIES).map(([key,sp])=>[key,{text:({maple:'Grey-brown mature bark develops coarse elongated plates and deep irregular furrows.',sakura:'Reddish-brown bark has shallow horizontal lenticels and fine peeling lines; young stems remain smooth.',ginkgo:'Grey-brown bark develops deep longitudinal furrows with broad uneven ridges.',dawnredwood:'Reddish-brown bark has long fibrous grooves and raised shredding strips above the fluted base.',chinesepine:'Thick scaly grey-brown basal plates share a continuous palette with warmer upper branches.',sweetgum:'Grey-brown bark has narrow intersecting furrows and uneven raised plates.',redbud:'Thin brown bark develops fine irregular scales on older stems.'})[key]+' Geometric relief and tissue scales are illustrative.',source:sp.source}])),

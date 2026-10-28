@@ -1,6 +1,6 @@
 // Semicircular two-needle pine anatomy in metres. Stomatal row counts draw
 // on primary seedling observations, not a universal mature-tree calibration.
-import {organHash as hash} from './organ-distribution.mjs?v=20';
+import {organHash as hash} from './organ-distribution.mjs?v=21';
 const add=(a,b)=>a.map((v,i)=>v+b[i]),sub=(a,b)=>a.map((v,i)=>v-b[i]),mul=(a,s)=>a.map(v=>v*s),dot=(a,b)=>a.reduce((s,v,i)=>s+v*b[i],0),cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],norm=a=>mul(a,1/(Math.hypot(...a)||1)),clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 export const NEEDLE_ARC=Math.PI/(Math.PI+2);
 export const NEEDLE_REFERENCES=[['Chinese pine botanical description','https://www.efloras.org/florataxon.aspx?flora_id=2&taxon_id=210001654'],['Pine needle anatomy and stomatal rows, seedling study','https://pmc.ncbi.nlm.nih.gov/articles/PMC4063482/'],['Chinese pine variation in needle longevity','https://pubmed.ncbi.nlm.nih.gov/12670800/']];
@@ -27,6 +27,6 @@ export function buildNeedle(mesh,cfg,{base,axis,length,phase,sharedSide,hand=1,p
  for(let j=0;j<ts.length-1;j++)for(let k=0;k<us.length-1;k++){const q=[grid[j][k],grid[j+1][k],grid[j][k+1],grid[j+1][k+1]],n=norm(add(q[0].n,q[2].n)),order=dot(cross(sub(q[1].p,q[0].p),sub(q[2].p,q[0].p)),n)<0?[0,2,1,2,3,1]:[0,1,2,2,1,3];for(const i of order){const v=q[i];mesh.v(v.p,v.n,v.c,kind,phase,v.flutter,v.uv);}}
  for(const end of[0,ts.length-1]){const ring=grid[end],center=ring.reduce((s,q)=>add(s,mul(q.p,1/ring.length)),[0,0,0]),n=mul(axis,end?1:-1);for(let k=0;k<us.length-1;k++){let a=ring[k],b=ring[k+1];if(dot(cross(sub(a.p,center),sub(b.p,center)),n)<0)[a,b]=[b,a];for(const q of[{p:center,uv:[.5,ts[end]*R],flutter:ts[end]*R/cfg.leafSize,c:colour},a,b])mesh.v(q.p,n,q.c,kind,phase,q.flutter,q.uv);}}
  const convex=sample(focusT,NEEDLE_ARC*.5),flat=sample(focusT,NEEDLE_ARC+(1-NEEDLE_ARC)*.5);
- mesh.preview.push({pts:[sample(0,0).p,sample(.6,0).p,sample(1,0).p,sample(.6,NEEDLE_ARC).p,sample(0,NEEDLE_ARC).p],n:up,c:colour,kind,phase,size:R});
+ mesh.preview.push({pts:[sample(0,0).p,sample(.6,0).p,sample(1,0).p,sample(.6,NEEDLE_ARC).p,sample(0,NEEDLE_ARC).p],n:up,c:colour,kind,phase,size:R,base:[...base],flutterAt:q=>Math.max(0,Math.min(1,dot(sub(q,base),axis)/R))*R/cfg.leafSize});
  return{type:cfg.type,phase,crossSection:'semicircular',width:p.width,length:R,perimeter,longitudinalRows:ts.length-1,crossSectionSamples:us.length-1,stomatalFaces:2,convexRows:p.convexRows,flatRows:p.flatRows,porePitch:p.porePitch,geometricStomata:macro,modelledPitDepth:.000012,flatNormal:mul(up,-1),divergence:p.divergence,twist:p.twist,curve:p.curve,convexFocus:convex.p,convexNormal:convex.n,flatFocus:flat.p,flatSurfaceNormal:flat.n,inspectDistance:.015,axis:[...axis],base:[...base]};
 }

@@ -1,6 +1,6 @@
-import {EAST_ASIAN_CROWNS,EAST_ASIAN_SPECIES} from './east-asia.mjs?v=20';
-import {buildXerophytaArchitecture} from './garden-species.mjs?v=20';
-import {SOUTH_AFRICAN_CROWNS,SOUTH_AFRICAN_SPECIES} from './south-africa.mjs?v=20';
+import {EAST_ASIAN_CROWNS,EAST_ASIAN_SPECIES} from './east-asia.mjs?v=21';
+import {buildXerophytaArchitecture} from './garden-species.mjs?v=21';
+import {SOUTH_AFRICAN_CROWNS,SOUTH_AFRICAN_SPECIES} from './south-africa.mjs?v=21';
 // Species-biased crown architecture in metres. An illustrative habit model,
 // not a simulation of growth, reaction wood, competition or branch mechanics.
 const add=(a,b)=>a.map((v,i)=>v+b[i]),sub=(a,b)=>a.map((v,i)=>v-b[i]),mul=(a,s)=>a.map(v=>v*s),dot=(a,b)=>a.reduce((s,v,i)=>s+v*b[i],0),norm=a=>mul(a,1/(Math.hypot(...a)||1)),mix=(a,b,t)=>add(mul(a,1-t),mul(b,t));

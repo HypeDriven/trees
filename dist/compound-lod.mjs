@@ -6,7 +6,7 @@ export function jacarandaPinnaScale(t){
  return (.66+.34*Math.sin(Math.PI*t))*(1-.56*Math.pow(t,1.7));
 }
 function jacarandaCoverage(x,y,pairs,leafletPairs){
- if(y<.03||y>.997)return 0;
+ if(y<0||y>.997)return 0;
  if(x<.0035&&y<.985)return 1;
  if(y>=.84&&x<.13){
   const z=(y-.84)/.145,cell=Math.round(z*13),s=cell/13,scale=(.60+.40*Math.sin(Math.PI*s))*(1-.40*s*s),dx=(x-.055*scale)/(.050*scale),dy=(z-s)/.028;
@@ -26,9 +26,9 @@ export function bipinnateCoverage(x,y,pairs=4,leafletPairs=9,terminal=false){
  const u=Math.abs(x-.5)*2;
  if(terminal)return jacarandaCoverage(u,y,pairs,leafletPairs);
  const rowStep=.66/(pairs-1),row=Math.round((y-.16-u*.10)/rowStep),center=.16+row*rowStep+u*.10;
- if(row<0||row>=pairs)return u<.004&&y>=.03&&y<=.86?1:0;
+ if(row<0||row>=pairs)return u<.004&&y>=0&&y<=.86?1:0;
  const scale=bipinnatePinnaScale(row/(pairs-1),leafletPairs>9),px=u/scale;
- if(y>.95||y<.03||u>.98)return 0;
+ if(y>.95||y<0||u>.98)return 0;
  if(u<.004&&y<.86)return 1;
  if(row<0||row>=pairs)return 0;
  if(px<.94&&Math.abs(y-center)<.0015)return 1;
@@ -39,7 +39,7 @@ export function bipinnateCoverage(x,y,pairs=4,leafletPairs=9,terminal=false){
 // Opposite simple leaves on a deciduous branchlet: not a compound leaf.
 export function redwoodSprayCoverage(x,y){
  const u=Math.abs(x-.5)*2,step=.74/23,row=Math.round((y-.08-u*.12)/step),center=.08+row*step+u*.12;
- if(y<.035||y>.985)return 0;if(u<.006&&y<.95)return 1;if(row<0||row>23)return 0;
+ if(y<0||y>.985)return 0;if(u<.006&&y<.95)return 1;if(row<0||row>23)return 0;
  const scale=bipinnatePinnaScale(row/23,true),s=u/scale,width=.013*Math.pow(Math.max(0,Math.sin(Math.PI*s)),.55)*(1-.18*s);
  return s>=.02&&s<.96&&Math.abs(y-center)<width?1:0;
 }
@@ -55,7 +55,7 @@ export function pineNeedleLayout(variant=4){
 }
 const pineLayouts=Array.from({length:8},(_,i)=>pineNeedleLayout(i));
 export function pineSprayCoverage(x,y,variant=4){
- const px=(x-.5)*2*.85,py=y*1.8;
+ const px=(x-.5)*2*.85,py=y*1.8;if(Math.abs(px)<.010&&py>=0&&py<.78)return 1;
  for(const needle of pineLayouts[Math.max(0,Math.min(7,Math.round(variant)))]){
   const {a,b,width,curve}=needle,dx=b[0]-a[0],dy=b[1]-a[1],qx=px-a[0],qy=py-a[1],L=Math.hypot(dx,dy),t=Math.max(0,Math.min(1,(qx*dx+qy*dy)/(L*L))),bend=curve*4*t*(1-t),ex=qx-dx*t+dy/L*bend,ey=qy-dy*t-dx/L*bend;
   if(Math.hypot(ex,ey)<width*(1-.85*Math.pow(t,7)))return 1;

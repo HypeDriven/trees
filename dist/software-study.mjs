@@ -1,8 +1,8 @@
 // A depth-buffered material renderer for leaf and shoot studies when neither
 // WebGPU nor WebGL2 is available. It uses the actual curved specimen triangles;
 // UV detail and wind share the same moving vertex positions, including veins.
-import {barkSample} from './wood.mjs?v=20';
-import {createLeafSurfaceTexture,LEAF_ANATOMY} from './leaf-anatomy.mjs?v=20';
+import {barkSample} from './wood.mjs?v=21';
+import {createLeafSurfaceTexture,LEAF_ANATOMY} from './leaf-anatomy.mjs?v=21';
 const norm=a=>{const l=Math.hypot(...a)||1;return a.map(v=>v/l);};
 const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
 const dot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
@@ -16,6 +16,9 @@ export function studyWindPosition(p,kind,phase,flutter,cfg,time){
   if(kind>.5){const f=Math.sin(time*7+phase+x*1.5)*flutter*cfg.leafSize*.08*cfg.wind*gust;y+=f;x+=f*.6;}
  }return[x,y,z];
 }
+// Whole-canopy primitives use the same position-dependent wind as GPU studies.
+// Missing local weights mean structural sway only; bases never get a free offset.
+export function primitiveWindPosition(p,primitive,cfg,time){return studyWindPosition(p,primitive.kind,primitive.phase??0,primitive.flutterAt?.(p)??0,cfg,time);}
 export function createSoftwareStudy(){
  let vertices,indices,projected,woodData,textures,patchTextures,signature='',patchSignature='',metricWidth=0,image,depth,width=0,height=0;
  const gamma=Uint8ClampedArray.from({length:4096},(_,i)=>Math.round(Math.pow(i/4095,1/2.2)*255));
