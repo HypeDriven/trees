@@ -1,11 +1,11 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const source=fs.readFileSync(require('node:path').join(__dirname,'../dist/app.js'),'utf8');
 (async()=>{
- const {SPECIES}=await import('../dist/botany.mjs'),{bipinnateCoverage,redwoodSprayCoverage,pineSprayCoverage}=await import('../dist/compound-lod.mjs');
+ const {SPECIES,FLOWER_NOTES}=await import('../dist/botany.mjs'),{bipinnateCoverage,redwoodSprayCoverage,pineSprayCoverage}=await import('../dist/compound-lod.mjs');
  const elements=new Map(),$=key=>{if(!elements.has(key))elements.set(key,{close(){},querySelector(){return{};}});return elements.get(key);};
  let files,downloaded,pixels,mask;
  const canvas={width:0,height:0,getContext(){return{createImageData(w,h){return{data:new Uint8ClampedArray(w*h*4)};},putImageData(p){pixels=p;}};},toBlob(done){mask=pixels.data.slice();done(new Blob([new Uint8Array([137,80,78,71,13,10,26,10])]));}};
- const context={assert,SPECIES,bipinnateCoverage,redwoodSprayCoverage,pineSprayCoverage,console,$,document:{createElement:()=>canvas},Uint8Array,Uint8ClampedArray,Float32Array,TextEncoder,Blob,Map,Math,JSON,Number,Promise,toast(){},zipDownload(value){files=value;},download(value){downloaded=value;},sync(){},schedule(){}};
+ const context={assert,SPECIES,FLOWER_NOTES,bipinnateCoverage,redwoodSprayCoverage,pineSprayCoverage,console,studyCamera(){},$,document:{createElement:()=>canvas},Uint8Array,Uint8ClampedArray,Float32Array,TextEncoder,Blob,Map,Math,JSON,Number,Promise,toast(){},zipDownload(value){files=value;},download(value){downloaded=value;},sync(){},schedule(){}};
  vm.createContext(context);
  vm.runInContext('const SPECIES_IDS='+source.match(/const SPECIES_IDS=(.*?);/)[1]+';let defaults='+source.match(/const defaults=(.*?);\n/)[1]+';let controls='+source.match(/const controls=(.*?);\n/)[1]+';let cfg={...defaults};let hidden=false;',context);
  vm.runInContext(source.slice(source.indexOf('async function thornCutoutFiles'),source.indexOf("$('#export').onclick=")),context);
@@ -26,7 +26,7 @@ const source=fs.readFileSync(require('node:path').join(__dirname,'../dist/app.js
  for(const[u,v]of tex.slice(90,96)){assert(u>=0&&u<=1/9+1e-6);assert(v>=0&&v<=.25+1e-6,'Redwood sprays need their own opacity row');}
  for(const[u,v]of tex.slice(96,102)){assert(u>=1/9-1e-6&&u<=2/9+1e-6);assert(v>=0&&v<=.25+1e-6,'Pine cohorts need their own atlas cell');}
  assert(obj.includes('f 1/1/1 2/2/2 3/3/3'));assert(mask.some(v=>v===0)&&mask.some(v=>v===255));
- const recipe=JSON.parse(files['recipe.json']);assert.equal(recipe.version,12);assert.equal(recipe.parameters.type,'sweetthorn');
+ const recipe=JSON.parse(files['recipe.json']);assert.equal(recipe.version,13);assert.equal(recipe.parameters.type,'sweetthorn');
  // Actual ZIP builder must preserve binary PNG bytes rather than text-encode them.
  vm.runInContext(source.slice(source.indexOf('function zipDownload('),source.indexOf('\n',source.indexOf('function zipDownload('))),context);
  vm.runInContext("zipDownload({'tiny.png':new Uint8Array([137,80,78,71,255,0])})",context);
@@ -40,5 +40,15 @@ const source=fs.readFileSync(require('node:path').join(__dirname,'../dist/app.js
   const input={files:[{async text(){return JSON.stringify(r);}}],value:'file'};
   await context.restore({target:input});assert.equal(vm.runInContext('cfg.type',context),type);assert.equal(vm.runInContext('cfg.fruitStage',context),'mature');assert.equal(input.value,'');
  }
+ // Flower recipes retain inspection choices and the exporter separates petal,
+ // filament, anther and stigma material groups.
+ const floralRecipe={format:'starhermit-trees',version:13,parameters:{...vm.runInContext('({...defaults})',context),type:'sakura',view:'flower',leafSize:.085,flowerLayout:'cluster',flowerStage:'bud',flowerSex:'female'}};
+ await context.restore({target:{files:[{async text(){return JSON.stringify(floralRecipe);}}],value:'file'}});
+ for(const key of ['view','flowerLayout','flowerStage','flowerSex'])assert.equal(vm.runInContext('cfg.'+key,context),floralRecipe.parameters[key]);
+ const floral=[];for(const kind of[.306,.307,.311,.312,.314,.30])for(let i=0;i<3;i++)floral.push(i*.001,0,0,0,1,0,.9,.8,.8,kind,0,0,i%2,0);
+ context.treeVertices=new Float32Array(floral);context.zipDownload=value=>{files=value;};
+ vm.runInContext("cfg={...defaults,type:'sakura',view:'flower',leafSize:.085};",context);
+ await vm.runInContext('exportMesh()',context);
+ for(const name of ['petal','filament','floral','stigma','calyx'])assert(files['starhermit-trees.obj'].includes('usemtl '+name));
  console.log('OBJ cutout UVs/materials, binary texture ZIPs, all new species recipes and legacy import passed');
 })().catch(e=>{console.error(e);process.exitCode=1;});

@@ -1,5 +1,5 @@
-import {EAST_ASIAN_SPECIES} from './east-asia.mjs?v=16';
-import {buildEastAsianOrgan} from './east-asia-organs.mjs?v=16';
+import {EAST_ASIAN_SPECIES} from './east-asia.mjs?v=17';
+import {buildEastAsianOrgan} from './east-asia-organs.mjs?v=17';
 // Geometric reproductive structures, in metres. Surface amplitudes and
 // developmental stages are illustrative; these are not scans or growth models.
 const add=(a,b)=>a.map((v,i)=>v+b[i]),sub=(a,b)=>a.map((v,i)=>v-b[i]),mul=(a,s)=>a.map(v=>v*s),dot=(a,b)=>a.reduce((s,v,i)=>s+v*b[i],0),cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],norm=a=>mul(a,1/(Math.hypot(...a)||1));

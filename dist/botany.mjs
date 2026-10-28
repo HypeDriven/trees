@@ -1,16 +1,17 @@
-import {leafContour,triangulateContour,PALMATE_VEINS,veinDistance} from './leaf-shapes.mjs?v=16';
-import {EAST_ASIAN_SPECIES} from './east-asia.mjs?v=16';
-import {buildEastAsianOrgan} from './east-asia-organs.mjs?v=16';
-import {jacarandaPinnaScale,bipinnatePinnaScale} from './compound-lod.mjs?v=16';
-import {buildGardenFlowers} from './garden-flowers.mjs?v=16';
-import {SOUTH_AFRICAN_SPECIES} from './south-africa.mjs?v=16';
-import {buildFruit,FRUIT_NOTES} from './fruit.mjs?v=16';
-import {shootGrowth,leafDevelopment,springPhenology,FOLIAGE_REFERENCES} from './foliage-growth.mjs?v=16';
-import {buildTreeArchitecture,ARCHITECTURE_NOTES} from './architecture.mjs?v=16';
-import {woodTube,woodRadius} from './wood.mjs?v=16';
-import {buildRootSystem,ROOT_PROFILES} from './roots.mjs?v=16';
+import {buildFlowers,FLOWER_NOTES} from './flowers.mjs?v=17';
+import {leafContour,triangulateContour,PALMATE_VEINS,veinDistance} from './leaf-shapes.mjs?v=17';
+import {EAST_ASIAN_SPECIES} from './east-asia.mjs?v=17';
+import {buildEastAsianOrgan} from './east-asia-organs.mjs?v=17';
+import {jacarandaPinnaScale,bipinnatePinnaScale} from './compound-lod.mjs?v=17';
+import {buildGardenFlowers} from './garden-flowers.mjs?v=17';
+import {SOUTH_AFRICAN_SPECIES} from './south-africa.mjs?v=17';
+import {buildFruit,FRUIT_NOTES} from './fruit.mjs?v=17';
+import {shootGrowth,leafDevelopment,springPhenology,FOLIAGE_REFERENCES} from './foliage-growth.mjs?v=17';
+import {buildTreeArchitecture,ARCHITECTURE_NOTES} from './architecture.mjs?v=17';
+import {woodTube,woodRadius} from './wood.mjs?v=17';
+import {buildRootSystem,ROOT_PROFILES} from './roots.mjs?v=17';
 // All geometry uses metres. Traits are a morphological model, not a growth simulator.
-export {ARCHITECTURE_NOTES,FOLIAGE_REFERENCES,FRUIT_NOTES};
+export {ARCHITECTURE_NOTES,FOLIAGE_REFERENCES,FRUIT_NOTES,FLOWER_NOTES};
 export const SPECIES = {
  ...SOUTH_AFRICAN_SPECIES,...EAST_ASIAN_SPECIES,
  oak: {name:'English oak',latin:'Quercus robur',family:'Fagaceae',leaf:[.05,.15],length:.09,petiole:[.002,.006],width:.34,bud:.005,veins:6,rows:10,twig:[.23,.19,.12],leafColor:[.11,.23,.045],fall:[.40,.23,.055],source:'https://www.worldfloraonline.org/taxon/wfo-0000292858',habit:'Broad, irregular crown; sturdy, sinuous limbs.',traits:['Alternate leaves; rounded lobes and basal auricles','Short petiole · 2–6 mm','Clustered terminal buds; stalked acorns'],range:'Blade length 50–150 mm; modeled within that typical range.',limitations:'Lobe number, pubescence and acorn form vary. Juvenile oaks can retain dead leaves; that variability is not simulated.'},
@@ -213,7 +214,7 @@ export function buildSpecimen(cfg,{hidden=false,preview=true}={}){
   if(fruit&&cfg.type==='birch'&&['summer','autumn'].includes(cfg.season))addFruit(norm([.10,-1,.04]),cfg.season==='summer'?'developing':'mature');
   if(pineLike){
    if(fruit)addFruit(norm(add(mul(dir,-.48),[0,-.7,0])),'mature');
-   if(flower&&cfg.season==='spring'){let top=add(p,mul(dir,.04));solid(top,dir,.045,.003,[.48,.43,.18],.3,true);for(let k=0;k<3;k++)solid(add(top,mul(u,k*.004)),dir,.01,.002,[.55,.35,.08],.3,true);solid(add(top,mul(dir,.04)),dir,.006,.002,[.39,.12,.13],.3,true);flowers+=4;}
+   if(flower&&cfg.season==='spring'){if(cfg.type==='chinesepine'){const detail=buildFlowers(m,cfg,{base:p,axis:dir,fine,seed:Math.floor(R(1,999999))});stats.flowerDetails.push(detail);return;}let top=add(p,mul(dir,.04));solid(top,dir,.045,.003,[.48,.43,.18],.3,true);for(let k=0;k<3;k++)solid(add(top,mul(u,k*.004)),dir,.01,.002,[.55,.35,.08],.3,true);solid(add(top,mul(dir,.04)),dir,.006,.002,[.39,.12,.13],.3,true);flowers+=4;}
   }
  }
 
@@ -255,7 +256,9 @@ export function buildSpecimen(cfg,{hidden=false,preview=true}={}){
  // Skeleton: alternate lateral shoots on angiosperms; whorled scaffolds on pine.
  function path(p,d,len,droop=0,wiggle=.04,steps=9){let pts=[p],dir=norm(d),a=R(0,6.28);for(let i=1;i<=steps;i++){dir=norm(add(dir,[Math.sin(a+i*.7)*wiggle,droop/steps,Math.cos(a+i*.8)*wiggle]));p=add(p,mul(dir,len/steps));if(p[1]<.025)p=[p[0],.025,p[2]];pts.push(p)}return pts}
  function rec(points,r0,r1,depth,phase=R(0,6.28),fruit=false){let r={points,r0,r1,depth,phase,fruit,children:0};records.push(r);return r}
- if(cfg.view==='roots'){let baseRadius=buildTreeArchitecture(cfg).baseRadius;tube([[0,0,0],[.01,baseRadius*1.6,0],[0,Math.max(.55,baseRadius*2.6),0]],baseRadius,baseRadius*.82,sp.twig,0);rootSystem=buildRootSystem(m,cfg,{preview,study:true,baseRadius});
+ if(cfg.view==='flower'){
+  const twig=[[-.012,-.002,-.002],[0,0,0],[.012,.001,.002]];tube(twig,.0018,.0013,sp.twig,0);const detail=buildFlowers(m,cfg,{base:twig[1],axis:[0,0,1],fine:true,study:true});stats.flowerDetails.push(detail);flowers=detail.flowers;inspectFocus=detail.focus;inspectDistance=detail.inspectDistance;stats.flowerStudy=detail;
+ }else if(cfg.view==='roots'){let baseRadius=buildTreeArchitecture(cfg).baseRadius;tube([[0,0,0],[.01,baseRadius*1.6,0],[0,Math.max(.55,baseRadius*2.6),0]],baseRadius,baseRadius*.82,sp.twig,0);rootSystem=buildRootSystem(m,cfg,{preview,study:true,baseRadius});
  }else if(cfg.view==='wood'||cfg.view==='bark'){
   const part=cfg.woodPart||'junction';let main,rad;
   if(cfg.type==='monkeytail'){main=[[0,0,0],[.004,.12,0],[-.003,.24,.004],[.006,.38,.002],[.003,.48,0]];rad=.024;rec(main,rad,.020,0);tube(main,rad,.020,sp.twig,0);if(part==='junction'){let p=main[2],pts=[p,add(p,[.035,.055,.005]),add(p,[.075,.16,.015])];rec(pts,.016,.012,1);tube(pts,.016,.012,sp.twig,0);}}else if(part==='branch'){

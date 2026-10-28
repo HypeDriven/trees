@@ -17,3 +17,5 @@
 .fruit-panel{border-top:1px solid var(--line);margin-top:20px}.fruit-panel .botany-button{margin-top:14px}.fruit-panel #fruit-controls{margin-top:18px}@media(max-width:800px){.fruit-panel{grid-column:1/-1}}
 
 .species-region{font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#7d8977;margin:14px 0 9px}.season-note{font-size:9px;color:#879181;line-height:1.5;margin:9px 0 0}.southern-presets button{min-height:55px}
+
+#flower-panel[hidden],#flower-panel [hidden]{display:none!important}#flower-panel{padding:4px 0 12px}#flower-panel>p{font-size:10px;line-height:1.8}#flower-source{font-size:10px;color:#627d50}#viewport[data-view=flower] .scene-bottom>div:first-child{background:#f7f9f0e8;border:1px solid #e0e6d7;border-radius:7px;padding:10px 14px}#viewport[data-view=flower] .scene-bottom h2{font-size:23px}#flower-panel .wood-actions button{font-size:9px}

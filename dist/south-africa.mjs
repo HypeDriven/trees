@@ -1,4 +1,4 @@
-import {GARDEN_SPECIES,GARDEN_PRESETS,GARDEN_CROWNS,GARDEN_REFERENCES} from './garden-species.mjs?v=16';
+import {GARDEN_SPECIES,GARDEN_PRESETS,GARDEN_CROWNS,GARDEN_REFERENCES} from './garden-species.mjs?v=17';
 // Adult organ ranges in metres; regional crown and root settings are
 // illustrative profiles, not fixed dimensions or a calibrated growth model.
 export const SOUTH_AFRICAN_SPECIES={

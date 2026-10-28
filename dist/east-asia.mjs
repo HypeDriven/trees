@@ -15,7 +15,7 @@ export const EAST_ASIAN_PRESETS={
  ginkgo:{height:18,spread:.85,leafSize:.055,density:72,rootDepth:1.5,season:'summer'},
  dawnredwood:{height:24,spread:.8,leafSize:.014,density:72,rootDepth:1,season:'summer'},
  chinesepine:{height:16,spread:1.1,leafSize:.105,density:76,rootDepth:1.5,maturity:.8,season:'summer'},
- sweetgum:{height:17,spread:.9,leafSize:.105,density:72,rootDepth:1.4,season:'summer'},
+ sweetgum:{height:17,spread:.9,leafSize:.105,density:72,rootDepth:1.4,season:'summer',flowerSex:'female'},
  redbud:{height:5,spread:1.1,leafSize:.095,density:68,rootDepth:1.3,season:'summer',springProgress:.78}
 };
 export const EAST_ASIAN_CROWNS={

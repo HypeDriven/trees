@@ -1,3 +1,4 @@
+import {buildFlowers} from './flowers.mjs?v=17';
 // Separate geometric flowers, seeds and fruit; dimensions in metres.
 const add=(a,b)=>a.map((v,i)=>v+b[i]),sub=(a,b)=>a.map((v,i)=>v-b[i]),mul=(a,s)=>a.map(v=>v*s),cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],norm=a=>mul(a,1/(Math.hypot(...a)||1));
 const frame=d=>{const u=norm(cross(d,Math.abs(d[1])>.94?[1,0,0]:[0,1,0]));return[u,norm(cross(u,d))]},TAU=Math.PI*2,GOLD=Math.PI*(3-Math.sqrt(5));
@@ -17,41 +18,8 @@ export function buildEastAsianOrgan(mesh,cfg,{mode='fruit',base=[0,0,0],axis=[0,
  function lathe(p,dir,L,radius,col,kind=.36,rows=fine?32:4,sides=fine?28:6){const[a,b]=frame(dir);patch((t,x)=>{const a0=(x+1)*Math.PI,r=radius(t);return add(p,add(mul(dir,L*t),add(mul(a,Math.cos(a0)*r),mul(b,Math.sin(a0)*r))));},rows,sides,col,kind,0,[Math.max(radius(.5),.0001)*TAU,L],'tube');}
  function rod(p,q,r,col=[.29,.22,.12],kind=.36){const dir=norm(sub(q,p));lathe(p,dir,Math.hypot(...sub(q,p)),t=>r*(1-.28*t),col,kind,1,fine?6:3);}
  function seedBody(p,dir,L,r,col,kind=.34){lathe(p,dir,L,t=>r*Math.pow(Math.max(0,Math.sin(Math.PI*t)),.55),col,kind);}
- function petal(p,dir,side,L,W,col,notched=false){const n=norm(cross(side,dir));patch((t,x)=>{const tip=notched?1-.13*Math.exp(-Math.pow(x/.17,2))*Math.pow(t,10):1;return add(p,add(mul(dir,L*t*tip),add(mul(side,x*W*Math.pow(Math.sin(Math.PI*t*(notched?.82:1)),.65)),mul(n,L*(.10*t*t+.12*x*x*Math.sin(Math.PI*t))))));},fine?20:2,fine?10:2,col,.305,fine?.000055:0,[W*2,L]);}
  function wingedSeed(p,dir,L,W){const[a,b]=frame(dir);seedBody(p,dir,L*.62,W*.38,[.30,.19,.085]);patch((t,x)=>add(p,add(mul(dir,L*t),add(mul(a,x*W*Math.pow(Math.sin(Math.PI*t),.6)),mul(b,L*.035*x*x*Math.sin(Math.PI*t))))),fine?16:3,fine?8:2,[.58,.41,.22],.42,fine?.000025:0,[W*2,L]);}
- if(mode==='flower'){
-  if(type==='sakura'){
-   const count=fine?5:4,top=add(base,mul(d,.004));rod(base,top,.00065);
-   for(let k=0;k<count;k++){const a=k*GOLD,q=add(top,add(mul(u,Math.cos(a)*.015),mul(v,Math.sin(a)*.015))),face=norm(add(mul(d,.25),add(mul(u,Math.cos(a)*.6),mul(v,Math.sin(a)*.6)))),[a0,b0]=frame(face);rod(top,q,.00045,[.43,.23,.16]);
-    if(!fine){
-     for(let j=0;j<5;j++){const theta=j*TAU/5,outward=add(mul(a0,Math.cos(theta)),mul(b0,Math.sin(theta))),side=norm(cross(face,outward)),L=.014,ps=[q,add(q,add(mul(outward,L*.55),mul(side,-L*.45))),add(q,mul(outward,L)),add(q,add(mul(outward,L*.55),mul(side,L*.45)))];for(const n of[0,1,2,0,2,3])mesh.v(ps[n],face,[.92,.78,.81],.305,seed*.013,0,[n%2*.01,n>1?.014:0]);}
-     mesh.preview.push({pts:Array.from({length:10},(_,i)=>{const a=i*Math.PI/5,r=i%2?.006:.014;return add(q,add(mul(a0,Math.cos(a)*r),mul(b0,Math.sin(a)*r)));}),n:face,c:[.92,.78,.81],kind:.305,phase:0});
-     const r=.0017,ps=[add(q,mul(a0,r)),add(q,add(mul(a0,-r),mul(b0,r))),add(q,add(mul(a0,-r),mul(b0,-r)))];for(const p of ps)mesh.v(p,face,[.70,.50,.20],.3,0,0,[0,0]);out.petals+=5;out.flowers++;continue;
-    }
-
-    seedBody(add(q,mul(face,-.003)),face,.004,.0023,[.45,.23,.19],.3);
-    for(let j=0;j<5;j++){const theta=j*TAU/5,outward=add(mul(a0,Math.cos(theta)),mul(b0,Math.sin(theta))),side=norm(cross(face,outward)),L=R(k*9+j,.012,.016);petal(q,outward,side,L,L*.48,(t)=>[.92,.73+.15*t,.76+.13*t],true);out.petals++;petal(add(q,mul(face,-.001)),outward,side,.004,.001,[.30,.36,.13]);}
-    for(let j=0;j<(fine?25:8);j++){const theta=j*GOLD,tip=add(q,add(mul(face,.0055),add(mul(a0,Math.cos(theta)*.0034),mul(b0,Math.sin(theta)*.0034))));rod(q,tip,.000055,[.77,.64,.40],.3);if(fine)seedBody(tip,face,.00065,.00025,[.72,.51,.17],.3);out.stamens++;}
-    rod(q,add(q,mul(face,.0068)),.00014,[.57,.64,.27],.3);out.flowers++;
-   }
-   out.notchedPetals=true;out.sepals=out.flowers*5;
-  }else if(type==='redbud'){
-   const count=fine?7:5;for(let k=0;k<count;k++){const a=k*GOLD,q=add(base,add(mul(u,Math.cos(a)*.008),mul(v,Math.sin(a)*.008))),dir=norm(add(mul(u,Math.cos(a)),add(mul(v,Math.sin(a)),mul(d,.35)))),[side,up]=frame(dir);rod(base,q,.0004);
-    petal(q,norm(add(mul(dir,.3),mul(up,.9))),side,.012,.0055,[.57,.07,.29]);
-    for(const sign of[-1,1]){petal(q,norm(add(mul(dir,.8),mul(side,sign*.6))),up,.010,.0032,[.53,.045,.24]);petal(q,norm(add(mul(dir,.95),mul(up,-.3))),mul(side,sign),.009,.0022,[.41,.025,.19]);}
-    out.flowers++;out.petals+=5;
-   }out.peaFlowers=true;
-  }else if(type==='maple'){
-   for(let k=0;k<(fine?7:4);k++){const a=k*GOLD,q=add(base,add(mul(d,.032+R(k,.0,.018)),add(mul(u,Math.cos(a)*.012),mul(v,Math.sin(a)*.012))));rod(base,q,.00025);seedBody(q,d,.003,.002,[.45,.49,.12],.3);for(let j=0;j<(fine?8:3);j++){const theta=j*GOLD,tip=add(q,add(mul(d,.004),add(mul(u,Math.cos(theta)*.002),mul(v,Math.sin(theta)*.002))));rod(q,tip,.00007,[.55,.48,.17],.3);out.stamens++;}out.flowers++;}out.petals=0;
-  }else if(type==='ginkgo'){
-   const tip=add(base,mul(d,.025));rod(base,tip,.00045);for(const sign of[-1,1]){const p=add(tip,mul(u,sign*.003));rod(tip,p,.0003);seedBody(p,d,.003,.0016,[.30,.42,.13],.3);out.ovules++;}
-  }else if(type==='dawnredwood'){
-   for(let k=0;k<3;k++){const p=add(base,add(mul(u,(k-1)*.006),mul(d,k*.003)));seedBody(p,d,.006,.002,[.46,.30,.10],.3);}out.pollenCones=3;
-  }else if(type==='sweetgum'){
-   seedBody(base,d,.006,.0035,[.35,.42,.12],.3);out.flowers=1;out.femaleHead=true;
-  }
-  return out;
- }
+ if(mode==='flower')return buildFlowers(mesh,cfg,{base,axis,fine,seed,study:cfg.view==='flower'});
  if(type==='maple'){
   const p=add(base,mul(d,.016));rod(base,p,.00065);const L=R(1,.025,.030)*(young?.65:1),angle=.65,col=young?[.33,.42,.12]:[.52,.36,.15];
   for(const sign of[-1,1]){const dir=norm(add(mul(d,.90),mul(u,sign*angle))),side=norm(cross(dir,v));seedBody(p,dir,.007,.0032,col);const q=add(p,mul(dir,.003));patch((t,x)=>add(q,add(mul(dir,L*t),add(mul(side,(x*.5+.5)*L*.25*Math.pow(Math.sin(Math.PI*t),.65)*sign),mul(v,L*.025*Math.sin(t*Math.PI)*x)))),fine?48:7,fine?12:3,(t,x)=>col.map(c=>c*(.93+.06*Math.sin(t*50+x*14))),.42,fine?.00007:0,[L*.25,L]);out.wingedSeeds++;}
