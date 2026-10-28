@@ -24,9 +24,9 @@ const source=fs.readFileSync(require('node:path').join(__dirname,'../dist/app.js
  const tex=obj.split('\n').filter(l=>l.startsWith('vt ')).map(l=>l.split(' ').slice(1).map(Number));for(let n=0;n<4;n++){const slot=n+1;for(const [u,v]of tex.slice(18+n*6,24+n*6)){assert(u>=slot/9-1e-6&&u<=(slot+1)/9+1e-6);assert(v>=.5-1e-6&&v<=.75+1e-6,'Fever-tree UVs must address the fine-leaflet atlas row');}}
  for(let n=0;n<8;n++)for(const [u,v]of tex.slice(42+n*6,48+n*6)){assert(u>=n/9-1e-6&&u<=(n+1)/9+1e-6);assert(v>=.25-1e-6&&v<=.5+1e-6,'Jacaranda UVs must address the terminal-pinna atlas row');}
  for(const[u,v]of tex.slice(90,96)){assert(u>=0&&u<=1/9+1e-6);assert(v>=0&&v<=.25+1e-6,'Redwood sprays need their own opacity row');}
- for(const[u,v]of tex.slice(96,102)){assert(u>=1/9-1e-6&&u<=2/9+1e-6);assert(v>=0&&v<=.25+1e-6,'Pine cohorts need their own atlas cell');}
+ for(const[u,v]of tex.slice(96,102)){assert(u>=5/9-1e-6&&u<=6/9+1e-6);assert(v>=0&&v<=.25+1e-6,'Pine cohorts need their own atlas cell');}
  assert(obj.includes('f 1/1/1 2/2/2 3/3/3'));assert(mask.some(v=>v===0)&&mask.some(v=>v===255));
- const recipe=JSON.parse(files['recipe.json']);assert.equal(recipe.version,14);assert.equal(recipe.parameters.type,'sweetthorn');assert.equal(recipe.parameters.shootStage,'extending');
+ const recipe=JSON.parse(files['recipe.json']);assert.equal(recipe.version,15);assert.equal(recipe.parameters.type,'sweetthorn');assert.equal(recipe.parameters.shootStage,'extending');
  // Actual ZIP builder must preserve binary PNG bytes rather than text-encode them.
  vm.runInContext(source.slice(source.indexOf('function zipDownload('),source.indexOf('\n',source.indexOf('function zipDownload('))),context);
  vm.runInContext("zipDownload({'tiny.png':new Uint8Array([137,80,78,71,255,0])})",context);
@@ -45,6 +45,9 @@ const source=fs.readFileSync(require('node:path').join(__dirname,'../dist/app.js
  const floralRecipe={format:'starhermit-trees',version:13,parameters:{...vm.runInContext('({...defaults})',context),type:'sakura',view:'flower',leafSize:.085,flowerLayout:'cluster',flowerStage:'bud',flowerSex:'female'}};
  await context.restore({target:{files:[{async text(){return JSON.stringify(floralRecipe);}}],value:'file'}});
  for(const key of ['view','flowerLayout','flowerStage','flowerSex'])assert.equal(vm.runInContext('cfg.'+key,context),floralRecipe.parameters[key]);
+ const needleRecipe={format:'starhermit-trees',version:15,parameters:{...vm.runInContext('({...defaults})',context),type:'chinesepine',view:'surface',leafSize:.105,needleFace:'flat',shootStage:'extending',season:'summer'}};
+ await context.restore({target:{files:[{async text(){return JSON.stringify(needleRecipe);}}],value:'file'}});
+ for(const key of ['type','view','needleFace','shootStage'])assert.equal(vm.runInContext('cfg.'+key,context),needleRecipe.parameters[key]);
  const floral=[];for(const kind of[.306,.307,.311,.312,.314,.30])for(let i=0;i<3;i++)floral.push(i*.001,0,0,0,1,0,.9,.8,.8,kind,0,0,i%2,0);
  context.treeVertices=new Float32Array(floral);context.zipDownload=value=>{files=value;};
  vm.runInContext("cfg={...defaults,type:'sakura',view:'flower',leafSize:.085};",context);

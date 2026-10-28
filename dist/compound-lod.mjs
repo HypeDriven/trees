@@ -47,11 +47,17 @@ export function redwoodSprayCoverage(x,y){
 // Twelve two-needle fascicles projected onto one cohort card. Distances are
 // fractions of needle length, so the silhouettes remain about 1.2 mm wide
 // for a 100 mm needle. A crossed pair of cards represents twenty-four fascicles.
-export function pineSprayCoverage(x,y){
- const p=[(x-.5)*2*.85,y*1.8];
- for(let j=0;j<12;j++)for(let k=0;k<2;k++){
-  const sign=j%2?1:-1,a=[0,(.05+j*.032)*1.8],b=[sign*(.60+k*.035),a[1]+.75+k*.04],d=b.map((v,i)=>v-a[i]),q=p.map((v,i)=>v-a[i]),t=Math.max(0,Math.min(1,(q[0]*d[0]+q[1]*d[1])/(d[0]*d[0]+d[1]*d[1]))),width=.006*(1-.8*Math.pow(t,8));
-  if(Math.hypot(q[0]-d[0]*t,q[1]-d[1]*t)<width)return 1;
- }
- return 0;
+export function pineNeedleLayout(variant=4){
+ const out=[];for(let j=0;j<12;j++)for(let k=0;k<2;k++){
+  const r1=((j*37+variant*19)%101)/101,r2=((j*53+variant*29)%103)/103,r3=((j*31+variant*47)%107)/107,sign=j%2?1:-1,a=[(r2-.5)*.010,(.05+j*.032+(r1-.5)*.018)*1.8],dx=sign*(.43+.28*r2+k*.022),dy=(.58+.29*r3)*(k?1.012:.988),width=.0045+.0020*r1,curve=sign*(r3-.35)*.095;
+  out.push({fascicle:j,needle:k,a,b:[a[0]+dx,a[1]+dy],width,curve});
+ }return out;
+}
+const pineLayouts=Array.from({length:8},(_,i)=>pineNeedleLayout(i));
+export function pineSprayCoverage(x,y,variant=4){
+ const px=(x-.5)*2*.85,py=y*1.8;
+ for(const needle of pineLayouts[Math.max(0,Math.min(7,Math.round(variant)))]){
+  const {a,b,width,curve}=needle,dx=b[0]-a[0],dy=b[1]-a[1],qx=px-a[0],qy=py-a[1],L=Math.hypot(dx,dy),t=Math.max(0,Math.min(1,(qx*dx+qy*dy)/(L*L))),bend=curve*4*t*(1-t),ex=qx-dx*t+dy/L*bend,ey=qy-dy*t-dx/L*bend;
+  if(Math.hypot(ex,ey)<width*(1-.85*Math.pow(t,7)))return 1;
+ }return 0;
 }

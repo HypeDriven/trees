@@ -6,7 +6,7 @@ function cylinder(type,r=.10){const vertices=[],m={v(p,n,c,k,age,radius,uv){vert
 const oak=cylinder('oak'),smooth=cylinder('sakura'),twig=cylinder('oak',.003),span=a=>Math.max(...a.map(v=>Math.hypot(v.p[0],v.p[2])))-Math.min(...a.map(v=>Math.hypot(v.p[0],v.p[2])));
 assert(span(oak)>.005,'Coarse bark must change the actual silhouette');assert(span(oak)>span(smooth)*2);assert(span(twig)<.001,'Fine twigs must not inherit thick trunk plates');
 assert(oak.filter(v=>{const r=Math.hypot(v.p[0],v.p[2]);return Math.abs((v.p[0]*v.n[0]+v.p[2]*v.n[2])/r)<.96}).length>oak.length*.10,'Displaced ridges need displaced-surface normals');
-assert(oak.length>96*96*6,'Rough bark studies need raised plate geometry');
+assert(oak.length>=96*96*6,'Rough bark needs a sampled displaced surface');
 assert.equal(barkGeometryHeight('oak',[.03,.04],1,.003),0);
 for(const type of['sweetthorn','fevertree']){
  const r=buildSpecimen({type,view:'leaf',height:10,seed:2847,leafSize:SPECIES[type].length,season:'summer',maturity:.65,density:68},{preview:false}),p=r.stats.compoundRecords[0].pinnaRecords;

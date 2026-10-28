@@ -16,7 +16,7 @@ for(const [type,species] of Object.entries(SPECIES)){
  assert(Math.max(...potentials)/Math.min(...potentials)>1.25,'Need variation between shoots and leaf positions');
  const spring=buildSpecimen({...cfg,view:'shoot',density:32,maturity:.65,reproductive:false});
  assert(spring.stats.organGrowth.some(x=>x.expansion<.5));
- if(type==='pine')for(let i=0;i<spring.stats.leafLengths.length;i+=2)assert.equal(spring.stats.leafLengths[i],spring.stats.leafLengths[i+1]);
+ if(type==='pine')for(let i=0;i<spring.stats.leafLengths.length;i+=2)assert(Math.abs(spring.stats.leafLengths[i]/spring.stats.leafLengths[i+1]-1)<.04,'Needles in one fascicle need strongly correlated, slightly varied lengths');
  console.log(type+': developing apical organs, adult ranges, shoot variation and seasonal expansion passed');
 }
 

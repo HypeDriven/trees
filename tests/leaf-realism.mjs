@@ -50,6 +50,7 @@ function flatPatch(n){const out=[];for(let y=0;y<n;y++)for(let x=0;x<n;x++)for(c
 const pc={...c,wind:0},pv=new Float32Array([0,0,0,-1,0,3.2,0,0,-3.2,0,0,0,0,-.032,0,.04]);
 const patch=n=>{renderer.upload(flatPatch(n),{...pc,view:'leaf',widthRatio:SPECIES.oak.width});return renderer.render({vp:pv,eye:[.04,.01,0],sun:[1,.4,.5],cfg:pc,time:0,width:160,height:160}).data.slice();};
 const coarse=patch(1),fine=patch(10);assert(coarse[(80*160+80)*4]<170,'The test patch is not visible');let error=0,count=0;for(let y=28;y<132;y++)for(let x=28;x<132;x++)for(let k=0;k<3;k++){error+=Math.abs(coarse[(y*160+x)*4+k]-fine[(y*160+x)*4+k]);count++;}assert(error/count<.65,'Macro shading changes with triangle rows');
+const woodPatch=flatPatch(1);for(let i=0;i<woodPatch.length;i+=14){woodPatch[i+9]=0;woodPatch[i+10]=.7;}renderer.upload(woodPatch,{...c,view:'bark',widthRatio:SPECIES.oak.width});renderer.upload(oak.vertices,{...c,view:'leaf',widthRatio:SPECIES.oak.width});assert.deepEqual(render(0),a,'Returning from bark loses the leaf material cache');
 const app=fs.readFileSync(new URL('../dist/app.js',import.meta.url),'utf8');
 assert(app.includes('study.upload(botanical.vertices'));assert(app.includes('study.render({vp,eye,sun,cfg,time:elapsed'));assert(app.includes("next.shootStage=['extending','set']"));
 console.log('Actual fallback image has moving, light-responsive material detail on the curved leaf mesh');

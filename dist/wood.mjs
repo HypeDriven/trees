@@ -1,4 +1,4 @@
-import {EAST_ASIAN_SPECIES} from './east-asia.mjs?v=18';
+import {EAST_ASIAN_SPECIES} from './east-asia.mjs?v=19';
 // Physical-scale procedural wood. Relief amplitudes are illustrative, not scans.
 const add=(a,b)=>a.map((x,i)=>x+b[i]),sub=(a,b)=>a.map((x,i)=>x-b[i]),mul=(a,s)=>a.map(x=>x*s),dot=(a,b)=>a.reduce((s,x,i)=>s+x*b[i],0),cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],norm=a=>mul(a,1/(Math.hypot(...a)||1));
 const fract=x=>x-Math.floor(x),mix=(a,b,t)=>a+(b-a)*t,smooth=(a,b,x)=>{let t=Math.max(0,Math.min(1,(x-a)/(b-a)));return t*t*(3-2*t)};
@@ -6,16 +6,31 @@ const hash=(x,y)=>fract(Math.sin(x*127.1+y*311.7)*43758.5453);
 export function woodNoise(x,y){let a=Math.floor(x),b=Math.floor(y),u=smooth(0,1,fract(x)),v=smooth(0,1,fract(y));return mix(mix(hash(a,b),hash(a+1,b),u),mix(hash(a,b+1),hash(a+1,b+1),u),v)}
 function woodCell(x,y){let a=Math.floor(x),b=Math.floor(y),fx=fract(x),fy=fract(y),near=8,second=8,id=.5;for(let i=-1;i<=1;i++)for(let j=-1;j<=1;j++){let hx=hash(a+i,b+j),hy=fract(Math.sin((a+i)*269.5+(b+j)*183.3)*43758.5453),dx=i+.2+.6*hx-fx,dy=j+.2+.6*hy-fy,d=dx*dx+dy*dy;if(d<near){second=near;near=d;id=hx}else second=Math.min(second,d)}return[Math.sqrt(second)-Math.sqrt(near),id]}
 export const BARK_GEOMETRY={
- oak:.014,willow:.012,pine:.011,sweetthorn:.012,marula:.008,wildolive:.010,yellowwood:.008,karee:.009,jacaranda:.008,sausagetree:.006,
- maple:.012,sakura:.0025,ginkgo:.013,dawnredwood:.010,chinesepine:.012,sweetgum:.010,redbud:.005,birch:.0015,baobab:.003,fevertree:.0007,eucalyptus:.0014,monkeytail:.0005
+ oak:.014,willow:.012,pine:.011,sweetthorn:.012,marula:.008,wildolive:.010,yellowwood:.008,karee:.009,jacaranda:.008,sausagetree:.0035,
+ maple:.012,sakura:.0025,ginkgo:.013,dawnredwood:.010,chinesepine:.012,sweetgum:.010,redbud:.0022,birch:.0015,baobab:.003,fevertree:.0007,eucalyptus:.0014,monkeytail:.0005
+};
+// Metre-scale morphology classes. Depths and pitches are representative
+// modelling values; smooth species deliberately do not inherit coarse plates.
+export const BARK_PROFILES={
+ oak:['furrowed',.024,.085],willow:['furrowed',.018,.10],pine:['plated',.034,.045],birch:['lenticels',.028,.014],
+ sweetthorn:['furrowed',.022,.065],marula:['flaky',.037,.042],wildolive:['furrowed',.018,.075],yellowwood:['fibrous',.010,.12],
+ baobab:['folded',.11,.24],fevertree:['powdery',.009,.012],sausagetree:['flaky',.027,.035],karee:['furrowed',.016,.070],
+ jacaranda:['furrowed',.020,.048],monkeytail:['fibres',.0015,.014],eucalyptus:['peeling',.045,.090],
+ maple:['plated',.028,.065],sakura:['lenticels',.025,.012],ginkgo:['furrowed',.029,.13],dawnredwood:['fibrous',.012,.15],
+ chinesepine:['plated',.037,.048],sweetgum:['furrowed',.018,.060],redbud:['flaky',.018,.028]
 };
 export function barkGeometryHeight(type,uv,age,radius){
- if(radius<.012||type==='monkeytail')return 0;
+ if(radius<.012)return 0;
  const amp=Math.min(BARK_GEOMETRY[type]??.008,radius*.12)*smooth(.012,.055,radius)*age,x=uv[0],y=uv[1],warp=woodNoise(x*9,y*4);
- if(['birch','sakura','fevertree','eucalyptus'].includes(type))return amp*(woodNoise(x*27,y*40)-.5);
- if(type==='baobab')return amp*Math.sin(x*42+woodNoise(x*3,y*2)*3);
- const pine=type==='pine'||type==='chinesepine',cell=woodCell(x*(pine?26:22)+warp*.6,y*(pine?20:7)+woodNoise(x*4,y*6)*.5),edge=1-smooth(.025,.18,cell[0]),ridge=Math.pow(.5+.5*Math.sin(x*(type==='dawnredwood'?340:170)+warp*4),2.5);
- return amp*((1-edge)*(.45+.55*cell[1])-.48*edge+.18*(ridge-.5));
+ const [pattern,pitch,length]=BARK_PROFILES[type],qx=x/pitch+warp*.65+Math.sin(y*9)*.15,qy=y/length+woodNoise(x*5,y*6)*.40;
+ if(pattern==='powdery'||pattern==='peeling')return amp*(woodNoise(x*75,y*95)-.5);
+ if(pattern==='lenticels'){const row=Math.floor(y/length),a=fract(x/pitch+hash(row,1)*2),b=fract(y/length),lenticel=(1-smooth(.025,.13,Math.abs(b-.5)))*(1-smooth(.13,.40,Math.abs(a-.5)));return amp*((woodNoise(x*42,y*65)-.5)*.20-lenticel*.45);}
+ if(pattern==='folded')return amp*(Math.sin(qx*Math.PI*2)*.65+woodNoise(x*35,y*22)*.12);
+ if(pattern==='fibres')return amp*(Math.pow(.5+.5*Math.sin(qx*6.283+y*15),8)-.25);
+ const cell=woodCell(qx,qy),edge=1-smooth(.016,.16,cell[0]);
+ if(pattern==='fibrous'){const wave=.5+.5*Math.sin(qx*6.283+Math.sin(y*23)*.6),split=Math.pow(1-wave,5);return amp*(wave*.70-split*.42+(cell[1]-.5)*.16);}
+ if(pattern==='furrowed'){const wave=.5+.5*Math.sin(qx*6.283+Math.sin(y*19)*.45),groove=Math.pow(1-wave,5),crossCrack=edge*.40;return amp*(wave*.65-Math.max(groove*.65,crossCrack)+cell[1]*.15);}
+ return amp*((1-edge)*(.40+.55*cell[1])-.55*edge+(pattern==='flaky'?.10:.20)*(woodNoise(x*230,y*190)-.5));
 }
 export function barkSample(type,uv,age=.65,zone=0){
  let x=uv[0],y=uv[1],coarse=woodNoise(x*13,y*8),warp=woodNoise(x*24,y*9),fibers=Math.sin(x*3100+Math.sin(y*180)*1.5),height=0,dark=0,rough=.82;
@@ -23,7 +38,7 @@ export function barkSample(type,uv,age=.65,zone=0){
  if(type==='monkeytail'){let fiber=Math.pow(.5+.5*Math.sin(x*2400+Math.sin(y*35)*.8),12),crossing=Math.pow(.5+.5*Math.sin(x*650+y*960),18),pores=woodNoise(x*1800,y*1400);return{height:fiber*.00038+crossing*.00022+(pores-.5)*.00006,dark:.3+.4*(1-fiber),roughness:.92,color:pores*.6+fiber*.4};}
  if(zone>.075&&type!=='pine'){let pores=woodNoise(x*950,y*750);return {height:(pores-.5)*.00005,dark:smooth(.8,1,pores)*.20,roughness:.60,color:coarse}}
  if(type==='birch'&&zone>.03&&zone<.05){let row=Math.floor(y*115),u=fract(x*42+hash(row,1)*2),v=fract(y*115),line=(1-smooth(.055,.14,Math.abs(v-.5)))*(1-smooth(.12,.36,Math.abs(u-.5)));let diamond=Math.abs(Math.sin(x*95+y*25))*Math.abs(Math.sin(x*95-y*25));let fissure=(1-smooth(.012,.04,diamond))*age*age;return{height:-.00017*line-.0012*fissure+(coarse-.5)*.00012,dark:Math.max(line*.78,fissure*.72),roughness:.50+coarse*.16,color:coarse}}
- if(['maple','ginkgo','sweetgum','redbud'].includes(type)){const cell=woodCell(x*48+warp*.45,y*(type==='ginkgo'?13:19)+coarse*.3),crack=1-smooth(.018,.13,cell[0]);height=(.3-crack)*.0055*age;dark=crack*.75;rough=.86;
+ if(['maple','ginkgo','sweetgum','redbud'].includes(type)){const cell=woodCell(x*48+warp*.45,y*(type==='ginkgo'?13:19)+coarse*.3),crack=1-smooth(.018,.13,cell[0]);height=(.3-crack)*(type==='redbud'?.0012:.0055)*age;dark=crack*.75;rough=.86;
  }else if(type==='sakura'){const row=Math.floor(y*90),a=fract(x*32+hash(row,1)*2),b=fract(y*90),line=(1-smooth(.05,.15,Math.abs(b-.5)))*(1-smooth(.15,.38,Math.abs(a-.5)));height=-line*.00035+(coarse-.5)*.00012;dark=line*.52;rough=.57;
  }else if(type==='dawnredwood'){const phase=x*640+warp*5+Math.sin(y*14)*.7,split=Math.pow(.5+.5*Math.sin(phase),10);height=(.3-split)*.0055*age+(coarse-.5)*.001;dark=split*.72;rough=.88;
  }else if(type==='pine'){let upper=smooth(0,.06,zone),young=smooth(.06,.08,zone),cell=woodCell(x*mix(52,105,upper)+warp*.3,y*mix(24,85,upper)+coarse*.3),crack=1-smooth(.018,.11,cell[0]),pores=woodNoise(x*950,y*750);height=mix(((1-crack)*(.65+.35*cell[1])-.25*crack)*mix(.004,.0012,upper)*(.3+.7*age),(pores-.5)*.00005,young);dark=mix(crack*.80,smooth(.8,1,pores)*.20,young);rough=mix(mix(.85,.66,upper),.60,young);
@@ -50,23 +65,25 @@ export function pineBarkStyle(y,radius,treeHeight=10){
  return{zone:mix(.06*upper,.08,young),color:[.28,.235,.19].map((v,i)=>mix(v,[.36,.26,.185][i],upper))};
 }
 function interpolatePath(points,t){let x=t*(points.length-1),i=Math.min(points.length-2,Math.floor(x)),f=x-i,p0=points[Math.max(0,i-1)],p1=points[i],p2=points[i+1],p3=points[Math.min(points.length-1,i+2)];return p1.map((v,k)=>.5*((2*v)+(-p0[k]+p2[k])*f+(2*p0[k]-5*v+4*p2[k]-p3[k])*f*f+(-p0[k]+3*v-3*p2[k]+p3[k])*f*f*f))}
-export function woodTube(mesh,points,r0,r1,type,{fine=false,macro=false,maturity=.65,root=false,collar=false,preview=true,cap=false,zone:forceZone,treeHeight=10}={}){
+export function woodTube(mesh,points,r0,r1,type,{fine=false,macro=false,focusT=.44,maturity=.65,root=false,collar=false,preview=true,cap=false,zone:forceZone,treeHeight=10}={}){
  const pineLike=type==='pine'||type==='chinesepine',isTwig=r0<.007,white=type==='birch'&&r0>.018;
  let zone=forceZone??(pineLike?pineBarkStyle(points[0][1],r0,treeHeight).zone:isTwig?.08:white?.04:0),age=Math.max(.04,Math.min(1,maturity*(isTwig?.10:.35+.65*Math.min(1,r0/.09))));
  const southern={maple:[[.32,.29,.24],[.31,.21,.13]],sakura:[[.36,.23,.18],[.40,.22,.16]],ginkgo:[[.32,.30,.25],[.32,.28,.17]],dawnredwood:[[.40,.20,.12],[.42,.22,.13]],chinesepine:[[.31,.27,.21],[.35,.24,.15]],sweetgum:[[.32,.29,.24],[.33,.25,.17]],redbud:[[.31,.24,.19],[.34,.22,.15]],jacaranda:[[.32,.30,.26],[.30,.25,.18]],monkeytail:[[.045,.037,.030],[.11,.075,.045]],eucalyptus:[[.54,.52,.46],[.36,.20,.14]],baobab:[[.40,.37,.34],[.36,.34,.28]],fevertree:[[.43,.46,.19],[.40,.36,.20]],sausagetree:[[.37,.34,.28],[.34,.29,.21]],karee:[[.25,.235,.19],[.35,.19,.12]],sweetthorn:[[.20,.17,.135],[.34,.17,.10]],marula:[[.40,.38,.33],[.34,.30,.22]],wildolive:[[.29,.29,.24],[.30,.29,.20]],yellowwood:[[.33,.31,.26],[.25,.29,.17]]}[type];
  const base=zone===.04?[.70,.69,.62]:zone===.06?[.43,.20,.075]:zone===.08?(type==='willow'?[.34,.30,.095]:[.24,.15,.09]):type==='birch'?[.24,.22,.19]:type==='willow'?[.24,.22,.18]:[.27,.235,.19];
  const wholeGum=type==='eucalyptus'&&!fine&&!macro;
- let sides=macro?(preview?112:224):fine?96:root&&r0>.14?80:wholeGum?(r0>.14?40:r0>.035?16:r0>.007?8:5):r0>.14?56:r0>.035?24:r0>.007?10:5,steps=macro?(preview?120:200):fine?96:root&&r0>.14?120:Math.max(points.length-1,r0>.04?(wholeGum?24:32):points.length-1),rings=[],arc=0,previousU=null;
+ const pathLength=points.slice(1).reduce((s,p,i)=>s+Math.hypot(...sub(p,points[i])),0),halfSpan=Math.min(.5,.145/Math.max(.001,pathLength)),t0=macro?Math.max(0,focusT-halfSpan):0,t1=macro?Math.min(1,focusT+halfSpan):1;
+ let sides=macro?(r0<.04?320:512):fine?96:root&&r0>.14?80:wholeGum?(r0>.14?40:r0>.035?16:r0>.007?8:5):r0>.14?72:r0>.035?24:r0>.007?10:5,steps=macro?224:fine?96:root&&r0>.14?120:Math.max(points.length-1,r0>.04?(wholeGum?24:32):points.length-1),rings=[],arc=0,previousU=null;
+ const denseSteps=steps,samples=macro?[...new Set([...Array.from({length:33},(_,i)=>i/32),...Array.from({length:steps+1},(_,i)=>t0+(t1-t0)*i/steps)].map(v=>Math.round(v*1e10)/1e10))].sort((a,b)=>a-b):Array.from({length:steps+1},(_,i)=>i/steps);steps=samples.length-1;
  const phase=points[0][0]*.37+points[0][2]*.53,uvOffset=points[0][1];
  for(let j=0;j<=steps;j++){
-  let t=j/steps,p=interpolatePath(points,t),before=interpolatePath(points,Math.max(0,t-.0003)),after=interpolatePath(points,Math.min(1,t+.0003)),axis=norm(sub(after,before));if(j)arc+=Math.hypot(...sub(p,rings[j-1].center));
+  let t=samples[j],p=interpolatePath(points,t),before=interpolatePath(points,Math.max(0,t-.0003)),after=interpolatePath(points,Math.min(1,t+.0003)),axis=norm(sub(after,before));if(j)arc+=Math.hypot(...sub(p,rings[j-1].center));
   let u=previousU?norm(sub(previousU,mul(axis,dot(previousU,axis)))):norm(cross(axis,Math.abs(axis[1])>.94?[1,0,0]:[0,1,0]));if(Math.hypot(...u)<.9)u=norm(cross(axis,[0,0,1]));previousU=u;let v=norm(cross(u,axis)),r=woodRadius(r0,r1,t)*(type==='baobab'&&points[0][1]<.01&&r0>.45?1+.18*Math.sin(Math.PI*t):1),localAge=age*(.3+.7*Math.sqrt(r/r0)),collarBump=collar?.28*Math.exp(-Math.pow((arc-r0*2.6)/Math.max(.01,r0*1.3),2)):0,ring=[];
   const pineStyle=pineLike?pineBarkStyle(p[1],r,treeHeight):null,ringZone=forceZone??pineStyle?.zone??zone,ringBase=(type==='chinesepine'?southern[0].map((c,i)=>mix(c,southern[1][i],smooth(.18,.85,p[1]/Math.max(.1,treeHeight)))):pineStyle?.color)??(southern?southern[0].map((c,i)=>mix(c,southern[1][i],1-smooth(.003,.025,r))):base);
   for(let k=0;k<=sides;k++){
    let a=k/sides*Math.PI*2,n=add(mul(u,Math.cos(a)),mul(v,Math.sin(a))),uv=[a*r+phase,arc+uvOffset],surface=barkSample(type,uv,localAge,ringZone),rootFlare=root?.38*Math.exp(-arc/Math.max(.08,r0*2))*(.6+.4*Math.cos(a*5+phase)):0,rr=r*(1+collarBump+rootFlare)+(surface.height+barkGeometryHeight(type,uv,localAge,r))*Math.min(1,r/.02);
    let pos=add(p,mul(n,Math.max(r*.75,rr))),taper=(r0-r1)/Math.max(.001,Math.hypot(...sub(points.at(-1),points[0])));let normal=norm(add(n,mul(axis,taper)));
    const palette=type==='eucalyptus'?[.55,.54,.48].map((c,i)=>mix(mix(c,[.34,.36,.33][i],smooth(.24,.48,surface.color)),[.48,.34,.27][i],smooth(.52,.73,surface.color))):ringBase,youngEuc=type==='eucalyptus'?1-smooth(.003,.015,r):0;const co=palette.map((x,i)=>mix(x,[.36,.20,.14][i],youngEuc)*(.94+.12*surface.color));ring.push({p:pos,n:normal,c:co,uv,age:localAge,r,zone:ringZone});
-  }ring[sides].p=[...ring[0].p];ring[sides].n=[...ring[0].n];rings.push({points:ring,center:p,axis});
+  }ring[sides].p=[...ring[0].p];ring[sides].n=[...ring[0].n];rings.push({points:ring,center:p,axis,t});
  }
  for(let j=0;j<=steps;j++)for(let k=0;k<sides;k++){
   const q=rings[j].points[k],a=rings[j].points[(k+sides-1)%sides].p,b=rings[j].points[(k+1)%sides].p,c=rings[Math.max(0,j-1)].points[k].p,d=rings[Math.min(steps,j+1)].points[k].p;let n=norm(cross(sub(b,a),sub(d,c)));if(dot(n,q.n)<0)n=mul(n,-1);q.n=n;
@@ -80,9 +97,9 @@ export function woodTube(mesh,points,r0,r1,type,{fine=false,macro=false,maturity
    quad(get(j,-1),get(j+1,-1),get(j,1),get(j+1,1));
   }
  }
- if(fine&&r0>.025&&(BARK_GEOMETRY[type]??0)>.005){
-  for(let chip=0;chip<(macro?12:7);chip++){
-   const j=Math.floor(steps*(.16+.065*chip)),ring=rings[j],k=Math.floor(sides*((.11+chip*.213)%1)),q=ring.points[k],side=norm(cross(ring.axis,q.n)),L=Math.min(r0*.7,.024+.004*(chip%4)),W=L*.34,lift=Math.min(.0045,r0*.055);
+ if(fine&&r0>.025&&['plated','flaky','fibrous'].includes(BARK_PROFILES[type][0])){
+  for(let chip=0;chip<(macro?38:7);chip++){
+   const j=Math.floor(steps*(.08+.82*hash(chip+31,7))),ring=rings[j],k=Math.floor(sides*hash(chip+9,23)),q=ring.points[k],side=norm(cross(ring.axis,q.n)),L=Math.min(r0*.7,.012+.022*hash(chip,17)),W=L*(BARK_PROFILES[type][0]==='fibrous'?.10:.25),lift=Math.min(type==='redbud'?.0008:type==='sausagetree'?.0015:.0045,r0*.055)*(.4+.6*hash(chip,13));
    const point=(t,x,back)=>add(q.p,add(mul(ring.axis,L*t),add(mul(side,x*W*(1-.45*t)),mul(q.n,(lift*Math.pow(t,1.6)+.00025*Math.sin(Math.PI*t)*(1-x*x))-(back?.0007:0)))));
    for(let back=0;back<2;back++)for(let row=0;row<5;row++)for(let col=0;col<3;col++){const t=row/5,tt=(row+1)/5,x=col/3*2-1,xx=(col+1)/3*2-1,ps=[point(t,x,back),point(tt,x,back),point(t,xx,back),point(tt,xx,back)],n=norm(cross(sub(ps[1],ps[0]),sub(ps[2],ps[0]))),normal=back?mul(n,-1):n;for(const i of(back?[0,2,1,2,3,1]:[0,1,2,2,1,3]))mesh.v(ps[i],normal,q.c,q.zone,q.age,q.r,[(i<2?x:xx)*W,(i%2?tt:t)*L]);if(preview)mesh.preview.push({pts:[ps[0],ps[1],ps[3],ps[2]],n:normal,c:q.c,kind:q.zone,phase:0});}
   }
@@ -95,7 +112,8 @@ export function woodTube(mesh,points,r0,r1,type,{fine=false,macro=false,maturity
   }
  }
  if(cap){for(let end of [0,steps]){let ring=rings[end],normal=mul(ring.axis,end?1:-1),radius=end?r1:r0,center=ring.center,wood=[.48,.35,.21];for(let k=0;k<sides;k++){let a=ring.points[k],b=ring.points[k+1],cr=cross(sub(a.p,center),sub(b.p,center)),order=dot(cr,normal)>0?[a,b]:[b,a];let ca=k/sides*Math.PI*2,cb=(k+1)/sides*Math.PI*2;mesh.v(center,normal,wood,.12,age,radius,[0,0]);for(let q of order){let a0=q===a?ca:cb;mesh.v(q.p,normal,wood,.12,age,radius,[Math.cos(a0)*radius,Math.sin(a0)*radius])}if(preview)mesh.preview.push({pts:[center,a.p,b.p],n:normal,c:wood,kind:.12,phase:0})}}}
- return {rings:steps+1,sides,quadCount,zone,age,collar,root};
+ let study=null;if(macro){const ring=rings.reduce((best,r)=>Math.abs(r.t-focusT)<Math.abs(best.t-focusT)?r:best,rings[0]),q=ring.points.reduce((best,q)=>q.p[2]>best.p[2]?q:best,ring.points[0]);study={focus:[...q.p],center:[...ring.center],normal:[...q.n],radius:q.r,pattern:BARK_PROFILES[type][0],length:pathLength*(t1-t0),circumference:Math.PI*2*q.r,axialSpacing:pathLength*(t1-t0)/denseSteps,circumferentialSpacing:Math.PI*2*q.r/sides,rings:steps+1,sides,depth:BARK_GEOMETRY[type]*age};}
+ return {rings:steps+1,sides,quadCount,zone,age,collar,root,study};
 }
 export const WOOD_NOTES={
  ...Object.fromEntries(Object.entries(EAST_ASIAN_SPECIES).map(([key,sp])=>[key,{text:({maple:'Grey-brown mature bark develops coarse elongated plates and deep irregular furrows.',sakura:'Reddish-brown bark has shallow horizontal lenticels and fine peeling lines; young stems remain smooth.',ginkgo:'Grey-brown bark develops deep longitudinal furrows with broad uneven ridges.',dawnredwood:'Reddish-brown bark has long fibrous grooves and raised shredding strips above the fluted base.',chinesepine:'Thick scaly grey-brown basal plates share a continuous palette with warmer upper branches.',sweetgum:'Grey-brown bark has narrow intersecting furrows and uneven raised plates.',redbud:'Thin brown bark develops fine irregular scales on older stems.'})[key]+' Geometric relief and tissue scales are illustrative.',source:sp.source}])),
