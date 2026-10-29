@@ -35,3 +35,22 @@ for shader in [fs,depth]:
  results.append(np.array(outputs))
 assert np.array_equal(*results),'Colour and shadow silhouettes must match'
 print('Thorn-tree, jacaranda, pine and dawn-redwood colour/shadow masks match exported opacity textures')
+
+# Simplified broadleaf envelopes must preserve the botanical outline in both
+# passes, including oak lobes and serrated birch/cherry margins.
+species=['oak','willow','pine','birch','sweetthorn','marula','wildolive','yellowwood','baobab','fevertree','sausagetree','karee','jacaranda','monkeytail','eucalyptus','maple','sakura','ginkgo','dawnredwood','chinesepine','sweetgum','redbud']
+indices=[i for i,t in enumerate(species) if t not in ['maple','sweetgum','redbud','ginkgo','monkeytail']]
+js=f"""import {{bladeWidth}} from {json.dumps((root/'dist/botany.mjs').as_uri())};
+const species={json.dumps(species)},indices={json.dumps(indices)},w={w},h={h},a=new Float32Array(indices.length*w*h);let k=0;
+for(const i of indices)for(let y=0;y<h;y++)for(let x=0;x<w;x++)a[k++]=bladeWidth(species[i],(y+.5)/h,x<w/2?-1:1);
+process.stdout.write(Buffer.from(a.buffer));"""
+expected=np.frombuffer(subprocess.run(['node','--input-type=module','-e',js],cwd=root,stdout=subprocess.PIPE,check=True).stdout,dtype='f4').reshape(len(indices),h,w)
+for shader in [fs,depth]:
+ start=shader.index('float leafEnvelope(');end=shader.index('float leafLodCoverage(',start)
+ probe=c.program(vertex_shader='#version 330\nvoid main(){vec2 p=vec2((gl_VertexID<<1)&2,gl_VertexID&2);gl_Position=vec4(p*2.-1.,0,1);}',fragment_shader='#version 330\nuniform float species;out float mask;\n'+shader[start:end]+f'\nvoid main(){{vec2 uv=gl_FragCoord.xy/vec2({w}.,{h}.);mask=leafEnvelope(uv.y,uv.x<.5?-1.:1.,species);}}')
+ texture=c.texture((w,h),1,dtype='f4');frame=c.framebuffer(color_attachments=[texture]);frame.use();c.viewport=(0,0,w,h);vao=c.vertex_array(probe,[])
+ for j,i in enumerate(indices):
+  probe['species'].value=i;vao.render(vertices=3)
+  actual=np.frombuffer(frame.read(components=1,dtype='f4'),dtype='f4').reshape(h,w)
+  assert np.max(np.abs(actual-expected[j]))<.0001,f'{species[i]}: shader outline differs from botanical geometry'
+print('All simplified broadleaf colour/shadow outlines retain botanical lobes and teeth')

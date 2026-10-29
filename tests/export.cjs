@@ -6,7 +6,7 @@ const source=fs.readFileSync(require('node:path').join(__dirname,'../dist/app.js
  let files,downloaded,pixels,mask;
  const canvas={width:0,height:0,getContext(){return{createImageData(w,h){return{data:new Uint8ClampedArray(w*h*4)};},putImageData(p){pixels=p;}};},toBlob(done){mask=pixels.data.slice();done(new Blob([new Uint8Array([137,80,78,71,13,10,26,10])]));}};
  const context={assert,SPECIES,FLOWER_NOTES,bipinnateCoverage,redwoodSprayCoverage,pineSprayCoverage,console,studyCamera(){},$,document:{createElement:()=>canvas},Uint8Array,Uint8ClampedArray,Float32Array,TextEncoder,Blob,Map,Math,JSON,Number,Promise,toast(){},zipDownload(value){files=value;},download(value){downloaded=value;},sync(){},schedule(){}};
- vm.createContext(context);
+ let exportOptions;context.buildSpecimen=(_cfg,options)=>(exportOptions=options,{vertices:context.treeVertices});vm.createContext(context);
  vm.runInContext('const SPECIES_IDS='+source.match(/const SPECIES_IDS=(.*?);/)[1]+';let defaults='+source.match(/const defaults=(.*?);\n/)[1]+';let controls='+source.match(/const controls=(.*?);\n/)[1]+';let cfg={...defaults};let hidden=false;',context);
  vm.runInContext(source.slice(source.indexOf('async function thornCutoutFiles'),source.indexOf("$('#export').onclick=")),context);
  const vertices=[];for(let pairs=3;pairs<=5;pairs++)for(let i=0;i<6;i++)vertices.push(i*.01,0,0,0,1,0,.13,.27,.06,1.2+pairs*.01,0,0,i%2,i<3?0:1);
@@ -17,7 +17,7 @@ const source=fs.readFileSync(require('node:path').join(__dirname,'../dist/app.js
  context.treeVertices=new Float32Array(vertices);
  vm.runInContext("cfg={...defaults,type:'sweetthorn',view:'tree',leafSize:.006};",context);
  await vm.runInContext('exportMesh()',context);
- assert(files['starhermit-thorn.png'] instanceof Uint8Array);assert(files['starhermit-thorn-opacity.png'] instanceof Uint8Array);
+ assert.equal(exportOptions.detail,'full');assert.equal(exportOptions.omitBuried,false);assert(files['starhermit-thorn.png'] instanceof Uint8Array);assert(files['starhermit-thorn-opacity.png'] instanceof Uint8Array);
  assert(files['starhermit-trees.mtl'].includes('map_d starhermit-thorn-opacity.png'));assert(files['starhermit-trees.mtl'].includes('thorn_cutout'));
  const obj=files['starhermit-trees.obj'],uvs=obj.split('\n').filter(l=>l.startsWith('vt ')).map(l=>Number(l.split(' ')[1]));
  for(let slot=0;slot<3;slot++)assert(uvs.slice(slot*6,slot*6+6).every(x=>x>=slot/9-1e-6&&x<=(slot+1)/9+1e-6));
@@ -26,7 +26,7 @@ const source=fs.readFileSync(require('node:path').join(__dirname,'../dist/app.js
  for(const[u,v]of tex.slice(90,96)){assert(u>=0&&u<=1/9+1e-6);assert(v>=0&&v<=.25+1e-6,'Redwood sprays need their own opacity row');}
  for(const[u,v]of tex.slice(96,102)){assert(u>=5/9-1e-6&&u<=6/9+1e-6);assert(v>=0&&v<=.25+1e-6,'Pine cohorts need their own atlas cell');}
  assert(obj.includes('f 1/1/1 2/2/2 3/3/3'));assert(mask.some(v=>v===0)&&mask.some(v=>v===255));
- const recipe=JSON.parse(files['recipe.json']);assert.equal(recipe.version,17);assert.equal(recipe.parameters.type,'sweetthorn');assert.equal(recipe.parameters.shootStage,'extending');
+ const recipe=JSON.parse(files['recipe.json']);assert.equal(recipe.version,18);assert.equal(recipe.parameters.type,'sweetthorn');assert.equal(recipe.parameters.shootStage,'extending');
  // Actual ZIP builder must preserve binary PNG bytes rather than text-encode them.
  vm.runInContext(source.slice(source.indexOf('function zipDownload('),source.indexOf('\n',source.indexOf('function zipDownload('))),context);
  vm.runInContext("zipDownload({'tiny.png':new Uint8Array([137,80,78,71,255,0])})",context);

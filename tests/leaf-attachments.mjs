@@ -11,8 +11,8 @@ function triangleDistance(p,a,b,c){
  return Math.min(segmentDistance(p,a,b),segmentDistance(p,b,c),segmentDistance(p,c,a));
 }
 // Independently compare attachment rays with the emitted curved/displaced mesh.
-for(const type of['oak','willow','pine','baobab','eucalyptus']){
- const triangles=[],mesh={v(p){triangles.push(p)},preview:{push(){}}},points=[[0,0,0],[.06,.10,.02],[-.025,.23,.045],[.09,.40,-.01]],surface=woodTube(mesh,points,.055,.014,type,{fine:false,preview:false,maturity:1}).surface;
+for(const type of['oak','willow','pine','baobab','eucalyptus'])for(const detail of['full','near','balanced','far']){
+ const triangles=[],mesh={v(p){triangles.push(p)},preview:{push(){}}},points=[[0,0,0],[.06,.10,.02],[-.025,.23,.045],[.09,.40,-.01]],surface=woodTube(mesh,points,.055,.014,type,{fine:false,preview:false,maturity:1,detail}).surface;
  for(let j=0;j<17;j++)for(let k=0;k<11;k++){
   const t=.02+.96*j/16,{axis}=surface.sample(t),a=k*2.399963,out=norm(cross(axis,[Math.cos(a),.2,Math.sin(a)])),joint=surface.attachment(t,out);let distance=Infinity;
   for(let i=0;i<triangles.length;i+=3)distance=Math.min(distance,triangleDistance(joint.surface,...triangles.slice(i,i+3)));

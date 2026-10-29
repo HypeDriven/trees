@@ -1,5 +1,5 @@
-import {organDirection,blossomDevelopment} from './organ-distribution.mjs?v=21';
-import {triangulateContour} from './leaf-shapes.mjs?v=21';
+import {organDirection,blossomDevelopment} from './organ-distribution.mjs?v=22';
+import {triangulateContour} from './leaf-shapes.mjs?v=22';
 
 // Metres throughout. Species-level organ arrangements follow the references;
 // tissue thickness, pigment, pubescence and pollen relief remain illustrative.
