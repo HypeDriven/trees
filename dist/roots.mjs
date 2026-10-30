@@ -1,4 +1,4 @@
-import {woodTube,woodRadius} from './wood.mjs?v=22';
+import {woodTube,woodRadius} from './wood.mjs?v=23';
 const add=(a,b)=>a.map((v,i)=>v+b[i]),sub=(a,b)=>a.map((v,i)=>v-b[i]),mul=(a,s)=>a.map(v=>v*s),cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],norm=a=>mul(a,1/(Math.hypot(...a)||1));
 function seeded(seed){return()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 export const ROOT_PROFILES={
@@ -26,12 +26,12 @@ export const ROOT_PROFILES={
  birch:{primaries:10,spread:.43,depth:.7,lateral:.10,sinkers:2,tap:false}
 };
 export const ROOT_REFERENCE='https://extension.umn.edu/garden-and-home/yard-and-garden/gardening-in-minnesota/watering-established-trees-and-shrubs';
-export function buildRootSystem(mesh,cfg,{preview=false,study=false,baseRadius}={}){
+export function buildRootSystem(mesh,cfg,{preview=false,study=false,baseRadius,inspection=null}={}){
  const profile=ROOT_PROFILES[cfg.type],random=seeded(cfg.seed^0x5a31b72),R=(a,b)=>a+(b-a)*random(),height=cfg.height??10,spread=height*profile.spread*(cfg.rootSpread??1),depth=cfg.rootDepth??profile.depth,levels=Math.max(1,Math.min(4,Math.round(cfg.rootBranching??3))),base=baseRadius??height*(cfg.type==='oak'||cfg.type==='willow'?.025:cfg.type==='pine'?.015:.012),segments=[],terminals=[];
  const stats={primary:0,lateral:0,sinkers:0,feeder:0,tap:0,segments:0,depth:0,spread:0,connections:[],source:ROOT_REFERENCE};
  const sinkerSites=[],rotation=R(0,Math.PI*2),sectorPhase=R(0,Math.PI*2),smooth=t=>{t=Math.max(0,Math.min(1,t));return t*t*(3-2*t)},boundedY=y=>Math.max(-depth, y);
  function record(points,r0,r1,kind,parent=null){let id=segments.length;segments.push({id,parent,points,r0,r1,kind});stats[kind]++;stats.segments++;if(parent!==null)stats.connections.push({parent,child:id,start:[...points[0]]});for(let p of points){stats.depth=Math.max(stats.depth,-p[1]);stats.spread=Math.max(stats.spread,Math.hypot(p[0],p[2]))}return id}
- function emit(points,r0,r1,kind,parent){let id=record(points,r0,r1,kind,parent);woodTube(mesh,points,r0,r1,cfg.type,{maturity:cfg.maturity??.65,root:false,collar:false,preview:false,zone:-.04,treeHeight:height});if(preview){for(let j=0;j<points.length-1;j++){let a=points[j],b=points[j+1],dir=norm(sub(b,a)),side=norm(cross(dir,Math.abs(dir[1])>.9?[1,0,0]:[0,1,0])),radius=woodRadius(r0,r1,j/(points.length-1)),pts=[add(a,mul(side,-radius)),add(b,mul(side,-radius*.8)),add(b,mul(side,radius*.8)),add(a,mul(side,radius))];if(study||pts.some(p=>p[1]>=-.003))mesh.preview.push({pts,n:[0,1,0],c:[.24,.17,.10],kind:-.04,phase:0})}}return id}
+ function emit(points,r0,r1,kind,parent){let id=record(points,r0,r1,kind,parent);woodTube(mesh,points,r0,r1,cfg.type,{maturity:cfg.maturity??.65,root:false,collar:false,preview:false,zone:-.04,treeHeight:height,inspection:inspection&&points.some(p=>p[1]+r0>=-.003)?inspection:null});if(preview){for(let j=0;j<points.length-1;j++){let a=points[j],b=points[j+1],dir=norm(sub(b,a)),side=norm(cross(dir,Math.abs(dir[1])>.9?[1,0,0]:[0,1,0])),radius=woodRadius(r0,r1,j/(points.length-1)),pts=[add(a,mul(side,-radius)),add(b,mul(side,-radius*.8)),add(b,mul(side,radius*.8)),add(a,mul(side,radius))];if(study||pts.some(p=>p[1]>=-.003))mesh.preview.push({pts,n:[0,1,0],c:[.24,.17,.10],kind:-.04,phase:0})}}return id}
  // Roots follow persistent curves with an early collar deflection and a
  // second, independently directed bend. Child forks inherit local tangents.
  function rootPath(start,az,len,order){

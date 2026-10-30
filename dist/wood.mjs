@@ -1,6 +1,6 @@
-import {DETAIL_GRID} from './render-detail.mjs?v=22';
-import {createStemSurface} from './stem-attachment.mjs?v=22';
-import {EAST_ASIAN_SPECIES} from './east-asia.mjs?v=22';
+import {DETAIL_GRID} from './render-detail.mjs?v=23';
+import {createStemSurface} from './stem-attachment.mjs?v=23';
+import {EAST_ASIAN_SPECIES} from './east-asia.mjs?v=23';
 // Physical-scale procedural wood. Relief amplitudes are illustrative, not scans.
 const add=(a,b)=>a.map((x,i)=>x+b[i]),sub=(a,b)=>a.map((x,i)=>x-b[i]),mul=(a,s)=>a.map(x=>x*s),dot=(a,b)=>a.reduce((s,x,i)=>s+x*b[i],0),cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],norm=a=>mul(a,1/(Math.hypot(...a)||1));
 const fract=x=>x-Math.floor(x),mix=(a,b,t)=>a+(b-a)*t,smooth=(a,b,x)=>{let t=Math.max(0,Math.min(1,(x-a)/(b-a)));return t*t*(3-2*t)};
@@ -67,7 +67,8 @@ export function pineBarkStyle(y,radius,treeHeight=10){
  return{zone:mix(.06*upper,.08,young),color:[.28,.235,.19].map((v,i)=>mix(v,[.36,.26,.185][i],upper))};
 }
 function interpolatePath(points,t){let x=t*(points.length-1),i=Math.min(points.length-2,Math.floor(x)),f=x-i,p0=points[Math.max(0,i-1)],p1=points[i],p2=points[i+1],p3=points[Math.min(points.length-1,i+2)];return p1.map((v,k)=>.5*((2*v)+(-p0[k]+p2[k])*f+(2*p0[k]-5*v+4*p2[k]-p3[k])*f*f+(-p0[k]+3*v-3*p2[k]+p3[k])*f*f*f))}
-export function woodTube(mesh,points,r0,r1,type,{fine=false,macro=false,focusT=.44,maturity=.65,root=false,collar=false,preview=true,cap=false,zone:forceZone,treeHeight=10,detail='full'}={}){
+export function woodTube(mesh,points,r0,r1,type,{fine=false,macro=false,focusT=.44,maturity=.65,root=false,collar=false,preview=true,cap=false,zone:forceZone,treeHeight=10,detail='full',inspection=null}={}){
+ const local=inspection?.path(points,r0);if(local?.near){fine=true;detail='full';if(r0>.012){macro=true;focusT=local.t;}}
  const pineLike=type==='pine'||type==='chinesepine',isTwig=r0<.007,white=type==='birch'&&r0>.018;
  let zone=forceZone??(pineLike?pineBarkStyle(points[0][1],r0,treeHeight).zone:isTwig?.08:white?.04:0),age=Math.max(.04,Math.min(1,maturity*(isTwig?.10:.35+.65*Math.min(1,r0/.09))));
  const southern={maple:[[.32,.29,.24],[.31,.21,.13]],sakura:[[.36,.23,.18],[.40,.22,.16]],ginkgo:[[.32,.30,.25],[.32,.28,.17]],dawnredwood:[[.40,.20,.12],[.42,.22,.13]],chinesepine:[[.31,.27,.21],[.35,.24,.15]],sweetgum:[[.32,.29,.24],[.33,.25,.17]],redbud:[[.31,.24,.19],[.34,.22,.15]],jacaranda:[[.32,.30,.26],[.30,.25,.18]],monkeytail:[[.045,.037,.030],[.11,.075,.045]],eucalyptus:[[.54,.52,.46],[.36,.20,.14]],baobab:[[.40,.37,.34],[.36,.34,.28]],fevertree:[[.43,.46,.19],[.40,.36,.20]],sausagetree:[[.37,.34,.28],[.34,.29,.21]],karee:[[.25,.235,.19],[.35,.19,.12]],sweetthorn:[[.20,.17,.135],[.34,.17,.10]],marula:[[.40,.38,.33],[.34,.30,.22]],wildolive:[[.29,.29,.24],[.30,.29,.20]],yellowwood:[[.33,.31,.26],[.25,.29,.17]]}[type];
@@ -115,7 +116,11 @@ export function woodTube(mesh,points,r0,r1,type,{fine=false,macro=false,focusT=.
  }
  if(cap){for(let end of [0,steps]){let ring=rings[end],normal=mul(ring.axis,end?1:-1),radius=end?r1:r0,center=ring.center,wood=[.48,.35,.21];for(let k=0;k<sides;k++){let a=ring.points[k],b=ring.points[k+1],cr=cross(sub(a.p,center),sub(b.p,center)),order=dot(cr,normal)>0?[a,b]:[b,a];let ca=k/sides*Math.PI*2,cb=(k+1)/sides*Math.PI*2;mesh.v(center,normal,wood,.12,age,radius,[0,0]);for(let q of order){let a0=q===a?ca:cb;mesh.v(q.p,normal,wood,.12,age,radius,[Math.cos(a0)*radius,Math.sin(a0)*radius])}if(preview)mesh.preview.push({pts:[center,a.p,b.p],n:normal,c:wood,kind:.12,phase:0})}}}
  let study=null;if(macro){const ring=rings.reduce((best,r)=>Math.abs(r.t-focusT)<Math.abs(best.t-focusT)?r:best,rings[0]),q=ring.points.reduce((best,q)=>q.p[2]>best.p[2]?q:best,ring.points[0]);study={focus:[...q.p],center:[...ring.center],normal:[...q.n],radius:q.r,pattern:BARK_PROFILES[type][0],length:pathLength*(t1-t0),circumference:Math.PI*2*q.r,axialSpacing:pathLength*(t1-t0)/denseSteps,circumferentialSpacing:Math.PI*2*q.r/sides,rings:steps+1,sides,depth:BARK_GEOMETRY[type]*age};}
- return {rings:steps+1,sides,quadCount,zone,age,collar,root,study,surface:createStemSurface(rings)};
+ const surface=createStemSurface(rings);
+ // Botanical placement uses the continuous axis; insertion rays still hit the
+ // actual emitted triangles. Changing tessellation must not reseed phenology.
+ surface.layoutSample=t=>({center:interpolatePath(points,t),axis:norm(sub(interpolatePath(points,Math.min(1,t+.0003)),interpolatePath(points,Math.max(0,t-.0003))))});
+ return {rings:steps+1,sides,quadCount,zone,age,collar,root,study,inspected:!!local?.near,surface};
 }
 export const WOOD_NOTES={
  ...Object.fromEntries(Object.entries(EAST_ASIAN_SPECIES).map(([key,sp])=>[key,{text:({maple:'Grey-brown mature bark develops coarse elongated plates and deep irregular furrows.',sakura:'Reddish-brown bark has shallow horizontal lenticels and fine peeling lines; young stems remain smooth.',ginkgo:'Grey-brown bark develops deep longitudinal furrows with broad uneven ridges.',dawnredwood:'Reddish-brown bark has long fibrous grooves and raised shredding strips above the fluted base.',chinesepine:'Thick scaly grey-brown basal plates share a continuous palette with warmer upper branches.',sweetgum:'Grey-brown bark has narrow intersecting furrows and uneven raised plates.',redbud:'Thin brown bark develops fine irregular scales on older stems.'})[key]+' Geometric relief and tissue scales are illustrative.',source:sp.source}])),

@@ -2,9 +2,9 @@
 // representative rather than calibrated reproductive development.
 const add=(a,b)=>a.map((v,i)=>v+b[i]),sub=(a,b)=>a.map((v,i)=>v-b[i]),mul=(a,s)=>a.map(v=>v*s),cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],norm=a=>mul(a,1/(Math.hypot(...a)||1));
 const frame=d=>{const a=norm(cross(d,Math.abs(d[1])>.93?[1,0,0]:[0,1,0]));return[a,norm(cross(a,d))]},TAU=Math.PI*2,GOLD=Math.PI*(3-Math.sqrt(5));
-import {blossomDevelopment} from './organ-distribution.mjs?v=22';
+import {blossomDevelopment} from './organ-distribution.mjs?v=23';
 const hash=x=>{const t=Math.sin(x*127.1+311.7)*43758.5453;return t-Math.floor(t)};
-export function buildGardenFlowers(mesh,cfg,{base=[0,0,0],axis=[0,1,0],fine=false,seed=cfg.seed,crownRadius=0}={}){
+export function buildGardenFlowers(mesh,cfg,{base=[0,0,0],axis=[0,1,0],fine=false,layoutFine=fine,seed=cfg.seed,crownRadius=0}={}){
  axis=norm(axis);const [u,v]=frame(axis),rnd=(i,a,b)=>a+(b-a)*hash(seed+i*1.73),result={type:cfg.type,clusterAxis:[...axis],flowers:0,tepals:0,stamens:0,buds:0,flowerRecords:[]};
  function patch(point,rows,cols,col,kind=.3,thick=0,shape='blade'){
   const sample=(t,x,back=false)=>{const p=point(t,x),dt=sub(point(Math.min(1,t+.001),x),point(Math.max(0,t-.001),x)),dx=sub(point(t,Math.min(1,x+.001)),point(t,Math.max(-1,x-.001))),normal=norm(cross(dx,dt)),n=Math.hypot(...normal)>.5?normal:u;return{p:add(p,mul(n,back?-thick:0)),n:back?mul(n,-1):n,uv:[(x+1)*.02,t*.05]};};
@@ -18,7 +18,7 @@ export function buildGardenFlowers(mesh,cfg,{base=[0,0,0],axis=[0,1,0],fine=fals
  function rod(p,q,r,col,kind=.3){const d=norm(sub(q,p)),[a,b]=frame(d);patch((t,x)=>{const angle=(x+1)*Math.PI;return add(add(p,mul(sub(q,p),t)),add(mul(a,Math.cos(angle)*r),mul(b,Math.sin(angle)*r)));},1,fine?6:3,col,kind,0,'tube');}
  function bell(p,d,L,opening=1){const [a,b]=frame(d);patch((t,x)=>{const angle=(x+1)*Math.PI,lip=.5+.5*Math.cos(angle*5),r=L*(.035+.12*t*t*opening),z=L*t+L*.10*lip*Math.pow(t,9);return add(add(p,mul(d,z)),add(mul(a,Math.cos(angle)*r),add(mul(b,Math.sin(angle)*r),mul(a,L*.05*Math.sin(t*Math.PI)))));},fine?22:2,fine?30:5,t=>[.22+.10*t,.11+.06*t,.47+.15*t],.3,fine?.00007:0,'tube');}
  if(cfg.type==='jacaranda'){
-  const count=fine?24:40,L=fine?.16:.18,top=add(base,mul(axis,L));rod(base,top,.0007,[.29,.28,.16],.36);
+  const count=layoutFine?24:40,L=layoutFine?.16:.18,top=add(base,mul(axis,L));rod(base,top,.0007,[.29,.28,.16],.36);
   for(let k=0;k<count;k++){const t=.08+.87*(k+.5)/count,a=k*GOLD+seed*.017,out=add(mul(u,Math.cos(a)),mul(v,Math.sin(a))),q=add(base,mul(axis,L*t)),tip=add(q,mul(out,L*(.56-.36*t)*rnd(k+2,.65,1.10))),d=norm(add(mul(out,.5),[0,-.65,0]));rod(q,tip,.00025,[.28,.27,.15],.36);const development=blossomDevelopment(cfg,seed,k);bell(tip,d,rnd(k+5,.030,.041),development.opening);result.flowerRecords.push({axis:d,...development});result.flowers++;}
  }else if(cfg.type==='monkeytail'){
   const count=1+(hash(seed+9)>.45?1:0)+(cfg.season!=='summer'&&hash(seed+73)>.90?1:0);

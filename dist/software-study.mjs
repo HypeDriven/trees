@@ -1,8 +1,10 @@
 // A depth-buffered material renderer for leaf and shoot studies when neither
 // WebGPU nor WebGL2 is available. It uses the actual curved specimen triangles;
 // UV detail and wind share the same moving vertex positions, including veins.
-import {barkSample} from './wood.mjs?v=22';
-import {createLeafSurfaceTexture,LEAF_ANATOMY} from './leaf-anatomy.mjs?v=22';
+import {barkSample} from './wood.mjs?v=23';
+import {createLeafSurfaceTexture,LEAF_ANATOMY} from './leaf-anatomy.mjs?v=23';
+import {indexGeometry} from './indexed-geometry.mjs?v=23';
+import {bipinnateCoverage,redwoodSprayCoverage,pineSprayCoverage} from './compound-lod.mjs?v=23';
 const norm=a=>{const l=Math.hypot(...a)||1;return a.map(v=>v/l);};
 const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
 const dot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
@@ -20,14 +22,12 @@ export function studyWindPosition(p,kind,phase,flutter,cfg,time){
 // Missing local weights mean structural sway only; bases never get a free offset.
 export function primitiveWindPosition(p,primitive,cfg,time){return studyWindPosition(p,primitive.kind,primitive.phase??0,(primitive.flutterAt?.(p)??0)*(primitive.card?(cfg.renderFlutterScale??1):1),cfg,time);}
 export function createSoftwareStudy(){
- let vertices,indices,projected,woodData,textures,patchTextures,signature='',patchSignature='',metricWidth=0,image,depth,width=0,height=0;
+ let vertices,indices,projected,woodData,textures,patchTextures,bladeOutline,signature='',patchSignature='',metricWidth=0,image,depth,width=0,height=0;
  const gamma=Uint8ClampedArray.from({length:4096},(_,i)=>Math.round(Math.pow(i/4095,1/2.2)*255));
  function upload(input,cfg){
   // Shared grid vertices are projected once per frame, rather than six times.
-  const map=new Map(),unique=[],ids=new Uint32Array(input.length/14);
-  for(let i=0;i<input.length;i+=14){const key=input.subarray(i,i+14).join(','),old=map.get(key);let index=old;if(index===undefined){index=unique.length/14;map.set(key,index);for(let j=0;j<14;j++)unique.push(input[i+j]);}ids[i/14]=index;}
-  vertices=new Float32Array(unique);indices=ids;projected=new Float64Array(unique.length/14*7);
-  woodData=null;if(['wood','bark'].includes(cfg.view)){woodData=new Float32Array(unique.length/14*2);for(let i=0;i<vertices.length;i+=14){const sample=barkSample(cfg.type,[vertices[i+12],vertices[i+13]],vertices[i+10],vertices[i+9]),o=i/14*2;woodData[o]=(1.13-.75*sample.dark)*(.70+.45*sample.color);woodData[o+1]=sample.roughness;}textures=null;patchTextures=null;signature='';patchSignature='';return;}if(LEAF_ANATOMY[cfg.type].venation==='needle'){textures=null;patchTextures=null;signature='';patchSignature='';return;}const key=cfg.type+':'+cfg.leafSize;
+  const packed=indexGeometry(input);vertices=packed.vertices;indices=packed.indices;projected=new Float64Array(vertices.length/14*7);bladeOutline=cfg.bladeOutline;
+  woodData=null;if(['wood','bark'].includes(cfg.view)||cfg.inspection){woodData=new Float32Array(vertices.length/14*2);for(let i=0;i<vertices.length;i+=14)if(vertices[i+9]<.1){const sample=barkSample(cfg.type,[vertices[i+12],vertices[i+13]],vertices[i+10],vertices[i+9]),o=i/14*2;woodData[o]=(1.13-.75*sample.dark)*(.70+.45*sample.color);woodData[o+1]=sample.roughness;}if(['wood','bark'].includes(cfg.view)){textures=null;patchTextures=null;signature='';patchSignature='';return;}}if(LEAF_ANATOMY[cfg.type].venation==='needle'){textures=null;patchTextures=null;signature='';patchSignature='';return;}const key=cfg.type+':'+cfg.leafSize;
   if(key!==signature){const p=LEAF_ANATOMY[cfg.type],needle=p.venation==='needle';metricWidth=needle?.004:cfg.type==='monkeytail'?Math.max(.002,Math.min(.008,cfg.leafSize*.024)):cfg.leafSize*cfg.widthRatio*2;textures=[false,true].map(under=>createLeafSurfaceTexture(cfg.type,cfg.leafSize,metricWidth,under,{height:512}));signature=key;}
   const patchKey=cfg.view==='surface'?key+':'+cfg.surfacePosition:'';
   if(patchKey!==patchSignature){patchTextures=patchKey?[false,true].map(under=>createLeafSurfaceTexture(cfg.type,cfg.leafSize,metricWidth,under,{bounds:[.20,(cfg.surfacePosition??.55)-.18,.80,(cfg.surfacePosition??.55)+.18]})):null;patchSignature=patchKey;}
@@ -45,8 +45,8 @@ export function createSoftwareStudy(){
    if(Math.abs(area)<.015)continue;
    const minX=Math.max(0,Math.floor(Math.min(ax,bx,cx))),maxX=Math.min(w-1,Math.ceil(Math.max(ax,bx,cx))),minY=Math.max(0,Math.floor(Math.min(ay,by,cy))),maxY=Math.min(h-1,Math.ceil(Math.max(ay,by,cy)));
    if(minX>maxX||minY>maxY)continue;
-   const kind=vertices[a+9],leaf=kind>.5&&kind<1.15,under=kind>1.005&&kind<1.05,texture=leaf&&kind<1.05?textures?.[under?1:0]:null;
-   if(leaf&&area>0)continue; // Closed finite leaves have their own reverse face.
+   const kind=vertices[a+9],leaf=kind>.5&&kind<1.15,under=kind>1.005&&kind<1.05||cfg.view==='tree'&&leaf&&kind<1.005&&area>0,texture=leaf&&kind<1.05?textures?.[under?1:0]:null;
+   if(leaf&&area>0&&cfg.view!=='tree')continue; // Closed finite leaves have their own reverse face.
    const p0=[projected[A+4],projected[A+5],projected[A+6]],p1=[projected[B+4],projected[B+5],projected[B+6]],p2=[projected[C+4],projected[C+5],projected[C+6]],e1=sub(p1,p0),e2=sub(p2,p0),du1=vertices[b+12]-vertices[a+12],dv1=vertices[b+13]-vertices[a+13],du2=vertices[c+12]-vertices[a+12],dv2=vertices[c+13]-vertices[a+13],det=du1*dv2-du2*dv1;
    const tangent=Math.abs(det)>1e-12?norm(e1.map((v,i)=>(v*dv2-e2[i]*dv1)/det)):[0,0,0],bitangent=Math.abs(det)>1e-12?norm(e1.map((v,i)=>(e2[i]*du1-v*du2)/det)):[0,0,0],facing=area<0?1:-1;
    // Keep relief below the current pixel footprint to avoid sparkly pore aliasing.
@@ -56,6 +56,8 @@ export function createSoftwareStudy(){
     if(wa<-.00001||wb<-.00001||wc<-.00001)continue;
     const iz=wa*projected[A+3]+wb*projected[B+3]+wc*projected[C+3],z=1/iz,index=y*w+x;if(z>=depth[index])continue;
     const aa=wa*projected[A+3]*z,bb=wb*projected[B+3]*z,cc=wc*projected[C+3]*z;
+    if(kind>.975&&kind<.995){const u=vertices[a+12]*aa+vertices[b+12]*bb+vertices[c+12]*cc,v=vertices[a+13]*aa+vertices[b+13]*bb+vertices[c+13]*cc;if(Math.abs(u-.5)*2*1.10>(bladeOutline?.(v,u<.5?-1:1)??1))continue;}
+    if(kind>1.19&&kind<1.50){const u=vertices[a+12]*aa+vertices[b+12]*bb+vertices[c+12]*cc,v=vertices[a+13]*aa+vertices[b+13]*bb+vertices[c+13]*cc,jac=kind>1.40,fever=kind>1.30&&!jac,pairs=jac?Math.round((kind-1.40)*100)+6:Math.round((kind-(fever?1.30:1.20))*100),coverage=kind<1.2?pineSprayCoverage(u,v,Math.round((kind-1.191)*1000)):kind>1.485?redwoodSprayCoverage(u,v):bipinnateCoverage(u,v,pairs,jac?16:fever?13:9,jac);if(!coverage)continue;}
     let nx=(vertices[a+3]*aa+vertices[b+3]*bb+vertices[c+3]*cc)*facing,ny=(vertices[a+4]*aa+vertices[b+4]*bb+vertices[c+4]*cc)*facing,nz=(vertices[a+5]*aa+vertices[b+5]*bb+vertices[c+5]*cc)*facing,tone=1,rough=kind>1.05&&kind<1.15?.48:.65;
     if(woodData&&kind<.10){tone=woodData[ai*2]*aa+woodData[bi*2]*bb+woodData[ci*2]*cc;rough=woodData[ai*2+1]*aa+woodData[bi*2+1]*bb+woodData[ci*2+1]*cc;}if(texture){const u=clamp(vertices[a+12]*aa+vertices[b+12]*bb+vertices[c+12]*cc,0,.99999),v=clamp(vertices[a+13]*aa+vertices[b+13]*bb+vertices[c+13]*cc,0,.99999);let tex=texture;const patch=patchTextures?.[under?1:0];if(patch&&u>patch.bounds[0]&&u<patch.bounds[2]&&v>patch.bounds[1]&&v<patch.bounds[3])tex=patch;const [u0,v0,u1,v1]=tex.bounds,tx=clamp((u-u0)/(u1-u0)*tex.width-.5,0,tex.width-1),ty=clamp((v-v0)/(v1-v0)*tex.height-.5,0,tex.height-1),ix=Math.floor(tx),iy=Math.floor(ty),fx=tx-ix,fy=ty-iy,o=(iy*tex.width+ix)*4,ox=(iy*tex.width+Math.min(tex.width-1,ix+1))*4,oy=(Math.min(tex.height-1,iy+1)*tex.width+ix)*4,oxy=(Math.min(tex.height-1,iy+1)*tex.width+Math.min(tex.width-1,ix+1))*4,d=tex.data;
      const sample=k=>(d[o+k]*(1-fx)+d[ox+k]*fx)*(1-fy)+(d[oy+k]*(1-fx)+d[oxy+k]*fx)*fy,tu=sample(0)*materialScale,tv=sample(1)*materialScale;nx-=tangent[0]*tu+bitangent[0]*tv;ny-=tangent[1]*tu+bitangent[1]*tv;nz-=tangent[2]*tu+bitangent[2]*tv;tone=sample(2);rough=sample(3);}

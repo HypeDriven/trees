@@ -1,9 +1,9 @@
-import {buildFlowers} from './flowers.mjs?v=22';
+import {buildFlowers} from './flowers.mjs?v=23';
 // Separate geometric flowers, seeds and fruit; dimensions in metres.
 const add=(a,b)=>a.map((v,i)=>v+b[i]),sub=(a,b)=>a.map((v,i)=>v-b[i]),mul=(a,s)=>a.map(v=>v*s),cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],norm=a=>mul(a,1/(Math.hypot(...a)||1));
 const frame=d=>{const u=norm(cross(d,Math.abs(d[1])>.94?[1,0,0]:[0,1,0]));return[u,norm(cross(u,d))]},TAU=Math.PI*2,GOLD=Math.PI*(3-Math.sqrt(5));
 const hash=x=>{const t=Math.sin(x*127.1+311.7)*43758.5453;return t-Math.floor(t)};
-export function buildEastAsianOrgan(mesh,cfg,{mode='fruit',base=[0,0,0],axis=[0,-1,0],fine=false,stage=cfg.fruitStage??'mature',seed=cfg.seed}={}){
+export function buildEastAsianOrgan(mesh,cfg,{mode='fruit',base=[0,0,0],axis=[0,-1,0],fine=false,layoutFine=fine,macroDetail=false,stage=cfg.fruitStage??'mature',seed=cfg.seed}={}){
  const type=cfg.type,d=norm(axis),[u,v]=frame(d),R=(i,a,b)=>a+(b-a)*hash(seed+i*1.731),young=stage==='developing',released=stage==='released';
  const out={type,stage,flowers:0,petals:0,stamens:0,ovules:0,scales:0,capsules:0,seeds:0,wingedSeeds:0,valves:0,scaleRecords:[],length:0};let focus=[...base];
  function patch(point,rows,cols,col,kind=.36,thickness=0,uvScale=[.02,.03],shape='blade'){
@@ -19,7 +19,7 @@ export function buildEastAsianOrgan(mesh,cfg,{mode='fruit',base=[0,0,0],axis=[0,
  function rod(p,q,r,col=[.29,.22,.12],kind=.36){const dir=norm(sub(q,p));lathe(p,dir,Math.hypot(...sub(q,p)),t=>r*(1-.28*t),col,kind,1,fine?6:3);}
  function seedBody(p,dir,L,r,col,kind=.34){lathe(p,dir,L,t=>r*Math.pow(Math.max(0,Math.sin(Math.PI*t)),.55),col,kind);}
  function wingedSeed(p,dir,L,W){const[a,b]=frame(dir);seedBody(p,dir,L*.62,W*.38,[.30,.19,.085]);patch((t,x)=>add(p,add(mul(dir,L*t),add(mul(a,x*W*Math.pow(Math.sin(Math.PI*t),.6)),mul(b,L*.035*x*x*Math.sin(Math.PI*t))))),fine?16:3,fine?8:2,[.58,.41,.22],.42,fine?.000025:0,[W*2,L]);}
- if(mode==='flower')return buildFlowers(mesh,cfg,{base,axis,fine,seed,study:cfg.view==='flower'});
+ if(mode==='flower')return buildFlowers(mesh,cfg,{base,axis,fine,layoutFine,macroDetail,seed,study:cfg.view==='flower'});
  if(type==='maple'){
   const p=add(base,mul(d,.016));rod(base,p,.00065);const L=R(1,.025,.030)*(young?.65:1),angle=.65,col=young?[.33,.42,.12]:[.52,.36,.15];
   for(const sign of[-1,1]){const dir=norm(add(mul(d,.90),mul(u,sign*angle))),side=norm(cross(dir,v));seedBody(p,dir,.007,.0032,col);const q=add(p,mul(dir,.003));patch((t,x)=>add(q,add(mul(dir,L*t),add(mul(side,(x*.5+.5)*L*.25*Math.pow(Math.sin(Math.PI*t),.65)*sign),mul(v,L*.025*Math.sin(t*Math.PI)*x)))),fine?48:7,fine?12:3,(t,x)=>col.map(c=>c*(.93+.06*Math.sin(t*50+x*14))),.42,fine?.00007:0,[L*.25,L]);out.wingedSeeds++;}
