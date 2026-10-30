@@ -1,23 +1,24 @@
-import {maximumLeafGrid,MAXIMUM_DETAIL} from './maximum-detail.mjs?v=24';
-import {createInspectionField} from './inspection.mjs?v=24';
-import {DETAIL_GRID,omitBuriedTriangles} from './render-detail.mjs?v=24';
-import {createStemSurface,linearStemSample} from './stem-attachment.mjs?v=24';
-import {buildXerophytaCrown} from './xerophyta-crown.mjs?v=24';
-import {buildNeedle,fascicleParameters,NEEDLE_REFERENCES} from './needle-anatomy.mjs?v=24';
-import {organHash,organDirection} from './organ-distribution.mjs?v=24';
-import {buildFlowers,FLOWER_NOTES} from './flowers.mjs?v=24';
-import {leafContour,triangulateContour,PALMATE_VEINS,veinDistance} from './leaf-shapes.mjs?v=24';
-import {EAST_ASIAN_SPECIES} from './east-asia.mjs?v=24';
-import {buildEastAsianOrgan} from './east-asia-organs.mjs?v=24';
-import {jacarandaPinnaScale,bipinnatePinnaScale,pineNeedleLayout} from './compound-lod.mjs?v=24';
-import {buildGardenFlowers} from './garden-flowers.mjs?v=24';
-import {SOUTH_AFRICAN_SPECIES} from './south-africa.mjs?v=24';
-import {buildFruit,FRUIT_NOTES} from './fruit.mjs?v=24';
-import {shootGrowth,leafDevelopment,shootNodePosition,springPhenology,FOLIAGE_REFERENCES} from './foliage-growth.mjs?v=24';
-import {buildTreeArchitecture,ARCHITECTURE_NOTES} from './architecture.mjs?v=24';
-import {LEAF_ANATOMY,dichotomousVeinDistance} from './leaf-anatomy.mjs?v=24';
-import {woodTube,woodRadius} from './wood.mjs?v=24';
-import {buildRootSystem,ROOT_PROFILES} from './roots.mjs?v=24';
+import {selectParts} from './retained-detail.mjs?v=25';
+import {maximumLeafGrid,MAXIMUM_DETAIL} from './maximum-detail.mjs?v=25';
+import {createInspectionField} from './inspection.mjs?v=25';
+import {DETAIL_GRID,omitBuriedTriangles} from './render-detail.mjs?v=25';
+import {createStemSurface,linearStemSample} from './stem-attachment.mjs?v=25';
+import {buildXerophytaCrown} from './xerophyta-crown.mjs?v=25';
+import {buildNeedle,fascicleParameters,NEEDLE_REFERENCES} from './needle-anatomy.mjs?v=25';
+import {organHash,organDirection} from './organ-distribution.mjs?v=25';
+import {buildFlowers,FLOWER_NOTES} from './flowers.mjs?v=25';
+import {leafContour,triangulateContour,PALMATE_VEINS,veinDistance} from './leaf-shapes.mjs?v=25';
+import {EAST_ASIAN_SPECIES} from './east-asia.mjs?v=25';
+import {buildEastAsianOrgan} from './east-asia-organs.mjs?v=25';
+import {jacarandaPinnaScale,bipinnatePinnaScale,pineNeedleLayout} from './compound-lod.mjs?v=25';
+import {buildGardenFlowers} from './garden-flowers.mjs?v=25';
+import {SOUTH_AFRICAN_SPECIES} from './south-africa.mjs?v=25';
+import {buildFruit,FRUIT_NOTES} from './fruit.mjs?v=25';
+import {shootGrowth,leafDevelopment,shootNodePosition,springPhenology,FOLIAGE_REFERENCES} from './foliage-growth.mjs?v=25';
+import {buildTreeArchitecture,ARCHITECTURE_NOTES} from './architecture.mjs?v=25';
+import {LEAF_ANATOMY,dichotomousVeinDistance} from './leaf-anatomy.mjs?v=25';
+import {woodTube,woodRadius} from './wood.mjs?v=25';
+import {buildRootSystem,ROOT_PROFILES} from './roots.mjs?v=25';
 // All geometry uses metres. Traits are a morphological model, not a growth simulator.
 export {NEEDLE_REFERENCES,ARCHITECTURE_NOTES,FOLIAGE_REFERENCES,FRUIT_NOTES,FLOWER_NOTES};
 export const SPECIES = {
@@ -65,8 +66,8 @@ class Mesh {
  v(p,n,c,kind,phase,flutter,uv){this.reserve(14);let o=this.used,a=this.a;for(let i=0;i<3;i++){a[o+i]=p[i];a[o+3+i]=n[i];a[o+6+i]=c[i]}a[o+9]=kind;a[o+10]=phase;a[o+11]=flutter;a[o+12]=uv[0];a[o+13]=uv[1];this.used+=14}
  tri(a,b,c,n,col,kind=0,phase=0,fl=[0,0,0],uv=[[0,0],[0,0],[0,0]]){this.v(a,n,col,kind,phase,fl[0],uv[0]);this.v(b,n,col,kind,phase,fl[1],uv[1]);this.v(c,n,col,kind,phase,fl[2],uv[2])}
 }
-export function buildSpecimen(cfg,{hidden=false,preview=true,detail:baseDetail='full',omitBuried=false,inspection=null}={}){
- const phenology=springPhenology(cfg),sp=SPECIES[cfg.type],pineLike=cfg.type==='pine'||cfg.type==='chinesepine',random=seeded(cfg.seed),R=(a,b)=>a+(b-a)*random(),m=new Mesh(),fine=cfg.view!=='tree',mature=cfg.maturity??.6,renderDetail=baseDetail,grid=DETAIL_GRID[renderDetail]??DETAIL_GRID.full,field=cfg.view==='tree'?createInspectionField(inspection):null;
+export function buildSpecimen(cfg,{hidden=false,preview=true,detail:baseDetail='full',omitBuried=false,inspection=null,retainParts=false}={}){
+ const phenology=springPhenology(cfg),sp=SPECIES[cfg.type],pineLike=cfg.type==='pine'||cfg.type==='chinesepine',random=seeded(cfg.seed),R=(a,b)=>a+(b-a)*random(),fine=cfg.view!=='tree',mature=cfg.maturity??.6,renderDetail=baseDetail,grid=DETAIL_GRID[renderDetail]??DETAIL_GRID.full,initialField=cfg.view==='tree'?createInspectionField(inspection):null;let m=new Mesh(),field=initialField;const retained=[],canRetain=retainParts&&cfg.view==='tree';let captureDepth=0,retainedOmitted=0;
  if(!preview)m.preview={push(){}};let rootSystem=null;let inspectFocus=null,inspectDistance=null,woodStats={tubes:0,collars:0,rootFlares:0};const stemSurfaces=new WeakMap();let records=[],leaves=0,fascicles=0,buds=0,flowers=0,fruits=0,petioles=0,stats={renderDetail,inspection:{leaves:0,compoundCards:0,needleCards:0,sprays:0,wood:0,reproductive:0},attachmentSites:0,leafAttachments:[],cardSupports:[],flowerArrangements:[],needleFascicles:[],leafAnatomy:[],leafGlands:0,leafHairs:0,retainedShoots:0,pineCards:0,pineVariants:[],sprayCards:0,spurs:[],deciduousSprays:0,compoundLeaves:0,pinnae:0,compoundRecords:[],spinePairs:0,oppositePairs:[],whorls:[],rosettes:[],flowerDetails:[],fruitDetails:[],organGrowth:[],leafLengths:[],petioleLengths:[],fascicleSizes:[],leafNodes:0,terminalBuds:0};
  // Expanded card anatomy uses its own seed; moving the camera cannot consume
  // the growth RNG or alter later shoots, leaf dimensions or organ counts.
@@ -274,7 +275,7 @@ export function buildSpecimen(cfg,{hidden=false,preview=true,detail:baseDetail='
 
  let sampledShoots=0,foliageNodes=null,flowerSitesPerShoot=12;
  stats.terminalTips=0;stats.coveredTips=0;stats.tipGaps=[];stats.leafyShoots=0;stats.apicalContinuations=0;
- function petioleRibbon(base,end,radius,col){const d=norm(sub(end,base)),[u,v]=frame(d);for(const side of[u,v]){const a=mul(side,radius),pts=[sub(base,a),add(base,a),end],n=norm(cross(side,d));m.tri(...pts,n,col,.2);m.preview.push({pts,n,c:col,kind:.2,phase:0});}}
+ function petioleRibbon(base,end,radius,col){if(field?.path([base,end],radius).near){tube([base,end],radius,radius*.7,col,.2,32);return;}const d=norm(sub(end,base)),[u,v]=frame(d);for(const side of[u,v]){const a=mul(side,radius),pts=[sub(base,a),add(base,a),end],n=norm(cross(side,d));m.tri(...pts,n,col,.2);m.preview.push({pts,n,c:col,kind:.2,phase:0});}}
 
 
  function rosette(rec){
@@ -308,6 +309,28 @@ export function buildSpecimen(cfg,{hidden=false,preview=true,detail:baseDetail='
   const points=rec.points,L=points.slice(1).reduce((sum,p,i)=>sum+Math.hypot(...sub(p,points[i])),0),sites=Math.min(12,Math.floor(L/.27));
   for(let j=0;j<sites&&seasonalFans<700;j++)for(const sign of[-1,1]){const t=.15+.75*(j+.5)/sites,a=t*(points.length-1),i=Math.min(points.length-2,Math.floor(a)),p=mix(points[i],points[i+1],a-i),dir=norm(sub(points[i+1],points[i])),[side]=frame(dir),axis=norm(add(mul(dir,.32),add(mul(side,sign*.90),[0,-.10,0]))),len=R(.40,.75),pts=path(p,axis,len,-.12,.012,5);tube(pts,.0025,.00065,sp.twig,.2,4);foliage({points:pts,r0:.0025,r1:.00065,phase:rec.phase+j*.47+sign*.3,terminal:false,fruit:false,nodes:6});seasonalFans++;}
  }
+ // Keep replayable local geometry recipes with the original growth RNG.
+ // Camera changes replay only intersecting parts; growth and distant meshes stay.
+ function captureGeometry(kind,draw,sensitive=true,stemPath=null){
+  if(!canRetain||captureDepth)return draw();
+  const start=m.used,seed=random.snapshot(),arrangement=stats.flowerArrangements.length;captureDepth++;let result;try{result=draw();}finally{captureDepth--;}
+  if(omitBuried){let out=start;for(let i=start;i<m.used;i+=42){if(m.a[i+9]<0&&m.a[i+1]<-.003&&m.a[i+15]<-.003&&m.a[i+29]<-.003){retainedOmitted++;continue;}if(out!==i)m.a.copyWithin(out,i,i+42);out+=42;}m.used=out;}
+  const count=(m.used-start)/14;if(!count)return result;
+  const min=[Infinity,Infinity,Infinity],max=[-Infinity,-Infinity,-Infinity];for(let i=start;i<m.used;i+=14)for(let k=0;k<3;k++){min[k]=Math.min(min[k],m.a[i+k]);max[k]=Math.max(max[k],m.a[i+k]);}
+  const part={id:retained.length,kind,start:start/14,count,min,max,sensitive};
+  if(stemPath&&result?.surface)part.reset=()=>stemSurfaces.set(stemPath,result.surface);
+  part.build=region=>{
+   const oldMesh=m,oldField=field,state=random.snapshot(),counts=[leaves,fascicles,buds,flowers,fruits,petioles],focus=inspectFocus,inspect=inspectDistance,wood={...woodStats},keys=Object.keys(stats),values={...stats},lengths=Object.fromEntries(keys.filter(k=>Array.isArray(stats[k])).map(k=>[k,stats[k].length])),oldInspection={...stats.inspection};
+   m=new Mesh();m.preview={push(){}};const complete=sensitive?region:{...region,forward:null,radius:Math.max(region.radius,Math.hypot(...region.center.map((v,k)=>Math.max(Math.abs(v-min[k]),Math.abs(v-max[k]))))+.01)};field=createInspectionField(complete);random.restore(seed);captureDepth++;
+   // Positional flower variation used this ordinal during original growth.
+   const priorArrangement=stats.flowerArrangements;stats.flowerArrangements=Array(arrangement);
+   try{const built=draw();let vertices=m.a.slice(0,m.used);if(omitBuried)vertices=omitBuriedTriangles(vertices);const details=stats.flowerDetails.slice(lengths.flowerDetails),fruits=stats.fruitDetails.slice(lengths.fruitDetails);if(kind==='reproductive'&&built){if(built.flowerRecords)details.push(built);else fruits.push(built);}return{...part,build:undefined,reset:undefined,vertices,inspection:Object.fromEntries(Object.keys(oldInspection).map(k=>[k,(stats.inspection[k]??0)-oldInspection[k]])),leafAnatomy:stats.leafAnatomy.slice(lengths.leafAnatomy),leafAttachments:stats.leafAttachments.slice(lengths.leafAttachments),flowers:details,fruits,pollen:details.reduce((n,d)=>n+(d.pollenGrains??0),0)};}
+   finally{captureDepth--;m=oldMesh;field=oldField;random.restore(state);[leaves,fascicles,buds,flowers,fruits,petioles]=counts;inspectFocus=focus;inspectDistance=inspect;for(const key of Object.keys(woodStats))delete woodStats[key];Object.assign(woodStats,wood);stats.flowerArrangements=priorArrangement;for(const key of Object.keys(stats))if(!keys.includes(key))delete stats[key];for(const key of keys){if(key==='inspection'){Object.assign(stats.inspection,oldInspection);}else if(Array.isArray(values[key])){stats[key]=values[key];stats[key].length=lengths[key];}else stats[key]=values[key];}}
+  };
+  retained.push(part);return result;
+ }
+ const wrap=(kind,fn,sensitive=true)=>(...args)=>captureGeometry(kind,()=>fn(...args),typeof sensitive==='function'?sensitive(args):sensitive,kind==='wood'?args[0]:null);
+ if(canRetain){tube=wrap('wood',tube,args=>args[4]===0||args[4]===undefined);foliage=wrap('foliage',foliage);bud=wrap('bud',bud,false);spines=wrap('spine',spines,false);flowerSolid=wrap('flower',flowerSolid,false);southernFlower=wrap('flower',southernFlower,false);attachedOrgan=wrap('reproductive',attachedOrgan,false);rosette=wrap('crown',rosette);solid=wrap('organ',solid,false);petioleRibbon=wrap('stem',petioleRibbon,false);}
  // Skeleton: alternate lateral shoots on angiosperms; whorled scaffolds on pine.
  function path(p,d,len,droop=0,wiggle=.04,steps=9){let pts=[p],dir=norm(d),a=R(0,6.28);for(let i=1;i<=steps;i++){dir=norm(add(dir,[Math.sin(a+i*.7)*wiggle,droop/steps,Math.cos(a+i*.8)*wiggle]));p=add(p,mul(dir,len/steps));if(p[1]<.025)p=[p[0],.025,p[2]];pts.push(p)}return pts}
  function rec(points,r0,r1,depth,phase=R(0,6.28),fruit=false){let r={points,r0,r1,depth,phase,fruit,children:0};records.push(r);return r}
@@ -347,10 +370,11 @@ export function buildSpecimen(cfg,{hidden=false,preview=true,detail:baseDetail='
    if(cfg.type==='monkeytail'?r.crown:r.children===0){r.terminal=true;foliage(r);if(!pineLike&&cfg.type!=='monkeytail'){for(let k=0;k<extras;k++){let t=cfg.type==='maple'?.30+.45*(Math.floor(k/2)+.5)/Math.ceil(extras/2):.25+.55*(k+.5)/Math.max(1,extras),idx=Math.min(r.points.length-2,Math.floor(t*(r.points.length-1))),p=r.points[idx],d=norm(sub(r.points[idx+1],p)),[u,v]=frame(d),a=r.phase+(cfg.type==='maple'?Math.floor(k/2)*Math.PI/2+k%2*Math.PI:k*2.399963),radial=add(mul(u,Math.cos(a)),mul(v,Math.sin(a))),axis=norm(add(mul(d,.25),radial));if(cfg.type==='willow')axis=norm(add(mul(d,.65),add(mul(radial,.3),[0,-.4,0])));if(cfg.type==='birch')axis=norm(add(mul(d,.6),add(mul(radial,.4),[0,-.25,0])));let len=cfg.type==='willow'?Math.min(R(.35,.65),p[1]*.85):R(.20,.34),pts=path(p,axis,len,cfg.type==='willow'?-.8:.12,.025,3),shoot={points:pts,r0:.0018,r1:.00035,phase:a,fruit:random()<.05,terminal:true};tube(pts,.0018,.00035,sp.twig,.2,3);foliage(shoot)}}sampledShoots++;}
   }
 
-  rootSystem=buildRootSystem(m,cfg,{preview,study:false,baseRadius,inspection:field});
+  rootSystem=buildRootSystem(m,cfg,{preview,study:false,baseRadius,inspection:field,emitWood:canRetain?(points,r0,r1,options)=>captureGeometry('root',()=>woodTube(m,points,r0,r1,cfg.type,{...options,inspection:field&&points.some(p=>p[1]+r0>=-.003)?field:null})):null});
 
  }
- let vertices=m.a.slice(0,m.used);const sourceTriangles=vertices.length/42;if(omitBuried&&cfg.view==='tree')vertices=omitBuriedTriangles(vertices);stats.omittedTriangles=sourceTriangles-vertices.length/42;let bounds={min:[Infinity,Infinity,Infinity],max:[-Infinity,-Infinity,-Infinity]},aboveGroundBounds={min:[Infinity,0,Infinity],max:[-Infinity,0,-Infinity]};for(let i=0;i<vertices.length;i+=14)for(let k=0;k<3;k++){bounds.min[k]=Math.min(bounds.min[k],vertices[i+k]);bounds.max[k]=Math.max(bounds.max[k],vertices[i+k]);if(vertices[i+1]>=0){aboveGroundBounds.min[k]=Math.min(aboveGroundBounds.min[k],vertices[i+k]);aboveGroundBounds.max[k]=Math.max(aboveGroundBounds.max[k],vertices[i+k])}}
+ let vertices=m.a.slice(0,m.used);const sourceTriangles=vertices.length/42;if(omitBuried&&cfg.view==='tree')vertices=omitBuriedTriangles(vertices);stats.omittedTriangles=retainedOmitted+sourceTriangles-vertices.length/42;let bounds={min:[Infinity,Infinity,Infinity],max:[-Infinity,-Infinity,-Infinity]},aboveGroundBounds={min:[Infinity,0,Infinity],max:[-Infinity,0,-Infinity]};for(let i=0;i<vertices.length;i+=14)for(let k=0;k<3;k++){bounds.min[k]=Math.min(bounds.min[k],vertices[i+k]);bounds.max[k]=Math.max(bounds.max[k],vertices[i+k]);if(vertices[i+1]>=0){aboveGroundBounds.min[k]=Math.min(aboveGroundBounds.min[k],vertices[i+k]);aboveGroundBounds.max[k]=Math.max(aboveGroundBounds.max[k],vertices[i+k])}}
  if(field){let nearest=Infinity;for(let i=0;i<vertices.length;i+=14){const d=(vertices[i]-field.center[0])**2+(vertices[i+1]-field.center[1])**2+(vertices[i+2]-field.center[2])**2;if(d<nearest)nearest=d;}stats.inspection.nearest=Math.sqrt(nearest);}
- return{vertices,preview:preview?m.preview:[],bounds,aboveGroundBounds,rootSystem,inspectFocus,inspectDistance,stats:{...stats,leaves,fascicles,buds,flowers,fruits,petioles,branches:records.length,wood:woodStats,roots:rootSystem?.stats??null},stride:14};
+ const detailParts=canRetain?{parts:retained,select:region=>selectParts(retained,region)}:null;
+ return{vertices,detailParts,preview:preview?m.preview:[],bounds,aboveGroundBounds,rootSystem,inspectFocus,inspectDistance,stats:{...stats,leaves,fascicles,buds,flowers,fruits,petioles,branches:records.length,wood:woodStats,roots:rootSystem?.stats??null},stride:14};
 }

@@ -1,6 +1,6 @@
 // Surface dimensions are representative rendering estimates, not measured
 // epidermal reconstructions. Venation classes are kept distinct by species.
-import {PALMATE_VEINS} from './leaf-shapes.mjs?v=24';
+import {PALMATE_VEINS} from './leaf-shapes.mjs?v=25';
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const hash=(x,y)=>{const z=Math.sin(x*127.1+y*311.7)*43758.5453;return z-Math.floor(z);};
 const smooth=(a,b,x)=>{const t=clamp((x-a)/(b-a),0,1);return t*t*(3-2*t);};

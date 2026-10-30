@@ -1,6 +1,6 @@
-import {bipinnateCoverage,redwoodSprayCoverage,pineSprayCoverage} from './compound-lod.mjs?v=24';
-import {createLeafSurfaceTexture} from './leaf-anatomy.mjs?v=24';
-import {barkSample} from './wood.mjs?v=24';
+import {bipinnateCoverage,redwoodSprayCoverage,pineSprayCoverage} from './compound-lod.mjs?v=25';
+import {createLeafSurfaceTexture} from './leaf-anatomy.mjs?v=25';
+import {barkSample} from './wood.mjs?v=25';
 const cache=new Map(),maskCache=new Map(),LAYERS=12,clamp=(x,a,b)=>Math.max(a,Math.min(b,x)),SIZE=256;
 // Linear RGBA data: two metric height gradients, tone / 1.5, roughness.
 // Basal blade space includes negative y, preserving cordate/palmate bases.

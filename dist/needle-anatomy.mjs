@@ -1,7 +1,7 @@
 // Semicircular two-needle pine anatomy in metres. Stomatal row counts draw
 // on primary seedling observations, not a universal mature-tree calibration.
-import {MAXIMUM_DETAIL} from './maximum-detail.mjs?v=24';
-import {organHash as hash} from './organ-distribution.mjs?v=24';
+import {MAXIMUM_DETAIL} from './maximum-detail.mjs?v=25';
+import {organHash as hash} from './organ-distribution.mjs?v=25';
 const add=(a,b)=>a.map((v,i)=>v+b[i]),sub=(a,b)=>a.map((v,i)=>v-b[i]),mul=(a,s)=>a.map(v=>v*s),dot=(a,b)=>a.reduce((s,v,i)=>s+v*b[i],0),cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],norm=a=>mul(a,1/(Math.hypot(...a)||1)),clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 export const NEEDLE_ARC=Math.PI/(Math.PI+2);
 export const NEEDLE_REFERENCES=[['Chinese pine botanical description','https://www.efloras.org/florataxon.aspx?flora_id=2&taxon_id=210001654'],['Pine needle anatomy and stomatal rows, seedling study','https://pmc.ncbi.nlm.nih.gov/articles/PMC4063482/'],['Chinese pine variation in needle longevity','https://pubmed.ncbi.nlm.nih.gov/12670800/']];

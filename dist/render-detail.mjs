@@ -1,4 +1,4 @@
-import {MAXIMUM_DETAIL} from './maximum-detail.mjs?v=24';
+import {MAXIMUM_DETAIL} from './maximum-detail.mjs?v=25';
 // Screen-space choices change tessellation, never organ counts or seeded growth.
 export function selectRenderDetail({view,distance,height=800,leafLength=.09,mode='auto',current=null}){
  if(mode==='full')return'full';

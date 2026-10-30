@@ -2,7 +2,7 @@
 // representative rather than calibrated reproductive development.
 const add=(a,b)=>a.map((v,i)=>v+b[i]),sub=(a,b)=>a.map((v,i)=>v-b[i]),mul=(a,s)=>a.map(v=>v*s),cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],norm=a=>mul(a,1/(Math.hypot(...a)||1));
 const frame=d=>{const a=norm(cross(d,Math.abs(d[1])>.93?[1,0,0]:[0,1,0]));return[a,norm(cross(a,d))]},TAU=Math.PI*2,GOLD=Math.PI*(3-Math.sqrt(5));
-import {blossomDevelopment} from './organ-distribution.mjs?v=24';
+import {blossomDevelopment} from './organ-distribution.mjs?v=25';
 const hash=x=>{const t=Math.sin(x*127.1+311.7)*43758.5453;return t-Math.floor(t)};
 export function buildGardenFlowers(mesh,cfg,{base=[0,0,0],axis=[0,1,0],fine=false,layoutFine=fine,maximum=false,seed=cfg.seed,crownRadius=0}={}){
  if(maximum)fine=true;

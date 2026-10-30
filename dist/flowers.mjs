@@ -1,5 +1,5 @@
-import {organDirection,blossomDevelopment} from './organ-distribution.mjs?v=24';
-import {triangulateContour} from './leaf-shapes.mjs?v=24';
+import {organDirection,blossomDevelopment} from './organ-distribution.mjs?v=25';
+import {triangulateContour} from './leaf-shapes.mjs?v=25';
 
 // Metres throughout. Species-level organ arrangements follow the references;
 // tissue thickness, pigment, pubescence and pollen relief remain illustrative.
@@ -44,7 +44,9 @@ export function buildFlowers(mesh,cfg,{base=[0,0,0],axis=[0,0,1],fine=false,layo
  }
  function ellipsoid(p,dir,radii,col,kind=.312,quality=detail){
   const [a,b]=frame(dir),rows=quality===2?12:quality===1?7:3,sides=quality===2?18:quality===1?10:5,point=(t,s)=>{const theta=t*Math.PI,phi=s*TAU;return add(p,add(mul(dir,Math.cos(theta)*radii[1]),add(mul(a,Math.sin(theta)*Math.cos(phi)*radii[0]),mul(b,Math.sin(theta)*Math.sin(phi)*radii[2]))))};
-  for(let j=0;j<rows;j++)for(let k=0;k<sides;k++){const t=j/rows,tt=(j+1)/rows,s=k/sides,ss=(k+1)/sides,coords=[[t,s],[tt,s],[t,ss],[tt,ss]],q=coords.map(([t,s])=>point(t,s)),n=norm(sub(point((t+tt)*.5,(s+ss)*.5),p));smoothQuad(coords.map(([t,s],i)=>{const theta=t*Math.PI,phi=s*TAU;return{p:q[i],n:norm(add(mul(dir,Math.cos(theta)/radii[1]),add(mul(a,Math.sin(theta)*Math.cos(phi)/radii[0]),mul(b,Math.sin(theta)*Math.sin(phi)/radii[2])))),uv:[s*radii[0]*TAU,t*radii[1]*2]}}),col,kind);if(fine)mesh.preview.push({pts:[q[0],q[1],q[3],q[2]],n,c:col,kind,phase:0});}
+  const grid=Array.from({length:rows+1},(_,j)=>Array.from({length:sides+1},(_,k)=>{const t=j/rows,s=k/sides,theta=t*Math.PI,phi=s*TAU;return{p:point(t,s),n:norm(add(mul(dir,Math.cos(theta)/radii[1]),add(mul(a,Math.sin(theta)*Math.cos(phi)/radii[0]),mul(b,Math.sin(theta)*Math.sin(phi)/radii[2])))),uv:[s*radii[0]*TAU,t*radii[1]*2]};}));
+  for(let j=0;j<rows;j++)for(let k=0;k<sides;k++){const q=[grid[j][k],grid[j+1][k],grid[j][k+1],grid[j+1][k+1]];smoothQuad(q,col,kind);if(Array.isArray(mesh.preview)){const n=norm(sub(point((j+.5)/rows,(k+.5)/sides),p));mesh.preview.push({pts:[q[0].p,q[1].p,q[3].p,q[2].p],n,c:col,kind,phase:0});}}
+
  }
  function hair(p,normal,L,index){const[a,b]=frame(normal),tip=add(p,add(mul(normal,L),mul(a,L*.25*Math.sin(index*2.4))));tri(add(p,mul(b,.000008)),sub(p,mul(b,.000008)),tip,a,[.64,.63,.49],.30);out.hairs++;}
  function path(p,q,bend=[0,0,0],steps=fine?10:1){return Array.from({length:steps+1},(_,j)=>{const t=j/steps;return add(mix(p,q,t),mul(bend,4*t*(1-t)))});}
@@ -57,8 +59,11 @@ export function buildFlowers(mesh,cfg,{base=[0,0,0],axis=[0,0,1],fine=false,layo
  }
  function petal(p,outward,side,face,L,W,{notched=false,opening=1,twist=0,cup=.10,fold=.045,color=[.90,.81,.82],index=0,sepal=false}={}){
   const contour=sepal?sepalContour(fine):notched?sakuraPetalContour(fine):roundedPetal(fine),ids=triangulateContour(contour),thickness=fine?(sepal?.00009:.000075):0;
-  const point=([x,y],back=false)=>{const spread=W*(.15+.85*opening),radial=L*y*opening,z=L*(y*(1-opening)*.84+cup*y*y+twist*x*y)+Math.sin(x*8+y*4+index)*L*.003*y*y+W*fold*x*x*Math.sin(Math.PI*y);return add(p,add(mul(outward,radial),add(mul(side,x*spread),mul(face,z-(back?thickness:0)))));};
-  const normal=(q,back=false)=>{const[x,y]=q,dx=sub(point([x+.001,y],back),point([x-.001,y],back)),dy=sub(point([x,y+.001],back),point([x,y-.001],back)),n=norm(cross(dy,dx));return back?mul(n,-1):n;};
+  const evaluatePoint=([x,y],back=false)=>{const spread=W*(.15+.85*opening),radial=L*y*opening,z=L*(y*(1-opening)*.84+cup*y*y+twist*x*y)+Math.sin(x*8+y*4+index)*L*.003*y*y+W*fold*x*x*Math.sin(Math.PI*y);return add(p,add(mul(outward,radial),add(mul(side,x*spread),mul(face,z-(back?thickness:0)))));};
+  const evaluateNormal=(q,back=false)=>{const[x,y]=q,dx=sub(point([x+.001,y],back),point([x-.001,y],back)),dy=sub(point([x,y+.001],back),point([x,y-.001],back)),n=norm(cross(dy,dx));return back?mul(n,-1):n;};
+  const positions=fine?new Map():null,normals=fine?new Map():null,key=(q,back)=>q[0]+','+q[1]+','+Number(back);
+  const point=(q,back=false)=>{if(!positions)return evaluatePoint(q,back);const k=key(q,back);let value=positions.get(k);if(!value){value=evaluatePoint(q,back);positions.set(k,value);}return value;};
+  const normal=(q,back=false)=>{if(!normals)return evaluateNormal(q,back);const k=key(q,back);let value=normals.get(k);if(!value){value=evaluateNormal(q,back);normals.set(k,value);}return value;};
   const emit=(a,b,c,back)=>{let points=[a,b,c],n=normal(a,back);if(dot(cross(sub(point(b,back),point(a,back)),sub(point(c,back),point(a,back))),n)<0)points=[a,c,b];for(const q of points){const pink=Math.exp(-q[1]*5.5),col=sepal?color:color.map((c,k)=>c*(1-pink*.12)+[.12,-.04,-.025][k]*pink);mesh.v(point(q,back),normal(q,back),col,sepal?.30:back?.307:.306,seed*.013+index*.731,0,[q[0]*W,q[1]*L]);}};
   const split=(a,b,c,level,back)=>{if(!level){emit(a,b,c,back);return;}const ab=mix(a,b,.5),bc=mix(b,c,.5),ca=mix(c,a,.5);split(a,ab,ca,level-1,back);split(ab,b,bc,level-1,back);split(ca,bc,c,level-1,back);split(ab,bc,ca,level-1,back);};
   for(let back=0;back<(fine?2:1);back++)for(const tri of ids)split(...tri.map(i=>contour[i]),fine?(sepal?1:macro?3:2):0,!!back);
