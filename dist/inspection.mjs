@@ -42,7 +42,7 @@ export function createSurfaceProximity(vertices,bounds,cell=.18){
 export function inspectionRegion({eye,direction=null,aspect=1,height=800,cfg,time=0,proximity,current=null}){
  if(!proximity)return null;const center=restCamera(eye,cfg,time),distance=proximity.nearest(center),limit=current?1.05:.78;if(distance>limit)return null;
  const delta=direction?restCamera(eye.map((v,k)=>v+direction[k]),cfg,time).map((v,k)=>v-center[k]):null,forward=delta?delta.map(v=>v/(Math.hypot(...delta)||1)):null,cone=Math.tan(Math.min(1.2,Math.atan(Math.tan(.3)*Math.max(1,aspect))+.20)),radius=Math.max(.16,distance+.08),move=current?Math.hypot(...center.map((v,k)=>v-current.center[k])):Infinity,turn=current?.forward&&forward?current.forward.reduce((s,v,k)=>s+v*forward[k],0):1;
- return current&&move<.003&&radius<=current.radius+.12&&turn>.9995?current:{center,radius,forward,cone,camera:[...eye],cameraForward:direction?[...direction]:null,height,time};
+ return current&&move<.003&&radius<=current.radius+.12&&turn>.9995?current:{center,radius,forward,cone,camera:[...eye],cameraForward:direction?[...direction]:null,surfaceDistance:distance,height,time};
 }
 
 // Used only for an explicit double click, not on the frame path. Intersections
