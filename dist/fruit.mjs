@@ -1,5 +1,5 @@
-import {EAST_ASIAN_SPECIES} from './east-asia.mjs?v=23';
-import {buildEastAsianOrgan} from './east-asia-organs.mjs?v=23';
+import {EAST_ASIAN_SPECIES} from './east-asia.mjs?v=24';
+import {buildEastAsianOrgan} from './east-asia-organs.mjs?v=24';
 // Geometric reproductive structures, in metres. Surface amplitudes and
 // developmental stages are illustrative; these are not scans or growth models.
 const add=(a,b)=>a.map((v,i)=>v+b[i]),sub=(a,b)=>a.map((v,i)=>v-b[i]),mul=(a,s)=>a.map(v=>v*s),dot=(a,b)=>a.reduce((s,v,i)=>s+v*b[i],0),cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],norm=a=>mul(a,1/(Math.hypot(...a)||1));
@@ -25,7 +25,8 @@ export const FRUIT_NOTES={
  birch:{name:'Fruiting catkin',source:'https://plants.ces.ncsu.edu/plants/betula-pendula/',text:'A pendant cylindrical fruiting catkin, with overlapping three-lobed bracts and small winged nutlets. These are not woody pine scales.'}
 };
 
-export function buildFruit(mesh,cfg,{base=[0,0,0],axis=[0,-1,0],fine=false,attached=['tree','shoot'].includes(cfg.view),stage=cfg.fruitStage??'mature',seed=cfg.seed??2847}={}){
+export function buildFruit(mesh,cfg,{base=[0,0,0],axis=[0,-1,0],fine=false,layoutFine=fine,maximum=false,attached=['tree','shoot'].includes(cfg.view),stage=cfg.fruitStage??'mature',seed=cfg.seed??2847}={}){
+ if(maximum)fine=true;
  if(EAST_ASIAN_SPECIES[cfg.type]&&cfg.type!=='chinesepine')return buildEastAsianOrgan(mesh,cfg,{mode:'fruit',base,axis,fine,stage,seed});
  axis=norm(axis);const [u,v]=frame(axis),rnd=(i,a,b)=>mix(a,b,hash(seed+i*1.73)),type=cfg.type;
  const details={type,stage,scales:0,capsules:0,bracts:0,wingedSeeds:0,silkyHairs:0,seeds:0,seedPairs:0,scaleRecords:[]};let focus=null;
@@ -66,7 +67,7 @@ export function buildFruit(mesh,cfg,{base=[0,0,0],axis=[0,-1,0],fine=false,attac
   details.length=L;details.valves=3;details.capsules=1;details.opening=opening;focus=add(add(p,mul(axis,L*.55)),mul(u,r+opening));
  }else if(type==='eucalyptus'){
   details.valves=0;
-  const young=stage==='developing',count=fine?9:7,p=stalk(.010,.00065),L=rnd(1,.0055,.008),r=L*.55,opened=stage==='released',col=young?[.29,.35,.16]:[.35,.26,.17];
+  const young=stage==='developing',count=layoutFine?9:7,p=stalk(.010,.00065),L=rnd(1,.0055,.008),r=L*.55,opened=stage==='released',col=young?[.29,.35,.16]:[.35,.26,.17];
   for(let k=0;k<count;k++){
    const a=k*GOLD,out=add(mul(u,Math.cos(a)),mul(v,Math.sin(a))),q=add(p,add(mul(out,.010),mul(axis,.003))),d=norm(add(mul(axis,.35),mul(out,.9))),[aa,bb]=frame(d);lathe(p,norm(sub(q,p)),length(sub(q,p)),t=>.00038*(1-.3*t),[.34,.24,.15],.36,fine?4:2,fine?6:4);
    lathe(q,d,L,t=>r*Math.sqrt(t)*(1-.04*t),col,.36,fine?44:4,fine?40:6);lathe(add(q,mul(d,L*.38)),d,L*.62,t=>r*.82*Math.sqrt(t),col.map(c=>c*.55),.36,fine?32:3,fine?40:6);

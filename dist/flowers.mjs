@@ -1,5 +1,5 @@
-import {organDirection,blossomDevelopment} from './organ-distribution.mjs?v=23';
-import {triangulateContour} from './leaf-shapes.mjs?v=23';
+import {organDirection,blossomDevelopment} from './organ-distribution.mjs?v=24';
+import {triangulateContour} from './leaf-shapes.mjs?v=24';
 
 // Metres throughout. Species-level organ arrangements follow the references;
 // tissue thickness, pigment, pubescence and pollen relief remain illustrative.
@@ -27,9 +27,10 @@ export function sakuraPetalContour(fine=true){
 const sepalContour=fine=>{const p=[[0,0]];quadratic(p,[.9,.13],[.72,.47],fine?5:1);quadratic(p,[.38,.82],[0,1],fine?5:1);return[...p,...p.slice(1,-1).reverse().map(([x,y])=>[-x,y])];};
 const roundedPetal=(fine=true)=>{const p=[[0,0]];quadratic(p,[.22,.10],[.85,.43],fine?4:1);quadratic(p,[1.08,.86],[.40,.98],fine?7:2);quadratic(p,[.15,1.04],[0,1],fine?4:1);return[...p,...p.slice(1,-1).reverse().map(([x,y])=>[-x,y])];};
 
-export function buildFlowers(mesh,cfg,{base=[0,0,0],axis=[0,0,1],fine=false,layoutFine=fine,macroDetail=false,seed=cfg.seed,study=false}={}){
- const type=cfg.type,d=norm(axis),[u,v]=frame(d),macro=macroDetail||study&&cfg.flowerLayout!=='cluster',stage=study?(cfg.flowerStage??'open'):'open',R=(i,a,b)=>a+(b-a)*hash(seed+i*1.731),detail=fine?macro?2:1:0;
- const out={type,stage,clusterAxis:[...d],flowers:0,petals:0,sepals:0,stamens:0,styles:0,stigmas:0,anthers:0,thecae:0,ovules:0,pollenCones:0,pollenSacs:0,microsporophylls:0,staminodes:0,hairs:0,pollenGrains:0,pedicelLengths:[],flowerRecords:[],petalRecords:[],scaleRecords:[],length:0};
+export function buildFlowers(mesh,cfg,{base=[0,0,0],axis=[0,0,1],fine=false,layoutFine=fine,macroDetail=false,maximum=false,seed=cfg.seed,study=false}={}){
+ if(maximum)fine=true;
+ const type=cfg.type,d=norm(axis),[u,v]=frame(d),macro=maximum||macroDetail||study&&cfg.flowerLayout!=='cluster',stage=study?(cfg.flowerStage??'open'):'open',R=(i,a,b)=>a+(b-a)*hash(seed+i*1.731),detail=fine?macro?2:1:0;
+ const out={type,stage,maximumDetail:fine&&macro,clusterAxis:[...d],flowers:0,petals:0,sepals:0,stamens:0,styles:0,stigmas:0,anthers:0,thecae:0,ovules:0,pollenCones:0,pollenSacs:0,microsporophylls:0,staminodes:0,hairs:0,pollenGrains:0,pedicelLengths:[],flowerRecords:[],petalRecords:[],scaleRecords:[],length:0};
  let focus=[...base],surfaceFocus=[...base],center=[...base];
  const tri=(a,b,c,normal,col,kind,uv=[[0,0],[0,0],[0,0]],phase=seed*.013)=>{if(dot(cross(sub(b,a),sub(c,a)),normal)<0){[b,c]=[c,b];[uv[1],uv[2]]=[uv[2],uv[1]];}for(const [i,p]of[a,b,c].entries())mesh.v(p,normal,col,kind,phase,0,uv[i]);};
  function quad(q,normal,col,kind,uv,phase=seed*.013){tri(q[0],q[1],q[2],normal,col,kind,[uv[0],uv[1],uv[2]],phase);tri(q[2],q[1],q[3],normal,col,kind,[uv[2],uv[1],uv[3]],phase);}
@@ -130,7 +131,7 @@ export function buildFlowers(mesh,cfg,{base=[0,0,0],axis=[0,0,1],fine=false,layo
  function sweetgum(){
   const male=study&&cfg.flowerSex==='male';out.sex=male?'male':'female';out.apetalous=true;
   if(male){const spikes=cfg.flowerLayout==='cluster'?3:1;for(let spike=0;spike<spikes;spike++){const p=add(base,mul(u,(spike-1)*.008)),end=add(p,mul(d,.018));tube([p,end],.00040,.0002,[.40,.44,.16]);for(let f=0;f<12;f++){const a=f*GOLD,radial=add(mul(u,Math.cos(a)),mul(v,Math.sin(a))),q=add(p,add(mul(d,.002+f*.0011),mul(radial,.0010)));for(let j=0;j<6;j++){const angle=j*GOLD,tip=add(q,add(mul(radial,.0019),add(mul(d,Math.sin(angle)*.00065),mul(u,Math.cos(angle)*.00065))));tube([q,tip],.00005,.00004,[.59,.60,.22],.311,5);anther(tip,radial,.55,j);out.stamens++;}out.flowers++;}center=add(p,mul(d,.010));focus=add(center,mul(u,.002));}out.maleSpikes=spikes;out.length=.018;surfaceFocus=focus;return;}
-  const p=add(base,mul(d,.035)),count=fine?30:12,radius=.0033;tube(path(base,p,mul(u,.002)),.00050,.00035,[.38,.45,.16]);ellipsoid(p,d,[radius,radius,radius],[.35,.44,.16],.30);
+  const p=add(base,mul(d,.035)),count=30,radius=.0033;tube(path(base,p,mul(u,.002)),.00050,.00035,[.38,.45,.16]);ellipsoid(p,d,[radius,radius,radius],[.35,.44,.16],.30);
   for(let k=0;k<count;k++){const y=1-2*(k+.5)/count,a=k*GOLD,r=Math.sqrt(1-y*y),radial=norm(add(mul(d,y),add(mul(u,Math.cos(a)*r),mul(v,Math.sin(a)*r)))),q=add(p,mul(radial,radius)),[x,z]=frame(radial);if(fine)ellipsoid(q,radial,[.00065,.0008,.00055],[.41,.50,.18],.30,1);
    for(const sign of[-1,1]){const root=add(q,mul(x,sign*.00035)),R=.0032,points=Array.from({length:fine?17:4},(_,j)=>{const t=j/(fine?16:3),a=t*2.3;return add(root,add(mul(radial,R*Math.sin(a)),mul(x,sign*R*(1-Math.cos(a)))));});tube(points,.00013,.000075,[.50,.49,.24],.311,fine?7:3);out.styles++;}
    if(fine)for(let tooth=0;tooth<5;tooth++){const a=tooth*GOLD,tip=add(q,add(mul(radial,.004),add(mul(x,Math.cos(a)*.0011),mul(z,Math.sin(a)*.0011))));tube([q,tip],.00007,.000025,[.45,.51,.22],.311,4);out.staminodes++;}out.flowers++;

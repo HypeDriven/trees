@@ -1,5 +1,5 @@
-import {studyWindPosition} from './software-study.mjs?v=23';
-import {bipinnateCoverage,redwoodSprayCoverage,pineSprayCoverage} from './compound-lod.mjs?v=23';
+import {studyWindPosition} from './software-study.mjs?v=24';
+import {bipinnateCoverage,redwoodSprayCoverage,pineSprayCoverage} from './compound-lod.mjs?v=24';
 
 // Wind moves the specimen through a stationary inspection volume. Undo its
 // structural displacement so proximity and refinements follow the real organ.
@@ -15,20 +15,34 @@ export function createInspectionField(region){
   for(let i=0;i<points.length-1;i++){const a=points[i],b=points[i+1],d=b.map((v,k)=>v-a[k]),q=eye.map((v,k)=>v-a[k]),u=Math.max(0,Math.min(1,q.reduce((s,v,k)=>s+v*d[k],0)/(d.reduce((s,v)=>s+v*v,0)||1))),sample=u=>a.map((v,k)=>v+d[k]*u),candidates=visible(sample(u),r0)?[u]:[0,.25,.5,.75,1];for(const f of candidates){const p=sample(f),distance=Math.hypot(...p.map((v,k)=>v-eye[k]))-r0;if(distance<best&&visible(p,r0)){best=distance;t=(i+f)/(points.length-1);}}}
   return{near:best<=radius,distance:best,t};
  }
- return{...region,near,path};
+ function geometryNear(vertices,start=0,end=vertices.length,padding=.004){
+  const limit=(radius+padding)**2;
+  for(let i=start;i<end;i+=42){const center=[0,1,2].map(k=>(vertices[i+k]+vertices[i+14+k]+vertices[i+28+k])/3),extent=Math.max(...[0,14,28].map(o=>Math.hypot(...center.map((v,k)=>vertices[i+o+k]-v))));if(near(center,extent+padding)&&triangleDistance2(vertices,i,eye)<=limit)return true;}
+  return false;
+ }
+ return{...region,near,path,geometryNear};
 }
 
-// Conservative occupied cells include entire triangle bounds, so a camera
-// near the middle of a long branch is detected as well as one near a vertex.
-export function createSurfaceProximity(vertices,bounds,cell=.18){
- const span=bounds.max.map((v,k)=>v-bounds.min[k]);cell=Math.max(cell,...span.map(v=>v/280));const min=bounds.min.map(v=>v-cell),dims=span.map(v=>Math.ceil(v/cell)+3),[nx,ny,nz]=dims,data=new Uint8Array(nx*ny*nz),index=(x,y,z)=>(z*ny+y)*nx+x;
- for(let i=0;i<vertices.length;i+=42){if(vertices[i+9]>=1.5||vertices[i+1]<-.003&&vertices[i+15]<-.003&&vertices[i+29]<-.003)continue;const lo=[],hi=[];for(let k=0;k<3;k++){lo[k]=Math.max(0,Math.floor((Math.min(vertices[i+k],vertices[i+14+k],vertices[i+28+k])-min[k])/cell));hi[k]=Math.min(dims[k]-1,Math.floor((Math.max(vertices[i+k],vertices[i+14+k],vertices[i+28+k])-min[k])/cell));}for(let z=lo[2];z<=hi[2];z++)for(let y=lo[1];y<=hi[1];y++)data.fill(1,index(lo[0],y,z),index(hi[0],y,z)+1);}
- return{cell,bytes:data.byteLength,nearest(p,limit=1.15){let best=limit;const lo=p.map((v,k)=>Math.max(0,Math.floor((v-limit-min[k])/cell))),hi=p.map((v,k)=>Math.min(dims[k]-1,Math.floor((v+limit-min[k])/cell)));for(let z=lo[2];z<=hi[2];z++)for(let y=lo[1];y<=hi[1];y++)for(let x=lo[0];x<=hi[0];x++){if(!data[index(x,y,z)])continue;const xyz=[x,y,z],d=Math.hypot(...p.map((v,k)=>Math.max(min[k]+xyz[k]*cell-v,0,v-(min[k]+(xyz[k]+1)*cell))));if(d<best)best=d;}return best;}};
+function segmentDistance2(p,a,b){const x=b[0]-a[0],y=b[1]-a[1],z=b[2]-a[2],u=Math.max(0,Math.min(1,((p[0]-a[0])*x+(p[1]-a[1])*y+(p[2]-a[2])*z)/(x*x+y*y+z*z||1)));return(p[0]-a[0]-x*u)**2+(p[1]-a[1]-y*u)**2+(p[2]-a[2]-z*u)**2;}
+function triangleDistance2(vertices,i,p){
+ const a=vertices.subarray(i,i+3),b=vertices.subarray(i+14,i+17),c=vertices.subarray(i+28,i+31),e=[b[0]-a[0],b[1]-a[1],b[2]-a[2]],f=[c[0]-a[0],c[1]-a[1],c[2]-a[2]],q=[p[0]-a[0],p[1]-a[1],p[2]-a[2]],dot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2],ee=dot(e,e),ff=dot(f,f),ef=dot(e,f),qe=dot(q,e),qf=dot(q,f),det=ee*ff-ef*ef;
+ if(det>1e-24){const u=(ff*qe-ef*qf)/det,v=(ee*qf-ef*qe)/det;if(u>=0&&v>=0&&u+v<=1)return(q[0]-e[0]*u-f[0]*v)**2+(q[1]-e[1]*u-f[1]*v)**2+(q[2]-e[2]*u-f[2]*v)**2;}
+ return Math.min(segmentDistance2(p,a,b),segmentDistance2(p,b,c),segmentDistance2(p,c,a));
 }
-export function inspectionRegion({eye,direction=null,aspect=1,cfg,time=0,proximity,current=null}){
+// Occupied cells accelerate exact surface distance; their size no longer
+// controls close-up quality or hides millimetre-scale camera movements.
+export function createSurfaceProximity(vertices,bounds,cell=.18){
+ const span=bounds.max.map((v,k)=>v-bounds.min[k]);cell=Math.max(cell,...span.map(v=>v/280));const min=bounds.min.map(v=>v-cell),dims=span.map(v=>Math.ceil(v/cell)+3),[nx,ny,nz]=dims,count=nx*ny*nz,counts=new Uint32Array(count),index=(x,y,z)=>(z*ny+y)*nx+x;
+ function cells(i,visit){if(vertices[i+9]>=1.5||vertices[i+1]<-.003&&vertices[i+15]<-.003&&vertices[i+29]<-.003)return;const lo=[],hi=[];for(let k=0;k<3;k++){lo[k]=Math.max(0,Math.floor((Math.min(vertices[i+k],vertices[i+14+k],vertices[i+28+k])-min[k])/cell));hi[k]=Math.min(dims[k]-1,Math.floor((Math.max(vertices[i+k],vertices[i+14+k],vertices[i+28+k])-min[k])/cell));}for(let z=lo[2];z<=hi[2];z++)for(let y=lo[1];y<=hi[1];y++)for(let x=lo[0];x<=hi[0];x++)visit(index(x,y,z));}
+ for(let i=0;i<vertices.length;i+=42)cells(i,c=>counts[c]++);
+ const offsets=new Uint32Array(count+1);for(let i=0;i<count;i++)offsets[i+1]=offsets[i]+counts[i];const refs=new Uint32Array(offsets[count]),cursor=offsets.slice(0,-1),marks=new Uint32Array(vertices.length/42);let stamp=0;
+ for(let i=0;i<vertices.length;i+=42)cells(i,c=>{refs[cursor[c]++]=i/42;});
+ return{cell,bytes:offsets.byteLength+refs.byteLength+marks.byteLength,nearest(p,limit=1.15){if(++stamp===0xffffffff){marks.fill(0);stamp=1;}let best=limit*limit;const lo=p.map((v,k)=>Math.max(0,Math.floor((v-limit-min[k])/cell))),hi=p.map((v,k)=>Math.min(dims[k]-1,Math.floor((v+limit-min[k])/cell)));for(let z=lo[2];z<=hi[2];z++)for(let y=lo[1];y<=hi[1];y++)for(let x=lo[0];x<=hi[0];x++){const c=index(x,y,z);if(offsets[c]===offsets[c+1])continue;const xyz=[x,y,z],d=p.reduce((s,v,k)=>s+Math.max(min[k]+xyz[k]*cell-v,0,v-(min[k]+(xyz[k]+1)*cell))**2,0);if(d>best)continue;for(let r=offsets[c];r<offsets[c+1];r++){const t=refs[r];if(marks[t]===stamp)continue;marks[t]=stamp;best=Math.min(best,triangleDistance2(vertices,t*42,p));}}return Math.sqrt(best);}};
+}
+export function inspectionRegion({eye,direction=null,aspect=1,height=800,cfg,time=0,proximity,current=null}){
  if(!proximity)return null;const center=restCamera(eye,cfg,time),distance=proximity.nearest(center),limit=current?1.05:.78;if(distance>limit)return null;
- const delta=direction?restCamera(eye.map((v,k)=>v+direction[k]),cfg,time).map((v,k)=>v-center[k]):null,forward=delta?delta.map(v=>v/(Math.hypot(...delta)||1)):null,cone=Math.tan(Math.min(1.2,Math.atan(Math.tan(.3)*Math.max(1,aspect))+.20)),radius=Math.max(.44,distance+.25),move=current?Math.hypot(...center.map((v,k)=>v-current.center[k])):Infinity,turn=current?.forward&&forward?current.forward.reduce((s,v,k)=>s+v*forward[k],0):1;
- return current&&move<Math.min(.16,current.radius*.25)&&radius<=current.radius+.12&&turn>.985?current:{center,radius,forward,cone};
+ const delta=direction?restCamera(eye.map((v,k)=>v+direction[k]),cfg,time).map((v,k)=>v-center[k]):null,forward=delta?delta.map(v=>v/(Math.hypot(...delta)||1)):null,cone=Math.tan(Math.min(1.2,Math.atan(Math.tan(.3)*Math.max(1,aspect))+.20)),radius=Math.max(.16,distance+.08),move=current?Math.hypot(...center.map((v,k)=>v-current.center[k])):Infinity,turn=current?.forward&&forward?current.forward.reduce((s,v,k)=>s+v*forward[k],0):1;
+ return current&&move<.003&&radius<=current.radius+.12&&turn>.9995?current:{center,radius,forward,cone,camera:[...eye],cameraForward:direction?[...direction]:null,height,time};
 }
 
 // Used only for an explicit double click, not on the frame path. Intersections

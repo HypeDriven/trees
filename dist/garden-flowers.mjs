@@ -2,9 +2,10 @@
 // representative rather than calibrated reproductive development.
 const add=(a,b)=>a.map((v,i)=>v+b[i]),sub=(a,b)=>a.map((v,i)=>v-b[i]),mul=(a,s)=>a.map(v=>v*s),cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],norm=a=>mul(a,1/(Math.hypot(...a)||1));
 const frame=d=>{const a=norm(cross(d,Math.abs(d[1])>.93?[1,0,0]:[0,1,0]));return[a,norm(cross(a,d))]},TAU=Math.PI*2,GOLD=Math.PI*(3-Math.sqrt(5));
-import {blossomDevelopment} from './organ-distribution.mjs?v=23';
+import {blossomDevelopment} from './organ-distribution.mjs?v=24';
 const hash=x=>{const t=Math.sin(x*127.1+311.7)*43758.5453;return t-Math.floor(t)};
-export function buildGardenFlowers(mesh,cfg,{base=[0,0,0],axis=[0,1,0],fine=false,layoutFine=fine,seed=cfg.seed,crownRadius=0}={}){
+export function buildGardenFlowers(mesh,cfg,{base=[0,0,0],axis=[0,1,0],fine=false,layoutFine=fine,maximum=false,seed=cfg.seed,crownRadius=0}={}){
+ if(maximum)fine=true;
  axis=norm(axis);const [u,v]=frame(axis),rnd=(i,a,b)=>a+(b-a)*hash(seed+i*1.73),result={type:cfg.type,clusterAxis:[...axis],flowers:0,tepals:0,stamens:0,buds:0,flowerRecords:[]};
  function patch(point,rows,cols,col,kind=.3,thick=0,shape='blade'){
   const sample=(t,x,back=false)=>{const p=point(t,x),dt=sub(point(Math.min(1,t+.001),x),point(Math.max(0,t-.001),x)),dx=sub(point(t,Math.min(1,x+.001)),point(t,Math.max(-1,x-.001))),normal=norm(cross(dx,dt)),n=Math.hypot(...normal)>.5?normal:u;return{p:add(p,mul(n,back?-thick:0)),n:back?mul(n,-1):n,uv:[(x+1)*.02,t*.05]};};

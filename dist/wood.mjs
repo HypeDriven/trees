@@ -1,6 +1,7 @@
-import {DETAIL_GRID} from './render-detail.mjs?v=23';
-import {createStemSurface} from './stem-attachment.mjs?v=23';
-import {EAST_ASIAN_SPECIES} from './east-asia.mjs?v=23';
+import {MAXIMUM_DETAIL} from './maximum-detail.mjs?v=24';
+import {DETAIL_GRID} from './render-detail.mjs?v=24';
+import {createStemSurface} from './stem-attachment.mjs?v=24';
+import {EAST_ASIAN_SPECIES} from './east-asia.mjs?v=24';
 // Physical-scale procedural wood. Relief amplitudes are illustrative, not scans.
 const add=(a,b)=>a.map((x,i)=>x+b[i]),sub=(a,b)=>a.map((x,i)=>x-b[i]),mul=(a,s)=>a.map(x=>x*s),dot=(a,b)=>a.reduce((s,x,i)=>s+x*b[i],0),cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],norm=a=>mul(a,1/(Math.hypot(...a)||1));
 const fract=x=>x-Math.floor(x),mix=(a,b,t)=>a+(b-a)*t,smooth=(a,b,x)=>{let t=Math.max(0,Math.min(1,(x-a)/(b-a)));return t*t*(3-2*t)};
@@ -68,14 +69,14 @@ export function pineBarkStyle(y,radius,treeHeight=10){
 }
 function interpolatePath(points,t){let x=t*(points.length-1),i=Math.min(points.length-2,Math.floor(x)),f=x-i,p0=points[Math.max(0,i-1)],p1=points[i],p2=points[i+1],p3=points[Math.min(points.length-1,i+2)];return p1.map((v,k)=>.5*((2*v)+(-p0[k]+p2[k])*f+(2*p0[k]-5*v+4*p2[k]-p3[k])*f*f+(-p0[k]+3*v-3*p2[k]+p3[k])*f*f*f))}
 export function woodTube(mesh,points,r0,r1,type,{fine=false,macro=false,focusT=.44,maturity=.65,root=false,collar=false,preview=true,cap=false,zone:forceZone,treeHeight=10,detail='full',inspection=null}={}){
- const local=inspection?.path(points,r0);if(local?.near){fine=true;detail='full';if(r0>.012){macro=true;focusT=local.t;}}
+ const local=inspection?.path(Array.from({length:65},(_,j)=>interpolatePath(points,j/64)),r0);if(local?.near){fine=true;detail='full';macro=true;focusT=local.t;}
  const pineLike=type==='pine'||type==='chinesepine',isTwig=r0<.007,white=type==='birch'&&r0>.018;
  let zone=forceZone??(pineLike?pineBarkStyle(points[0][1],r0,treeHeight).zone:isTwig?.08:white?.04:0),age=Math.max(.04,Math.min(1,maturity*(isTwig?.10:.35+.65*Math.min(1,r0/.09))));
  const southern={maple:[[.32,.29,.24],[.31,.21,.13]],sakura:[[.36,.23,.18],[.40,.22,.16]],ginkgo:[[.32,.30,.25],[.32,.28,.17]],dawnredwood:[[.40,.20,.12],[.42,.22,.13]],chinesepine:[[.31,.27,.21],[.35,.24,.15]],sweetgum:[[.32,.29,.24],[.33,.25,.17]],redbud:[[.31,.24,.19],[.34,.22,.15]],jacaranda:[[.32,.30,.26],[.30,.25,.18]],monkeytail:[[.045,.037,.030],[.11,.075,.045]],eucalyptus:[[.54,.52,.46],[.36,.20,.14]],baobab:[[.40,.37,.34],[.36,.34,.28]],fevertree:[[.43,.46,.19],[.40,.36,.20]],sausagetree:[[.37,.34,.28],[.34,.29,.21]],karee:[[.25,.235,.19],[.35,.19,.12]],sweetthorn:[[.20,.17,.135],[.34,.17,.10]],marula:[[.40,.38,.33],[.34,.30,.22]],wildolive:[[.29,.29,.24],[.30,.29,.20]],yellowwood:[[.33,.31,.26],[.25,.29,.17]]}[type];
  const base=zone===.04?[.70,.69,.62]:zone===.06?[.43,.20,.075]:zone===.08?(type==='willow'?[.34,.30,.095]:[.24,.15,.09]):type==='birch'?[.24,.22,.19]:type==='willow'?[.24,.22,.18]:[.27,.235,.19];
  const wholeGum=type==='eucalyptus'&&!fine&&!macro;
  const pathLength=points.slice(1).reduce((s,p,i)=>s+Math.hypot(...sub(p,points[i])),0),halfSpan=Math.min(.5,.145/Math.max(.001,pathLength)),t0=macro?Math.max(0,focusT-halfSpan):0,t1=macro?Math.min(1,focusT+halfSpan):1;
- const grid=DETAIL_GRID[detail]??DETAIL_GRID.full;let sides=macro?(r0<.04?Math.round(grid.barkSides*.625):grid.barkSides):fine?96:type==='monkeytail'?24:root&&r0>.14?80:wholeGum?(r0>.14?40:r0>.035?16:r0>.007?8:5):r0>.14?72:r0>.035?24:r0>.007?10:5,steps=macro?grid.barkRows:fine?grid.rows:root&&r0>.14?120:Math.max(points.length-1,r0>.04?(wholeGum?24:32):points.length-1),rings=[],arc=0,previousU=null;
+ const grid=DETAIL_GRID[detail]??DETAIL_GRID.full,pixelError=Math.max(.0000001,Math.max(.001,local?.distance??.2)*.618/(inspection?.height??800)*.25),maximumSides=r0>=.012?MAXIMUM_DETAIL.barkSides:Math.min(MAXIMUM_DETAIL.barkSides,Math.max(32,Math.ceil(Math.PI*Math.sqrt(r0/(2*pixelError))/8)*8));let sides=macro?(local?.near?maximumSides:(r0<.04?Math.round(grid.barkSides*.625):grid.barkSides)):fine?96:type==='monkeytail'?24:root&&r0>.14?80:wholeGum?(r0>.14?40:r0>.035?16:r0>.007?8:5):r0>.14?72:r0>.035?24:r0>.007?10:5,steps=macro?grid.barkRows:fine?grid.rows:root&&r0>.14?120:Math.max(points.length-1,r0>.04?(wholeGum?24:32):points.length-1),rings=[],arc=0,previousU=null;
  const denseSteps=steps,samples=macro?[...new Set([...Array.from({length:33},(_,i)=>i/32),...Array.from({length:steps+1},(_,i)=>t0+(t1-t0)*i/steps)].map(v=>Math.round(v*1e10)/1e10))].sort((a,b)=>a-b):Array.from({length:steps+1},(_,i)=>i/steps);steps=samples.length-1;
  const phase=points[0][0]*.37+points[0][2]*.53,uvOffset=points[0][1];
  for(let j=0;j<=steps;j++){

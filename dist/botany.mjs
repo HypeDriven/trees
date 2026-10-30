@@ -1,22 +1,23 @@
-import {createInspectionField} from './inspection.mjs?v=23';
-import {DETAIL_GRID,omitBuriedTriangles} from './render-detail.mjs?v=23';
-import {createStemSurface,linearStemSample} from './stem-attachment.mjs?v=23';
-import {buildXerophytaCrown} from './xerophyta-crown.mjs?v=23';
-import {buildNeedle,fascicleParameters,NEEDLE_REFERENCES} from './needle-anatomy.mjs?v=23';
-import {organHash,organDirection} from './organ-distribution.mjs?v=23';
-import {buildFlowers,FLOWER_NOTES} from './flowers.mjs?v=23';
-import {leafContour,triangulateContour,PALMATE_VEINS,veinDistance} from './leaf-shapes.mjs?v=23';
-import {EAST_ASIAN_SPECIES} from './east-asia.mjs?v=23';
-import {buildEastAsianOrgan} from './east-asia-organs.mjs?v=23';
-import {jacarandaPinnaScale,bipinnatePinnaScale,pineNeedleLayout} from './compound-lod.mjs?v=23';
-import {buildGardenFlowers} from './garden-flowers.mjs?v=23';
-import {SOUTH_AFRICAN_SPECIES} from './south-africa.mjs?v=23';
-import {buildFruit,FRUIT_NOTES} from './fruit.mjs?v=23';
-import {shootGrowth,leafDevelopment,shootNodePosition,springPhenology,FOLIAGE_REFERENCES} from './foliage-growth.mjs?v=23';
-import {buildTreeArchitecture,ARCHITECTURE_NOTES} from './architecture.mjs?v=23';
-import {LEAF_ANATOMY,dichotomousVeinDistance} from './leaf-anatomy.mjs?v=23';
-import {woodTube,woodRadius} from './wood.mjs?v=23';
-import {buildRootSystem,ROOT_PROFILES} from './roots.mjs?v=23';
+import {maximumLeafGrid,MAXIMUM_DETAIL} from './maximum-detail.mjs?v=24';
+import {createInspectionField} from './inspection.mjs?v=24';
+import {DETAIL_GRID,omitBuriedTriangles} from './render-detail.mjs?v=24';
+import {createStemSurface,linearStemSample} from './stem-attachment.mjs?v=24';
+import {buildXerophytaCrown} from './xerophyta-crown.mjs?v=24';
+import {buildNeedle,fascicleParameters,NEEDLE_REFERENCES} from './needle-anatomy.mjs?v=24';
+import {organHash,organDirection} from './organ-distribution.mjs?v=24';
+import {buildFlowers,FLOWER_NOTES} from './flowers.mjs?v=24';
+import {leafContour,triangulateContour,PALMATE_VEINS,veinDistance} from './leaf-shapes.mjs?v=24';
+import {EAST_ASIAN_SPECIES} from './east-asia.mjs?v=24';
+import {buildEastAsianOrgan} from './east-asia-organs.mjs?v=24';
+import {jacarandaPinnaScale,bipinnatePinnaScale,pineNeedleLayout} from './compound-lod.mjs?v=24';
+import {buildGardenFlowers} from './garden-flowers.mjs?v=24';
+import {SOUTH_AFRICAN_SPECIES} from './south-africa.mjs?v=24';
+import {buildFruit,FRUIT_NOTES} from './fruit.mjs?v=24';
+import {shootGrowth,leafDevelopment,shootNodePosition,springPhenology,FOLIAGE_REFERENCES} from './foliage-growth.mjs?v=24';
+import {buildTreeArchitecture,ARCHITECTURE_NOTES} from './architecture.mjs?v=24';
+import {LEAF_ANATOMY,dichotomousVeinDistance} from './leaf-anatomy.mjs?v=24';
+import {woodTube,woodRadius} from './wood.mjs?v=24';
+import {buildRootSystem,ROOT_PROFILES} from './roots.mjs?v=24';
 // All geometry uses metres. Traits are a morphological model, not a growth simulator.
 export {NEEDLE_REFERENCES,ARCHITECTURE_NOTES,FOLIAGE_REFERENCES,FRUIT_NOTES,FLOWER_NOTES};
 export const SPECIES = {
@@ -75,9 +76,9 @@ export function buildSpecimen(cfg,{hidden=false,preview=true,detail:baseDetail='
  function solid(p,dir,len,width,col,kind=.3,scales=false){const fine=cfg.view!=='tree'||field?.near(p,len);let [u,v]=frame(dir),sides=fine?12:4,rows=fine?(scales?10:6):2;let rings=[];for(let j=0;j<=rows;j++){let t=j/rows,rr=Math.sin(Math.PI*t)*width*(1-.3*t);rings.push(Array.from({length:sides+1},(_,k)=>{let a=k/sides*6.283,scale=scales?1+.15*Math.sin(k*2.4+j*3.3):1;return add(add(p,mul(dir,len*t)),mul(add(mul(u,Math.cos(a)),mul(v,Math.sin(a))),rr*scale))}))}for(let j=0;j<rows;j++)for(let k=0;k<sides;k++){let a=rings[j][k],b=rings[j+1][k],c=rings[j][k+1],d=rings[j+1][k+1];let n=norm(cross(sub(b,a),sub(c,a))),shade=scales?.74+.26*((j+k)%3)/2:1,co=col.map(x=>x*shade);surfaceQuad(a,b,c,d,n,co,kind);m.preview.push({pts:[a,b,d,c],n,c:co,kind,phase:0})}}
  function bud(p,dir,terminal=false){const fine=cfg.view!=='tree'||field?.near(p,sp.bud);if(cfg.type==='monkeytail'||(cfg.type==='willow'&&terminal))return;let len=sp.bud*R(.8,1.2),col=pineLike?[.34,.17,.065]:[.24,.12,.055];if(fine)solid(p,dir,len,len*.27,col,.3,cfg.type!=='willow');else{let [u,v]=frame(dir),a=add(p,mul(u,len*.25)),b=add(p,add(mul(u,-len*.15),mul(v,len*.22))),c=add(p,add(mul(u,-len*.15),mul(v,-len*.22))),top=add(p,mul(dir,len));for(let pts of [[a,b,top],[b,c,top],[c,a,top],[a,c,b]]){let n=norm(cross(sub(pts[1],pts[0]),sub(pts[2],pts[0])));m.tri(...pts,n,col,.3);if(preview)m.preview.push({pts,n,c:col,kind:.3,phase:0})}}buds++;if(terminal)stats.terminalBuds++}
  function lamina(p,axis,len,phase,kind=1,expansion=1,compoundPart=false,planeNormal=null,form={}){
-  const local=!!field?.near(add(p,mul(axis,len*.5)),len*.60,Math.max(.08,len*5)),fine=cfg.view!=='tree'||local,renderDetail=local?'full':baseDetail,grid=DETAIL_GRID[renderDetail]??DETAIL_GRID.full;if(local)stats.inspection.leaves++;
+  const local=!!field?.near(add(p,mul(axis,len*.5)),len*.60),fine=cfg.view!=='tree'||local,renderDetail=local?'full':baseDetail,grid=DETAIL_GRID[renderDetail]??DETAIL_GRID.full;if(local)stats.inspection.leaves++;
   const lodMask=!fine&&['far','balanced'].includes(renderDetail)&&!PALMATE_VEINS[cfg.type]&&!['ginkgo','monkeytail'].includes(cfg.type);if(lodMask)kind=.98;
-  let [side,up]=planeNormal?[norm(cross(axis,planeNormal)),planeNormal]:frame(axis);if(sp.region&&!planeNormal){const aligned=['leaf','surface'].includes(cfg.view),roll=R(aligned?-.08:-1.1,aligned?.08:1.1),old=side;side=add(mul(side,Math.cos(roll)),mul(up,Math.sin(roll)));up=add(mul(up,Math.cos(roll)),mul(old,-Math.sin(roll)));}let twist=R(-.12,.12),rows=fine?(compoundPart?(cfg.type==='jacaranda'&&cfg.view==='shoot'?8:24):grid.rows):sp.rows,width=cfg.type==='monkeytail'?Math.max(.001,Math.min(.004,len*sp.width)):len*sp.width,fold=R(.06,.13)+(1-expansion)*.24,flutterScale=len/cfg.leafSize,color=cfg.season==='autumn'?sp.fall:sp.leafColor;
+  let [side,up]=planeNormal?[norm(cross(axis,planeNormal)),planeNormal]:frame(axis);if(sp.region&&!planeNormal){const aligned=['leaf','surface'].includes(cfg.view),roll=R(aligned?-.08:-1.1,aligned?.08:1.1),old=side;side=add(mul(side,Math.cos(roll)),mul(up,Math.sin(roll)));up=add(mul(up,Math.cos(roll)),mul(old,-Math.sin(roll)));}let twist=R(-.12,.12),rows=local?maximumLeafGrid(cfg.type).rows:fine?(compoundPart?(cfg.type==='jacaranda'&&cfg.view==='shoot'?8:24):grid.rows):sp.rows,width=cfg.type==='monkeytail'?Math.max(.001,Math.min(.004,len*sp.width)):len*sp.width,fold=R(.06,.13)+(1-expansion)*.24,flutterScale=len/cfg.leafSize,color=cfg.season==='autumn'?sp.fall:sp.leafColor;
   let tint=R(.93,1.07)*(cfg.season==='spring'?1.10:1)*(1+(1-expansion)*.12),col=color.map(x=>x*tint);if(cfg.season==='autumn'&&['maple','sweetgum'].includes(cfg.type)){let gold=R(0,1);col=col.map((c,i)=>c*(1-gold)+[.75,.48,.055][i]*gold);}
   if(PALMATE_VEINS[cfg.type]){contouredLamina(p,axis,side,up,len,phase,col,kind,expansion,fold,twist,fine,renderDetail);return;}
   const point=(t,x,underside=false)=>{
@@ -95,7 +96,7 @@ export function buildSpecimen(cfg,{hidden=false,preview=true,detail:baseDetail='
   if(lodMask){const n=renderDetail==='far'?2:3;for(let j=0;j<n;j++){const t=j/n,tt=(j+1)/n,q=[point(t,-1),point(tt,-1),point(t,1),point(tt,1)],uv=[[0,t],[0,tt],[1,t],[1,tt]];surfaceQuad(...q,up,col,kind,phase,uv,[t,tt,t,tt].map(v=>v*flutterScale));}}
   else if(!fine&&sp.region&&!sp.outline){const tv=[[.5,0],[0,.30],[1,.30],[0,.70],[1,.70],[.5,1]],pts=tv.map(([x,t])=>point(t,x*2-1));for(const i of[0,1,2,1,3,2,3,4,2,3,5,4])m.v(pts[i],up,col,kind,phase,tv[i][1]*flutterScale,tv[i]);
   }else if(!fine){const edgeSamples=['maple','sweetgum'].includes(cfg.type)?28:cfg.type==='redbud'?9:cfg.type==='sakura'?6:cfg.type==='sweetthorn'?4:cfg.type==='willow'?6:10,boundary=[];for(let j=0;j<edgeSamples;j++){let t=j/edgeSamples;boundary.push([t,-1])}for(let j=edgeSamples;j>0;j--){let t=j/edgeSamples;boundary.push([t,1])}if(['maple','sweetgum'].includes(cfg.type)){const stops=cfg.type==='maple'?[0,.22,.34,.53,.68,.83,1]:[0,.20,.42,.60,.79,1];boundary.splice(0,boundary.length,...stops.map(t=>[t,-1]),...stops.slice(1,-1).reverse().map(t=>[t,1]));}if(cfg.type==='ginkgo')boundary.splice(0,boundary.length,[0,0],...Array.from({length:15},(_,j)=>[1,-1+j/7]));if(cfg.type==='redbud')boundary.push([0,1]);if(cfg.type==='redbud')for(let j=9;j>=0;j--)boundary.push([0,j/5-1]);const center=point(.5,0);for(let i=0;i<boundary.length;i++){let [t,x]=boundary[i],[tt,xx]=boundary[(i+1)%boundary.length],a=point(t,x),b=point(tt,xx),n=norm(cross(sub(a,center),sub(b,center)));for(let [p,uv,fl]of [[center,[.5,.5],.5],[a,[x*.5+.5,t],t],[b,[xx*.5+.5,tt],tt]])m.v(p,n,col,kind,phase,fl*flutterScale,uv)}}else{
-  const columns=fine?(cfg.type==='ginkgo'?32:compoundPart?(cfg.type==='jacaranda'&&cfg.view==='shoot'?2:4):grid.columns):2;
+  const columns=local?maximumLeafGrid(cfg.type).columns:fine?(cfg.type==='ginkgo'?32:compoundPart?(cfg.type==='jacaranda'&&cfg.view==='shoot'?2:4):grid.columns):2;
   function normalAt(t,x,underside){let dx=sub(point(t,Math.min(1,x+2/columns),underside),point(t,Math.max(-1,x-2/columns),underside)),dt=sub(point(Math.min(.9999,t+1/rows),x,underside),point(Math.max(.0001,t-1/rows),x,underside));let n=norm(cross(dx,dt));if(Math.hypot(...n)<.5)n=up;return underside?mul(n,-1):n}
   for(let back=0;back<(fine?2:1);back++)for(let j=0;j<rows;j++)for(let k=0;k<columns;k++){let t=j/rows,s=(j+1)/rows,x=k/columns*2-1,y=(k+1)/columns*2-1,coords=[[t,x],[s,x],[t,y],[s,y]],pts=coords.map(([t,x])=>point(t,x,!!back)),ns=coords.map(([t,x])=>normalAt(t,x,!!back)),indices=back?[0,1,2,2,1,3]:[0,2,1,2,3,1];for(let q of indices){let [tt,xx]=coords[q];m.v(pts[q],ns[q],col,back?1.02:kind,phase,tt*flutterScale,[xx*.5+.5,tt])}}
   }
@@ -104,10 +105,10 @@ export function buildSpecimen(cfg,{hidden=false,preview=true,detail:baseDetail='
   if(fine&&cfg.type==='sakura'){for(let j=0;j<44;j++){const t=.08+.83*j/44,x=(j%3-1)*.035,a=point(t,x,true),b=add(a,add(mul(up,-.00022),mul(axis,.00012))),c=add(a,mul(side,.000012));m.tri(a,b,c,side,[.55,.60,.40],.2);stats.leafHairs++;}}
   inspectFocus=point(cfg.surfacePosition??.55,0);
   // The software preview uses the same lobed/serrated outline at lower shading fidelity.
-  let outline=[];for(let j=0;j<=rows;j+=fine?2:1)outline.push(point(j/rows,lodMask?-bladeWidth(cfg.type,j/rows,-1)/1.10:-1));for(let j=rows;j>=0;j-=fine?2:1)outline.push(point(j/rows,lodMask?bladeWidth(cfg.type,j/rows,1)/1.10:1));if(cfg.type==='ginkgo')outline=[point(0,0),...Array.from({length:33},(_,j)=>point(1,-1+j/16))];if(cfg.type==='redbud')for(let j=15;j>=0;j--)outline.push(point(0,-1+j/8));let veins=[];if(fine&&cfg.type==='ginkgo'){for(let k=0;k<17;k++)veins.push(Array.from({length:20},(_,j)=>point(j/19,-.95+k*.11875)));}else if(fine){veins.push(Array.from({length:25},(_,j)=>point(j/24,0)));for(let k=1;k<=sp.veins;k++){let t=.08+k/(sp.veins+1)*.72;for(let sign of [-1,1])veins.push(Array.from({length:9},(_,j)=>point(Math.min(.98,t+j/8*.16),sign*j/8)))}}m.preview.push({pts:outline,n:up,c:col,kind,phase,veins,size:len,base:[...p],flutterAt:q=>Math.max(0,Math.min(1,sub(q,p).reduce((s,v,i)=>s+v*axis[i],0)/len))*flutterScale});leaves++;stats.leafLengths.push(len);if(fine)stats.leafAnatomy.push({type:cfg.type,venation:LEAF_ANATOMY[cfg.type].venation,thickness:LEAF_ANATOMY[cfg.type].thickness,expansion,rows,curved:true});
+  let outline=[];for(let j=0;j<=rows;j+=fine?2:1)outline.push(point(j/rows,lodMask?-bladeWidth(cfg.type,j/rows,-1)/1.10:-1));for(let j=rows;j>=0;j-=fine?2:1)outline.push(point(j/rows,lodMask?bladeWidth(cfg.type,j/rows,1)/1.10:1));if(cfg.type==='ginkgo')outline=[point(0,0),...Array.from({length:33},(_,j)=>point(1,-1+j/16))];if(cfg.type==='redbud')for(let j=15;j>=0;j--)outline.push(point(0,-1+j/8));let veins=[];if(fine&&cfg.type==='ginkgo'){for(let k=0;k<17;k++)veins.push(Array.from({length:20},(_,j)=>point(j/19,-.95+k*.11875)));}else if(fine){veins.push(Array.from({length:25},(_,j)=>point(j/24,0)));for(let k=1;k<=sp.veins;k++){let t=.08+k/(sp.veins+1)*.72;for(let sign of [-1,1])veins.push(Array.from({length:9},(_,j)=>point(Math.min(.98,t+j/8*.16),sign*j/8)))}}m.preview.push({pts:outline,n:up,c:col,kind,phase,veins,size:len,base:[...p],flutterAt:q=>Math.max(0,Math.min(1,sub(q,p).reduce((s,v,i)=>s+v*axis[i],0)/len))*flutterScale});leaves++;stats.leafLengths.push(len);if(fine)stats.leafAnatomy.push({type:cfg.type,venation:LEAF_ANATOMY[cfg.type].venation,thickness:LEAF_ANATOMY[cfg.type].thickness,expansion,rows,columns:local?maximumLeafGrid(cfg.type).columns:cfg.type==='ginkgo'?MAXIMUM_DETAIL.fanColumns:compoundPart?(cfg.type==='jacaranda'&&cfg.view==='shoot'?2:4):grid.columns,maximumDetail:local,curved:true});
  }
  function contouredLamina(p,axis,side,up,len,phase,col,kind,expansion,fold,twist,fine,renderDetail){
-  const contour=leafContour(cfg.type,{fine,phase}),triangles=triangulateContour(contour),ratio=sp.width,flutterScale=len/cfg.leafSize,subdivisions=fine?(renderDetail==='full'?(cfg.view==='surface'?4:cfg.view==='shoot'?1:3):renderDetail==='near'?1:0):0;
+  const contour=leafContour(cfg.type,{fine,phase}),triangles=triangulateContour(contour),ratio=sp.width,flutterScale=len/cfg.leafSize,subdivisions=fine?(renderDetail==='full'?(field?MAXIMUM_DETAIL.contourSubdivisions:cfg.view==='surface'?MAXIMUM_DETAIL.contourSubdivisions:cfg.view==='shoot'?1:3):renderDetail==='near'?1:0):0;
   const point=([x,y],back=false)=>{const vein=Math.exp(-Math.pow(veinDistance(cfg.type,x,y)/.006,2)),curl=-.085*y*y+.018*Math.sin(y*5.2),z=len*(curl+Math.abs(x)*fold*.50+twist*x*y)+(back?-LEAF_ANATOMY[cfg.type].thickness-.00007*vein:.00002*vein);return add(p,add(mul(axis,y*len),add(mul(side,x*len),mul(up,z))));};
   const normal=(q,back)=>{const [x,y]=q,dx=sub(point([x+.001,y],back),point([x-.001,y],back)),dy=sub(point([x,y+.001],back),point([x,y-.001],back)),n=norm(cross(dx,dy));return back?mul(n,-1):n;};
   const emit=(a,b,c,back)=>{for(const q of(back?[a,c,b]:[a,b,c]))m.v(point(q,back),normal(q,back),col,back?1.02:kind,phase,Math.max(0,q[1])*flutterScale,[.5+q[0]/(2*ratio),q[1]]);};
@@ -116,7 +117,7 @@ export function buildSpecimen(cfg,{hidden=false,preview=true,detail:baseDetail='
   if(fine)for(let j=0;j<contour.length;j++)for(let k=0;k<2**subdivisions;k++){const start=contour[j],end=contour[(j+1)%contour.length],a=start.map((v,i)=>v+(end[i]-v)*k/(2**subdivisions)),b=start.map((v,i)=>v+(end[i]-v)*(k+1)/(2**subdivisions)),out=norm(add(mul(side,b[1]-a[1]),mul(axis,a[0]-b[0])));surfaceQuad(point(a),point(b),point(a,true),point(b,true),out,col.map(c=>c*.82),kind,phase,[[.5+a[0]/(2*ratio),a[1]],[.5+b[0]/(2*ratio),b[1]],[.5+a[0]/(2*ratio),a[1]],[.5+b[0]/(2*ratio),b[1]]]);}
   const veins=[];for(const end of PALMATE_VEINS[cfg.type]){veins.push(Array.from({length:24},(_,i)=>point(end.map(v=>v*i/23))));if(fine){const L=Math.hypot(...end),d=end.map(v=>v/L),side=[-d[1],d[0]];for(let j=0;j<4;j++)for(const sign of[-1,1]){const t=.24+j*.17,start=end.map(v=>v*t),dir=norm([d[0]+side[0]*sign*.85,d[1]+side[1]*sign*.85,0]),length=.18*(1-t);veins.push(Array.from({length:8},(_,i)=>point(start.map((v,k)=>v+dir[k]*length*i/7))));}}}
   m.preview.push({pts:contour.map(q=>point(q)),n:up,c:col,kind,phase,veins:fine?veins:[],size:len,base:[...p],flutterAt:q=>Math.max(0,Math.min(1,sub(q,p).reduce((s,v,i)=>s+v*axis[i],0)/len))*flutterScale});inspectFocus=point([0,cfg.surfacePosition??.55]);leaves++;stats.leafLengths.push(len);
-  if(fine)stats.leafAnatomy.push({type:cfg.type,contour:contour.map(q=>q.map(v=>v*len)),primaryVeins:PALMATE_VEINS[cfg.type].map(q=>q.map(v=>v*len)),venation:'palmate',expansion,curved:true,thickness:LEAF_ANATOMY[cfg.type].thickness});
+  if(fine)stats.leafAnatomy.push({type:cfg.type,contour:contour.map(q=>q.map(v=>v*len)),primaryVeins:PALMATE_VEINS[cfg.type].map(q=>q.map(v=>v*len)),venation:'palmate',subdivisions,maximumDetail:!!field&&subdivisions===MAXIMUM_DETAIL.contourSubdivisions,expansion,curved:true,thickness:LEAF_ANATOMY[cfg.type].thickness});
  }
  function petioleGlands(p,axis,length){if(cfg.type!=='sakura'||!(fine||field?.near(p,length)))return;const [side]=frame(axis),at=add(p,mul(axis,length*.88));for(const sign of[-1,1])solid(add(at,mul(side,sign*.00065)),axis,.0012,.00065,[.36,.22,.12],.3);stats.leafGlands+=2;}
  function pinnedCard(point,col,kind,phase,scale){
@@ -196,7 +197,7 @@ export function buildSpecimen(cfg,{hidden=false,preview=true,detail:baseDetail='
   cardSupport(p,axis,L*.50,.00055);
   for(let hand=0;hand<2;hand++){const variant=Math.floor(organHash(phase+hand*17)*8),a=roll+hand*(1.0+organHash(phase+31)*.90),side=add(mul(u,Math.cos(a)),mul(v,Math.sin(a))),up=norm(cross(side,axis)),point=(x,y)=>add(p,add(mul(axis,y*L),mul(side,x*W)));
    const detailed=!!field?.near(point(0,.5),L*.65);if(detailed){
-    for(const needle of pineNeedleLayout(variant)){const start=point(needle.a[0]/.85,needle.a[1]/1.8),tip=point(needle.b[0]/.85,needle.b[1]/1.8),direction=norm(sub(tip,start)),length=Math.hypot(...sub(tip,start)),parameters=fascicleParameters(cfg.type,cfg.seed,phase+needle.fascicle*.37),end=add(start,mul(direction,parameters.sheathLength)),local=field.path([end,tip]),macro=local.near&&local.distance<.025,detail=buildNeedle(m,{...cfg,surfacePosition:macro?Math.max(.06,Math.min(.91,local.t)):cfg.surfacePosition},{base:end,axis:direction,length:Math.max(.001,length-parameters.sheathLength),phase:phase+needle.fascicle*.37+needle.needle*.17,sharedSide:side,hand:needle.needle?1:-1,parameters,fine:local.near,macro,colour:col});
+    for(const needle of pineNeedleLayout(variant)){const start=point(needle.a[0]/.85,needle.a[1]/1.8),tip=point(needle.b[0]/.85,needle.b[1]/1.8),direction=norm(sub(tip,start)),length=Math.hypot(...sub(tip,start)),parameters=fascicleParameters(cfg.type,cfg.seed,phase+needle.fascicle*.37),end=add(start,mul(direction,parameters.sheathLength)),local=field.path([end,tip]),macro=local.near,detail=buildNeedle(m,{...cfg,surfacePosition:macro?Math.max(.06,Math.min(.91,local.t)):cfg.surfacePosition},{base:end,axis:direction,length:Math.max(.001,length-parameters.sheathLength),phase:phase+needle.fascicle*.37+needle.needle*.17,sharedSide:side,hand:needle.needle?1:-1,parameters,fine:local.near,macro,inspection:field,colour:col});
      if(needle.needle===0)tube([start,end],parameters.width*.58,parameters.width*.52,[.36,.27,.16],.2,12);stats.leafAnatomy.push(detail);if(local.near)stats.inspection.leaves++;
     }stats.inspection.needleCards++;
    }else pinnedCard((t,x)=>point(x,t),col,1.191+variant*.001,phase,L/cfg.leafSize);
@@ -210,7 +211,7 @@ export function buildSpecimen(cfg,{hidden=false,preview=true,detail:baseDetail='
   const parameters=fascicleParameters(cfg.type,cfg.seed,phase),[sharedSide,sharedUp]=frame(axis),end=add(base,mul(axis,parameters.sheathLength*(.65+.35*expansion))),col=sp.leafColor.map(x=>x*(.94+.12*organHash(phase+9))),records=[];
   tube(Array.from({length:6},(_,i)=>mix(base,end,i/5)),parameters.width*.58,parameters.width*.53,[.36,.27,.16],.2,fine?12:5);
   for(const hand of[-1,1]){
-   const direction=norm(add(axis,mul(sharedUp,hand*parameters.divergence))),factor=1+(organHash(parameters.seed+hand*17)-.5)*.036,length=Math.max(sp.leaf[0]*expansion,Math.min(sp.leaf[1]*expansion,len*factor)),width=Math.max(cfg.type==='chinesepine'?.001:.0012,Math.min(cfg.type==='chinesepine'?.0015:.002,parameters.width*(1+(organHash(parameters.seed+hand*29)-.5)*.035))),detail=buildNeedle(m,cfg,{base:end,axis:direction,length,phase:phase+hand*.17,sharedSide,hand,parameters:{...parameters,width},fine,macro:cfg.view==='surface'&&leaves===0&&renderDetail==='full',colour:col});
+   const direction=norm(add(axis,mul(sharedUp,hand*parameters.divergence))),factor=1+(organHash(parameters.seed+hand*17)-.5)*.036,length=Math.max(sp.leaf[0]*expansion,Math.min(sp.leaf[1]*expansion,len*factor)),width=Math.max(cfg.type==='chinesepine'?.001:.0012,Math.min(cfg.type==='chinesepine'?.0015:.002,parameters.width*(1+(organHash(parameters.seed+hand*29)-.5)*.035))),detail=buildNeedle(m,cfg,{base:end,axis:direction,length,phase:phase+hand*.17,sharedSide,hand,parameters:{...parameters,width},fine,macro:cfg.view==='surface'&&renderDetail==='full',colour:col});
    stats.leafAnatomy.push(detail);stats.leafLengths.push(length);records.push(detail);if(!stats.needleStudy&&['leaf','surface'].includes(cfg.view)){stats.needleStudy=detail;inspectFocus=cfg.needleFace==='flat'?detail.flatFocus:detail.convexFocus;inspectDistance=detail.inspectDistance;}leaves++;
   }
   fascicles++;stats.fascicleSizes.push(2);stats.needleFascicles.push({base:[...base],axis:[...axis],sheathLength:Math.hypot(...sub(end,base)),width:parameters.width,needles:records,expansion});
@@ -225,27 +226,36 @@ export function buildSpecimen(cfg,{hidden=false,preview=true,detail:baseDetail='
   if(baobab)for(let k=0;k<(fine?36:9);k++){const a=k*2.399963,q=add(p,mul(d,.035)),tip=add(q,[Math.cos(a)*.028,.040,Math.sin(a)*.028]);fine?tube([p,q,tip],.00028,.00014,[.74,.67,.34],.2,3):petioleRibbon(p,tip,.0002,[.74,.67,.34]);}
   flowers++;
  }
+ // Test the emitted organ, including hanging stalks and off-axis heads.
+ // Attachment-only bounds miss large fruit and flowers at the end of a panicle.
+ function attachedOrgan(builder,options){
+  const start=m.used,previewStart=Array.isArray(m.preview)?m.preview.length:0;
+  let detail=builder(m,cfg,{...options,fine,layoutFine:fine,maximum:fine});
+  const maximum=!!field?.geometryNear(m.a,start,m.used);
+  if(maximum){m.used=start;if(Array.isArray(m.preview))m.preview.length=previewStart;detail=builder(m,cfg,{...options,fine:true,layoutFine:fine,maximum:true});stats.inspection.reproductive++;}
+  return{...detail,maximumDetail:fine||maximum,attachment:[...options.base],axis:[...options.axis],seed:options.seed,crownRadius:options.crownRadius??0,geometryStartVertex:start/14,geometryVertices:(m.used-start)/14};
+ }
  function reproductive(p,dir,{fruit=true,flower=true,oldWood=false,crownRadius=0}={}){
-  if(!cfg.reproductive)return;const detailed=fine||!!field?.near(p,.22);if(field&&detailed)stats.inspection.reproductive++;let [u]=frame(dir);
+  if(!cfg.reproductive)return;const detailed=fine||!!field?.near(p,.22);let [u]=frame(dir);
   if(EAST_ASIAN_SPECIES[cfg.type]&&!pineLike){
    const bloom=cfg.season==='spring'&&(cfg.type!=='redbud'||oldWood||fine)&&(!sp.earlyBloom||fine||((Math.sin(p[0]*173+p[1]*71+p[2]*193+cfg.seed)*43758.5453)%1+1)%1<phenology.bloom);
-   if(flower&&bloom){const detail=buildEastAsianOrgan(m,cfg,{mode:'flower',base:p,axis:organDirection(cfg.type,dir,p,cfg.seed+Math.floor(p[0]*151+p[1]*71+p[2]*193)),fine:detailed,layoutFine:fine,macroDetail:!!field?.near(p,.05,.12),seed:Math.floor(R(1,999999))});flowers+=detail.flowers;stats.flowerDetails.push({...detail,oldWood,attachment:[...p]});}
+   if(flower&&bloom){const detail=attachedOrgan(buildEastAsianOrgan,{mode:'flower',base:p,axis:organDirection(cfg.type,dir,p,cfg.seed+Math.floor(p[0]*151+p[1]*71+p[2]*193)),seed:Math.floor(R(1,999999))});flowers+=detail.flowers;stats.flowerDetails.push({...detail,oldWood,attachment:[...p]});}
    const ripe=['summer','autumn'].includes(cfg.season),sparse=cfg.type!=='sakura'||Math.sin((p[0]*.7+p[1]*.5+p[2])*31)>.7;
-   if(fruit&&ripe&&sparse){const detail=buildFruit(m,cfg,{base:p,axis:organDirection(cfg.type,dir,p,cfg.seed+p[0]*111+p[1]*73,{pendant:true}),fine:detailed,layoutFine:fine,macroDetail:!!field?.near(p,.05,.12),stage:cfg.season==='summer'?'developing':'mature',seed:Math.floor(R(1,999999))});fruits++;stats.fruitDetails.push(detail);}return;
+   if(fruit&&ripe&&sparse){const detail=attachedOrgan(buildFruit,{base:p,axis:organDirection(cfg.type,dir,p,cfg.seed+p[0]*111+p[1]*73,{pendant:true}),stage:cfg.season==='summer'?'developing':'mature',seed:Math.floor(R(1,999999))});fruits++;stats.fruitDetails.push(detail);}return;
   }
   if(['jacaranda','monkeytail','eucalyptus'].includes(cfg.type)){
    const blooms=cfg.type==='jacaranda'?cfg.season==='spring':['spring','summer'].includes(cfg.season);
-   if(flower&&blooms){const detail=buildGardenFlowers(m,cfg,{base:p,axis:organDirection(cfg.type,dir,p,cfg.seed+p[1]*73+p[0]*131),fine:detailed,layoutFine:fine,macroDetail:!!field?.near(p,.05,.12),crownRadius,seed:Math.floor(R(1,999999))});flowers+=detail.flowers;stats.flowerDetails.push({...detail,attachment:[...p]});}
-   if(fruit&&(cfg.type!=='monkeytail'||['summer','autumn'].includes(cfg.season))){const fruitAxis=cfg.type==='monkeytail'?norm(add(dir,[.15,.2,.10])):[.1,-1,.1],fruitBase=cfg.type==='monkeytail'?add(p,mul(u,crownRadius*.30)):p,detail=buildFruit(m,cfg,{base:fruitBase,axis:fruitAxis,fine:detailed,layoutFine:fine,macroDetail:!!field?.near(p,.05,.12),stage:cfg.type==='monkeytail'&&cfg.season==='autumn'?'released':'mature',seed:Math.floor(R(1,999999))});stats.fruitDetails.push(detail);fruits++;}return;
+   if(flower&&blooms){const detail=attachedOrgan(buildGardenFlowers,{base:p,axis:organDirection(cfg.type,dir,p,cfg.seed+p[1]*73+p[0]*131),crownRadius,seed:Math.floor(R(1,999999))});flowers+=detail.flowers;stats.flowerDetails.push({...detail,attachment:[...p]});}
+   if(fruit&&(cfg.type!=='monkeytail'||['summer','autumn'].includes(cfg.season))){const fruitAxis=cfg.type==='monkeytail'?norm(add(dir,[.15,.2,.10])):[.1,-1,.1],fruitBase=cfg.type==='monkeytail'?add(p,mul(u,crownRadius*.30)):p,detail=attachedOrgan(buildFruit,{base:fruitBase,axis:fruitAxis,stage:cfg.type==='monkeytail'&&cfg.season==='autumn'?'released':'mature',seed:Math.floor(R(1,999999))});stats.fruitDetails.push(detail);fruits++;}return;
   }
-  function addFruit(axis,stage,offset=[0,0,0]){const detail=buildFruit(m,cfg,{base:add(p,offset),axis,fine,stage,seed:Math.floor(R(1,999999))});stats.fruitDetails.push(detail);fruits++;}
+  function addFruit(axis,stage,offset=[0,0,0]){const detail=attachedOrgan(buildFruit,{base:add(p,offset),axis,stage,seed:Math.floor(R(1,999999))});stats.fruitDetails.push(detail);fruits++;}
   if(SOUTH_AFRICAN_SPECIES[cfg.type]){
    const fruitSeason=cfg.type==='karee'?['spring','summer'].includes(cfg.season):cfg.type==='baobab'?['summer','autumn','winter'].includes(cfg.season):cfg.type==='sausagetree'?['summer','autumn','winter'].includes(cfg.season):cfg.type==='wildolive'?['autumn','winter'].includes(cfg.season):['summer','autumn'].includes(cfg.season);
    if(fruit&&fruitSeason)addFruit(norm([.12,-1,.08]),cfg.type==='marula'?'developing':sp.compound==='bipinnate'&&cfg.season==='autumn'?'released':'mature');
    if(flower&&['baobab','sausagetree','karee','fevertree'].includes(cfg.type)){const blooms=cfg.type==='baobab'?cfg.season==='summer':cfg.type==='karee'?['winter','spring'].includes(cfg.season):['spring','summer'].includes(cfg.season);if(blooms)southernFlower(p);}
    if(flower&&((cfg.type==='sweetthorn'&&cfg.season==='summer')||(cfg.type==='wildolive'&&['spring','summer'].includes(cfg.season))||(cfg.type==='marula'&&cfg.season==='spring'))){
     const col=cfg.type==='sweetthorn'?[.74,.58,.035]:cfg.type==='marula'?[.42,.14,.15]:[.72,.73,.51],heads=cfg.type==='sweetthorn'?3:2;
-    for(let k=0;k<heads;k++){const tip=add(p,add(mul(u,(k-1)*.011),[0,.014,0]));fine?tube([p,tip],.00035,.0002,sp.twig,.2,5):petioleRibbon(p,tip,.0003,sp.twig);flowerSolid(tip,[0,1,0],.009,.0045,col,.3,true);flowers++;}
+    for(let k=0;k<heads;k++){const tip=add(p,add(mul(u,(k-1)*.011),[0,.014,0]));detailed?tube([p,tip],.00035,.0002,sp.twig,.2,5):petioleRibbon(p,tip,.0003,sp.twig);flowerSolid(tip,[0,1,0],.009,.0045,col,.3,true);flowers++;}
    }return;
   }
   if(fruit&&cfg.type==='oak'&&['summer','autumn'].includes(cfg.season)){
@@ -258,7 +268,7 @@ export function buildSpecimen(cfg,{hidden=false,preview=true,detail:baseDetail='
   if(fruit&&cfg.type==='birch'&&['summer','autumn'].includes(cfg.season))addFruit(norm([.10,-1,.04]),cfg.season==='summer'?'developing':'mature');
   if(pineLike){
    if(fruit)addFruit(norm(add(mul(dir,-.48),[0,-.7,0])),'mature');
-   if(flower&&cfg.season==='spring'){if(cfg.type==='chinesepine'){const detail=buildFlowers(m,cfg,{base:p,axis:dir,fine:detailed,layoutFine:fine,macroDetail:!!field?.near(p,.05,.12),seed:Math.floor(R(1,999999))});stats.flowerDetails.push(detail);return;}let top=add(p,mul(dir,.04));flowerSolid(top,dir,.045,.003,[.48,.43,.18],.3,true);for(let k=0;k<3;k++)flowerSolid(add(top,mul(u,k*.004)),dir,.01,.002,[.55,.35,.08],.3,true);flowerSolid(add(top,mul(dir,.04)),dir,.006,.002,[.39,.12,.13],.3,true);flowers+=4;}
+   if(flower&&cfg.season==='spring'){if(cfg.type==='chinesepine'){const detail=attachedOrgan(buildFlowers,{base:p,axis:dir,seed:Math.floor(R(1,999999))});stats.flowerDetails.push(detail);return;}let top=add(p,mul(dir,.04));flowerSolid(top,dir,.045,.003,[.48,.43,.18],.3,true);for(let k=0;k<3;k++)flowerSolid(add(top,mul(u,k*.004)),dir,.01,.002,[.55,.35,.08],.3,true);flowerSolid(add(top,mul(dir,.04)),dir,.006,.002,[.39,.12,.13],.3,true);flowers+=4;}
   }
  }
 

@@ -1,4 +1,4 @@
-import {buildSpecimen} from './botany.mjs?v=23';
+import {buildSpecimen} from './botany.mjs?v=24';
 
 // Keep camera-driven anatomy generation off the render thread.
 self.onmessage=({data:{id,cfg,options}})=>{

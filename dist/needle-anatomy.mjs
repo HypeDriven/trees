@@ -1,6 +1,7 @@
 // Semicircular two-needle pine anatomy in metres. Stomatal row counts draw
 // on primary seedling observations, not a universal mature-tree calibration.
-import {organHash as hash} from './organ-distribution.mjs?v=23';
+import {MAXIMUM_DETAIL} from './maximum-detail.mjs?v=24';
+import {organHash as hash} from './organ-distribution.mjs?v=24';
 const add=(a,b)=>a.map((v,i)=>v+b[i]),sub=(a,b)=>a.map((v,i)=>v-b[i]),mul=(a,s)=>a.map(v=>v*s),dot=(a,b)=>a.reduce((s,v,i)=>s+v*b[i],0),cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],norm=a=>mul(a,1/(Math.hypot(...a)||1)),clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 export const NEEDLE_ARC=Math.PI/(Math.PI+2);
 export const NEEDLE_REFERENCES=[['Chinese pine botanical description','https://www.efloras.org/florataxon.aspx?flora_id=2&taxon_id=210001654'],['Pine needle anatomy and stomatal rows, seedling study','https://pmc.ncbi.nlm.nih.gov/articles/PMC4063482/'],['Chinese pine variation in needle longevity','https://pubmed.ncbi.nlm.nih.gov/12670800/']];
@@ -13,8 +14,8 @@ export function needleRelief(u,y,width,p){
  const convex=u<NEEDLE_ARC,n=convex?p.convexRows:p.flatRows,local=convex?u/NEEDLE_ARC:(u-NEEDLE_ARC)/(1-NEEDLE_ARC),row=clamp(Math.floor(local*n),0,n-1),center=convex?(row+.5)/n*NEEDLE_ARC:NEEDLE_ARC+(row+.5)/n*(1-NEEDLE_ARC),perimeter=width*.5*(Math.PI+2),dx=(u-center)*perimeter,offset=hash(p.seed+row*19.3+(convex?0:73)),phase=y/p.porePitch+offset,dy=(phase-Math.floor(phase)-.5)*p.porePitch,r2=(dx/.000011)**2+(dy/.000024)**2,pit=-.000012*Math.exp(-r2*2.2),rim=.0000024*Math.exp(-Math.pow((Math.sqrt(r2)-1.12)/.30,2)),channel=-.0000014*Math.exp(-Math.pow(dx/.000028,2));
  return{height:pit+rim+channel,pit:Math.exp(-r2*2.2),wax:Math.exp(-Math.pow(dx/.000030,2)),row,convex};
 }
-export function buildNeedle(mesh,cfg,{base,axis,length,phase,sharedSide,hand=1,parameters,macro=false,fine=true,colour}){
- const p=parameters,R=length,side0=norm(sub(sharedSide,mul(axis,dot(sharedSide,axis)))),side=mul(side0,hand),up=norm(cross(side,axis)),radius=p.width*.5,perimeter=radius*(Math.PI+2),focusT=cfg.surfacePosition??.55,halfWindow=Math.min(.15,.0055/R),lo=Math.max(.03,focusT-halfWindow),hi=Math.min(.94,focusT+halfWindow),rows=fine?96:3;
+export function buildNeedle(mesh,cfg,{base,axis,length,phase,sharedSide,hand=1,parameters,macro=false,fine=true,inspection=null,colour}){
+ const p=parameters,R=length,side0=norm(sub(sharedSide,mul(axis,dot(sharedSide,axis)))),side=mul(side0,hand),up=norm(cross(side,axis)),radius=p.width*.5,perimeter=radius*(Math.PI+2),focusT=inspection?Math.max(.03,Math.min(.94,inspection.path(Array.from({length:97},(_,j)=>{const t=j/96;return add(base,add(mul(axis,R*t),add(mul(up,R*p.curve*t*t),mul(side,R*p.sideCurve*Math.sin(Math.PI*t)*t))));}),p.width*.5).t)):(cfg.surfacePosition??.55),halfWindow=Math.min(.15,.0055/R),lo=Math.max(.03,focusT-halfWindow),hi=Math.min(.94,focusT+halfWindow),rows=fine?MAXIMUM_DETAIL.needleRows:3;
  let ts=Array.from({length:rows+1},(_,i)=>i/rows),us=[...Array.from({length:17},(_,i)=>i/16*NEEDLE_ARC),...Array.from({length:9},(_,i)=>NEEDLE_ARC+i/8*(1-NEEDLE_ARC))];
  if(macro){const count=Math.ceil((hi-lo)*R/.000015);for(let i=0;i<=count;i++)ts.push(lo+(hi-lo)*i/count);for(const center of rowCenters(p))for(const distance of[-.000033,-.000022,-.000011,0,.000011,.000022,.000033])us.push(clamp(center+distance/perimeter,0,1));}
  const unique=a=>[...new Set(a.map(v=>Math.round(v*1e10)/1e10))].sort((a,b)=>a-b);ts=unique(ts);us=unique(us);

@@ -1,5 +1,5 @@
 // Keep triangle boundaries intact and respect the adapter's per-buffer limit.
-import {indexGeometry} from './indexed-geometry.mjs?v=23';
+import {indexGeometry} from './indexed-geometry.mjs?v=24';
 export function uploadGeometry(device,vertices,{stride=14,groundVertices=6,maxPartBytes=64*1024*1024,indexed=false,usage=globalThis.GPUBufferUsage.VERTEX|globalThis.GPUBufferUsage.COPY_DST}={}){
  const bytesPerVertex=stride*Float32Array.BYTES_PER_ELEMENT,count=vertices.length/stride,limit=Math.min(maxPartBytes,device.limits.maxBufferSize),perPart=Math.floor(limit/(bytesPerVertex*3))*3;
  if(!Number.isInteger(count)||count%3||perPart<3)throw Error('Invalid triangle mesh or GPU buffer limit');
