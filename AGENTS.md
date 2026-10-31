@@ -38,3 +38,34 @@
   to test the actual WebGPU shadow helper on a sloped receiver, an occluded
   receiver and positions outside the map. `PLAYWRIGHT_MODULE`, `CHROME_PATH`
   and `TREES_URL` can override local dependency and server paths.
+
+- Start foliage reviews with the saved reference plate and regenerated all-species
+  shoot/whole-tree contact sheets (`tests/render-natural-review.cjs`). Generated
+  targets guide appearance, not anatomical measurements.
+- Include species identity in all foliage streams. Mix parent-shoot posture and
+  torsion with local blade residuals; vary continuous camber, sweep, width and
+  asymmetry as well as yaw/pitch/roll. Check shapes in their local frames.
+- A compound leaf's shared rachis plane is only a reference frame. Each leaflet
+  needs its own roll and curvature, including opposite members and expanded LOD
+  cards. Keep card centrelines pinned to their real supports.
+- Avoid hard size clamping that collapses a whole cohort to identical lengths at
+  slider limits. Preserve bounded residual variation within the adult range.
+  Scale regional Shoot studies to their species' blade/leaflet dimensions.
+- Test actual emitted blade frames for duplicates and coplanarity, not just the
+  diversity of random inputs. Cover every preset and repeat detail/retention
+  checks after changing the shared foliage builders.
+
+- Fill long lower branches with independently seeded short leafy shoots, using
+  branch length and crown position. Preserve existing upper-crown streams and
+  roots; budget added nodes (currently at most 22%) rather than globally raising
+  density. Connect new shoots through the emitted bark surface.
+- Cached opacity masks must follow the encoded card family for every species,
+  including regional bipinnate foliage. Empty cached alpha makes foliage vanish
+  when Auto detail switches to distant rendering. Test actual GPU sampling over
+  multiple mip levels, not only unchanged CPU organ counts.
+- Run `node tests/lower-canopy.mjs` and, with Playwright/Chrome installed,
+  `node tests/distant-foliage.cjs`, alongside detail/retained inspection checks.
+
+- Use canonical skeleton exposure for added shoots (`crownHeight`), rather than
+  a bark intersection that changes under inspection refinement. Density-fill
+  shoots are vegetative; adding foliage must not reseed or multiply flowers.

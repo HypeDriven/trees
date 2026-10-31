@@ -5,7 +5,7 @@ import {createSurfaceProximity,inspectionRegion,pickSurface,restCamera} from './
 import {createGPUProfiler} from './gpu-profiler.mjs?v=25';
 import {selectRenderDetail} from './render-detail.mjs?v=25';
 import {indexGeometry} from './indexed-geometry.mjs?v=25';
-import {getSurfaceAtlas,uploadSurfaceAtlas} from './surface-cache.mjs?v=25';
+import {getSurfaceAtlas,uploadSurfaceAtlas} from './surface-cache.mjs?v=28';
 import {createSoftwareStudy,studyWindPosition,primitiveWindPosition} from './software-study.mjs?v=25';
 import {LEAF_ANATOMY,LEAF_SURFACE_REFERENCES} from './leaf-anatomy.mjs?v=25';
 import {EAST_ASIAN_PRESETS,EAST_ASIAN_REFERENCES} from './east-asia.mjs?v=25';
@@ -14,7 +14,7 @@ import {cameraDepthRange,inspectionShadowFrame} from './camera-range.mjs?v=26';
 import {uploadGeometry} from './mesh-buffers.mjs?v=25';
 import {ROOT_PROFILES,ROOT_REFERENCE} from './roots.mjs?v=25';
 import {WOOD_NOTES} from './wood.mjs?v=25';
-import { buildSpecimen, bladeWidth, SPECIES, NEEDLE_REFERENCES, ARCHITECTURE_NOTES, FOLIAGE_REFERENCES, FRUIT_NOTES, FLOWER_NOTES } from './botany.mjs?v=25';
+import { buildSpecimen, bladeWidth, SPECIES, NEEDLE_REFERENCES, ARCHITECTURE_NOTES, FOLIAGE_REFERENCES, FRUIT_NOTES, FLOWER_NOTES } from './botany.mjs?v=28';
 import {SOUTH_AFRICAN_PRESETS,SOUTH_AFRICAN_REFERENCES} from './south-africa.mjs?v=25';
 const SPECIES_IDS=['oak','willow','pine','birch','sweetthorn','marula','wildolive','yellowwood','baobab','fevertree','sausagetree','karee','jacaranda','monkeytail','eucalyptus','maple','sakura','ginkgo','dawnredwood','chinesepine','sweetgum','redbud',...Object.keys(REGIONAL_SPECIES)];
 const PRESETS={...SOUTH_AFRICAN_PRESETS,...EAST_ASIAN_PRESETS,...REGIONAL_PRESETS};
@@ -36,7 +36,7 @@ function stopRetainedDetail(){
 }
 function startRetainedSpecimen(options){
  const revision=generationRevision;retainedBasePending=true;$('#loading').style.display='flex';
- try{retainedWorker=new Worker(new URL('./specimen-worker.mjs?v=25',import.meta.url),{type:'module'});}catch{retainedBasePending=false;workerDisabled=true;generate({...options});return;}
+ try{retainedWorker=new Worker(new URL('./specimen-worker.mjs?v=28',import.meta.url),{type:'module'});}catch{retainedBasePending=false;workerDisabled=true;generate({...options});return;}
  retainedWorker.onmessage=({data})=>{if(revision!==generationRevision)return;const callback=retainedCallbacks.get(data.id);if(callback){retainedCallbacks.delete(data.id);data.error?callback.reject(Error(data.error)):callback.resolve(data.result);return;}if(data.id!==baseID)return;retainedBasePending=false;if(data.error){workerDisabled=true;retainedWorker.terminate();retainedWorker=null;generate(options);return;}generate({...options,prepared:data.result});$('#loading').style.display='none';};
  retainedWorker.onerror=error=>{if(revision!==generationRevision)return;console.error(error);for(const callback of retainedCallbacks.values())callback.reject(Error('Detail worker interrupted'));retainedCallbacks.clear();retainedWorker.terminate();retainedWorker=null;retainedBasePending=false;workerDisabled=true;generate(options);};
  const baseID=++retainedSequence;retainedWorker.postMessage({id:baseID,operation:'base',cfg:{...cfg},options:{hidden,preview:false,detail:options.detail??(performanceMode==='full'?'full':'far'),omitBuried:performanceMode==='auto'}});
@@ -76,7 +76,7 @@ function requestDisplayDetail({detail,inspection}){
  if(workerDisabled||typeof Worker==='undefined'||glRenderer?.software){generate({preserveCamera:true,detail,inspection});return;}
  const job={id:++detailJobID,key:displayBuildKey(),detail,inspection,cfg:{...cfg},options:{hidden,preview:false,detail,omitBuried:performanceMode==='auto',inspection}};
  if(workerJob){const same=workerJob.key===job.key&&workerJob.detail===detail&&inspectionEquivalent(inspection,workerJob.inspection);if(!same)pendingJob=job;else pendingJob=null;return;}
- if(!detailWorker){try{detailWorker=new Worker(new URL('./specimen-worker.mjs?v=25',import.meta.url),{type:'module'});}catch{workerDisabled=true;generate({preserveCamera:true,detail,inspection});return;}
+ if(!detailWorker){try{detailWorker=new Worker(new URL('./specimen-worker.mjs?v=28',import.meta.url),{type:'module'});}catch{workerDisabled=true;generate({preserveCamera:true,detail,inspection});return;}
   detailWorker.onmessage=({data})=>{const finished=workerJob;if(!finished||finished.id!==data.id)return;workerJob=null;const valid=canApplyDisplayJob(finished);if(valid){if(data.error){workerDisabled=true;detailWorker.terminate();detailWorker=null;generate({preserveCamera:true,detail:finished.detail,inspection:finished.inspection});}else generate({preserveCamera:true,detail:finished.detail,inspection:finished.inspection,prepared:data.result});}const next=pendingJob;pendingJob=null;if(next&&next.key===displayBuildKey())requestDisplayDetail(next);updateRenderStats();};
   detailWorker.onerror=()=>{const job=workerJob;workerJob=null;pendingJob=null;detailWorker.terminate();detailWorker=null;workerDisabled=true;if(job&&job.key===displayBuildKey())generate({preserveCamera:true,detail:job.detail,inspection:job.inspection});};
  }

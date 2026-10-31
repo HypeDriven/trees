@@ -1,4 +1,4 @@
-import {buildSpecimen} from './botany.mjs?v=25';
+import {buildSpecimen} from './botany.mjs?v=28';
 let retained=null,active=new Set();
 // Keep the specimen's growth recipes in this worker. A camera job replays a
 // local recipe, rather than regenerating thousands of distant flowers/leaves.

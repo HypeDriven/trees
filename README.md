@@ -284,3 +284,39 @@ The regional reproductive collection uses taxon-specific profiles in `dist/regio
 Regional reproductive geometry participates in seasonal whole-tree/shoot attachment, proximity refinement, retained geometry, software/GPU rendering, material-aware OBJ export and recipe import/export. Developing fruits differ in size and material; release separates valves or dispersal structures only for eligible profiles. Indehiscent fruits stay closed. Counts, dimensions, phenology and microscopic relief remain representative procedural models. Genus morphology references are linked in `REPRODUCTIVE_REFERENCES`; each profile also retains its Kew species link.
 
 Run `node tests/regional-reproduction.mjs` for all 125 profiles, stages, sexual forms and representative maximum-detail tissues. The existing fruit and maximum-detail tests also include regional taxa.
+
+### Foliage distribution review
+
+Species-specific seeded streams now combine shoot posture/torsion with separate
+blade pitch, roll, twist, camber, sweep, width and asymmetry. Compound leaflets
+can tilt away from their shared rachis plane. Opposite and whorled insertions
+retain their arrangement while individual blades differ. Cutout compound leaves
+and redwood sprays have asymmetrical, twisted wings around their supported
+centrelines. Adult dimension limits retain residual variation rather than
+clipping many blades to one size. Regional Shoot studies scale their twig length
+and thickness to the species' leaf dimensions.
+
+The [generated target plate](references/tree-realism-targets.png) and
+[complete built-in imagegen prompt](references/generation-prompt.json) are visual
+review aids. Anatomical choices remain source-informed and the angular spreads
+are illustrative. See [leaf-angle/display architecture](https://doi.org/10.1046/j.1469-8137.2003.00765.x)
+and [compound-leaf curvature](https://pmc.ncbi.nlm.nih.gov/articles/PMC7586739/).
+
+Saved [shoot contact sheets](references/procedural-review/collection-01.png) and
+[whole-tree contact sheets](references/procedural-whole-review/collection-01.png)
+cover all 147 presets, with species manifests in each directory's `audit.json`.
+Regenerate with `node tests/render-natural-review.cjs --trees`, adding
+`--whole-trees` for crowns. Run from this project with the local server active;
+`PLAYWRIGHT_MODULE`, `CHROME_PATH`, `REVIEW_URL` and `REVIEW_DIR` override tooling.
+`node tests/foliage-distribution.mjs` also checks actual blade frames, independent
+leaflet geometry, dimension-bound diversity and stable biology across detail.
+
+Long lower branches now receive short leafy shoots based on their length and
+crown position, with an additional node budget capped at 22%. Existing upper
+crown generation and roots retain their random streams. The additions attach
+to the rendered bark and keep position/age-dependent leaf growth.
+Regional bipinnate trees now populate the same cached opacity-mask slots their
+cards use, fixing leaves becoming transparent when Auto detail zooms out.
+`tests/lower-canopy.mjs` checks fill budgets and bark attachment;
+`tests/distant-foliage.cjs` executes the real GPU mask sampler across mip levels
+for the original card families and all affected regional species.

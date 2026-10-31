@@ -1,0 +1,737 @@
+[
+  {
+    "type": "jacaranda",
+    "blades": 4096,
+    "vertices": 1616880
+  },
+  {
+    "type": "monkeytail",
+    "blades": 3,
+    "vertices": 98418
+  },
+  {
+    "type": "eucalyptus",
+    "blades": 10,
+    "vertices": 11880
+  },
+  {
+    "type": "baobab",
+    "blades": 22,
+    "vertices": 36264
+  },
+  {
+    "type": "fevertree",
+    "blades": 1314,
+    "vertices": 1928184
+  },
+  {
+    "type": "sausagetree",
+    "blades": 106,
+    "vertices": 167928
+  },
+  {
+    "type": "karee",
+    "blades": 12,
+    "vertices": 21864
+  },
+  {
+    "type": "sweetthorn",
+    "blades": 494,
+    "vertices": 736908
+  },
+  {
+    "type": "marula",
+    "blades": 44,
+    "vertices": 69912
+  },
+  {
+    "type": "wildolive",
+    "blades": 16,
+    "vertices": 12312
+  },
+  {
+    "type": "yellowwood",
+    "blades": 18,
+    "vertices": 20136
+  },
+  {
+    "type": "maple",
+    "blades": 10,
+    "vertices": 15120
+  },
+  {
+    "type": "sakura",
+    "blades": 8,
+    "vertices": 17784
+  },
+  {
+    "type": "ginkgo",
+    "blades": 15,
+    "vertices": 58908
+  },
+  {
+    "type": "dawnredwood",
+    "blades": 36,
+    "vertices": 25752
+  },
+  {
+    "type": "chinesepine",
+    "blades": 0,
+    "vertices": 843024
+  },
+  {
+    "type": "sweetgum",
+    "blades": 8,
+    "vertices": 25656
+  },
+  {
+    "type": "redbud",
+    "blades": 7,
+    "vertices": 16428
+  },
+  {
+    "type": "fagus-sylvatica",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "carpinus-betulus",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "tilia-cordata",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "alnus-glutinosa",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "ulmus-minor",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "quercus-petraea",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "corylus-avellana",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "crataegus-monogyna",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "ilex-aquifolium",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "salix-caprea",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "quercus-cerris",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "ulmus-laevis",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "tilia-platyphyllos",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "populus-tremula",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "sorbus-torminalis",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "betula-pubescens",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "alnus-incana",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "sorbus-aucuparia",
+    "blades": 44,
+    "vertices": 69912
+  },
+  {
+    "type": "betula-nana",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "salix-phylicifolia",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "alnus-alnobetula",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "sorbus-aria",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "laburnum-alpinum",
+    "blades": 12,
+    "vertices": 21864
+  },
+  {
+    "type": "rhamnus-alpina",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "salix-alpina",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "quercus-ilex",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "quercus-suber",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "arbutus-unedo",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "ceratonia-siliqua",
+    "blades": 44,
+    "vertices": 69912
+  },
+  {
+    "type": "laurus-nobilis",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "fagus-orientalis",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "platanus-orientalis",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "quercus-trojana",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "carpinus-orientalis",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "corylus-colurna",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "ulmus-pumila",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "phellodendron-amurense",
+    "blades": 90,
+    "vertices": 138360
+  },
+  {
+    "type": "juglans-mandshurica",
+    "blades": 44,
+    "vertices": 69912
+  },
+  {
+    "type": "salix-arbutifolia",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "populus-suaveolens",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "salix-polaris",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "salix-arctica",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "salix-herbacea",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "salix-reticulata",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "dryas-integrifolia",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "quercus-calliprinos",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "pistacia-palaestina",
+    "blades": 44,
+    "vertices": 69912
+  },
+  {
+    "type": "pyrus-syriaca",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "arbutus-andrachne",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "styrax-officinalis",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "prosopis-cineraria",
+    "blades": 494,
+    "vertices": 736908
+  },
+  {
+    "type": "ziziphus-spina-christi",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "salvadora-persica",
+    "blades": 18,
+    "vertices": 13656
+  },
+  {
+    "type": "avicennia-marina",
+    "blades": 18,
+    "vertices": 13656
+  },
+  {
+    "type": "populus-euphratica",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "quercus-brantii",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "parrotia-persica",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "zelkova-carpinifolia",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "juglans-regia",
+    "blades": 44,
+    "vertices": 69912
+  },
+  {
+    "type": "betula-utilis",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "pistacia-atlantica",
+    "blades": 44,
+    "vertices": 69912
+  },
+  {
+    "type": "sideroxylon-spinosum",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "balanites-aegyptiaca",
+    "blades": 8,
+    "vertices": 16104
+  },
+  {
+    "type": "myrtus-nivellei",
+    "blades": 18,
+    "vertices": 13656
+  },
+  {
+    "type": "tamarix-africana",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "faidherbia-albida",
+    "blades": 484,
+    "vertices": 719052
+  },
+  {
+    "type": "vachellia-tortilis",
+    "blades": 494,
+    "vertices": 736908
+  },
+  {
+    "type": "senegalia-senegal",
+    "blades": 494,
+    "vertices": 736908
+  },
+  {
+    "type": "combretum-glutinosum",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "anogeissus-leiocarpa",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "ficus-sycomorus",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "kiggelaria-africana",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "prunus-africana",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "cordia-africana",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "warburgia-ugandensis",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "milicia-excelsa",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "pericopsis-elata",
+    "blades": 44,
+    "vertices": 69912
+  },
+  {
+    "type": "pentaclethra-macrophylla",
+    "blades": 484,
+    "vertices": 719052
+  },
+  {
+    "type": "pycnanthus-angolensis",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "rhizophora-racemosa",
+    "blades": 18,
+    "vertices": 13656
+  },
+  {
+    "type": "colophospermum-mopane",
+    "blades": 8,
+    "vertices": 16104
+  },
+  {
+    "type": "diospyros-mespiliformis",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "trichilia-emetica",
+    "blades": 44,
+    "vertices": 69912
+  },
+  {
+    "type": "syzygium-cordatum",
+    "blades": 18,
+    "vertices": 13656
+  },
+  {
+    "type": "vachellia-erioloba",
+    "blades": 494,
+    "vertices": 736908
+  },
+  {
+    "type": "ficus-benghalensis",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "ficus-religiosa",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "azadirachta-indica",
+    "blades": 44,
+    "vertices": 69912
+  },
+  {
+    "type": "shorea-robusta",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "terminalia-catappa",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "quercus-mongolica",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "carpinus-turczaninovii",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "sorbus-alnifolia",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "maackia-amurensis",
+    "blades": 44,
+    "vertices": 69912
+  },
+  {
+    "type": "stewartia-pseudocamellia",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "celtis-sinensis",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "cinnamomum-camphora",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "prunus-campanulata",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "toona-sinensis",
+    "blades": 44,
+    "vertices": 69912
+  },
+  {
+    "type": "triadica-sebifera",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "fagus-crenata",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "zelkova-serrata",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "cercidiphyllum-japonicum",
+    "blades": 18,
+    "vertices": 13656
+  },
+  {
+    "type": "styrax-japonicus",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "aesculus-turbinata",
+    "blades": 48,
+    "vertices": 73848
+  },
+  {
+    "type": "tectona-grandis",
+    "blades": 18,
+    "vertices": 13656
+  },
+  {
+    "type": "pterocarpus-macrocarpus",
+    "blades": 44,
+    "vertices": 69912
+  },
+  {
+    "type": "dalbergia-cochinchinensis",
+    "blades": 44,
+    "vertices": 69912
+  },
+  {
+    "type": "cassia-fistula",
+    "blades": 44,
+    "vertices": 69912
+  },
+  {
+    "type": "shorea-obtusa",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "artocarpus-altilis",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "talipariti-tiliaceum",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "thespesia-populnea",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "calophyllum-inophyllum",
+    "blades": 18,
+    "vertices": 13656
+  },
+  {
+    "type": "syzygium-malaccense",
+    "blades": 18,
+    "vertices": 13656
+  },
+  {
+    "type": "ceiba-pentandra",
+    "blades": 22,
+    "vertices": 36264
+  },
+  {
+    "type": "swietenia-macrophylla",
+    "blades": 44,
+    "vertices": 69912
+  },
+  {
+    "type": "guaiacum-officinale",
+    "blades": 90,
+    "vertices": 138360
+  },
+  {
+    "type": "bursera-simaruba",
+    "blades": 44,
+    "vertices": 69912
+  },
+  {
+    "type": "terminalia-buceras",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "paubrasilia-echinata",
+    "blades": 484,
+    "vertices": 719052
+  },
+  {
+    "type": "nothofagus-pumilio",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "luma-apiculata",
+    "blades": 18,
+    "vertices": 13656
+  },
+  {
+    "type": "quillaja-saponaria",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "cecropia-pachystachya",
+    "blades": 9,
+    "vertices": 10848
+  },
+  {
+    "type": "oak",
+    "blades": 8,
+    "vertices": 11976
+  },
+  {
+    "type": "willow",
+    "blades": 17,
+    "vertices": 13488
+  },
+  {
+    "type": "pine",
+    "blades": 0,
+    "vertices": 843024
+  },
+  {
+    "type": "birch",
+    "blades": 8,
+    "vertices": 9816
+  }
+]

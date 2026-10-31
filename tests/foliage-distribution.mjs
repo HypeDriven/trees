@@ -16,7 +16,7 @@ for(const [type,species] of Object.entries(SPECIES)){
  });
  assert(new Set(samples.map(x=>x.roll.toFixed(2))).size>15,type+' varied blade rotations');
  assert(new Set(samples.map(x=>x.length.toFixed(6))).size>15,type+' varied shoot leaf sizes');
- for(const x of samples){assert(x.matureLength>=species.leaf[0]&&x.matureLength<=species.leaf[1]);assert(Math.abs(x.roll)<.7&&Math.abs(x.yaw)<.5);}
+ for(const x of samples){assert(x.matureLength>=species.leaf[0]&&x.matureLength<=species.leaf[1]);assert(Math.abs(x.roll)<=.95&&Math.abs(x.yaw)<.5);}
  const adult={...cfg,season:'autumn'},shoot=shootGrowth(adult,41,{relativeAge:.1});
  assert.equal(leafDevelopment(adult,species,shoot,1,7).expansion,1,type+' set leaves finish expanding');
 }
@@ -38,3 +38,24 @@ for(const type of ['oak','maple','sweetthorn','fagus-sylvatica','olea-europaea']
  assert(low.vertices.every(Number.isFinite));assert.equal(low.stats.coveredTips,low.stats.terminalTips);
 }
 console.log('All species: position/age-dependent shoot sizes and blade rotations, regional growth, two-ranked alternation and LOD identity passed.');
+// Inspect final blade frames and continuous surfaces, not just the random
+// parameters of one outer shoot. This includes leaflets sharing a rachis plane.
+let audited=0;
+for(const [type,species] of Object.entries(SPECIES)){
+ const cfg={...base,type,view:'shoot',shootStage:'set',season:'summer',leafSize:species.length},specimen=buildSpecimen(cfg,{preview:false,detail:'far'}),poses=specimen.stats.bladePoses;
+ if(!poses.length)continue; // solid needles are audited by pine fascicle tests
+ assert(poses.every(p=>p.normal.every(Number.isFinite)&&Math.abs(Math.hypot(...p.normal)-1)<1e-8),type+' orthonormal blade frame');
+ const shapes=new Set(poses.map(({form:f})=>[f.camber,f.twist,f.sweep,f.asymmetry].map(x=>x.toFixed(4)).join('/')));
+ assert(shapes.size>poses.length*.85,type+' repeats relative blade shapes');
+ if(poses.some(p=>p.compoundPart)){
+  const normals=poses.filter(p=>p.compoundPart).map(p=>p.normal),spread=Math.max(...normals.map(n=>Math.acos(Math.max(-1,Math.min(1,dot(n,normals[0]))))));
+  assert(spread>.12,type+' leaflets are confined to a shared plane');
+ }
+ // At the adult size bounds, hard clamping must not erase all size variation.
+ for(const leafSize of species.leaf){
+  const lengths=Array.from({length:24},(_,i)=>leafDevelopment({...cfg,leafSize},species,shootGrowth(cfg,i),.5,i).length);
+  if(species.leaf[1]>species.leaf[0])assert(new Set(lengths.map(x=>x.toFixed(7))).size>12,type+' clipped identical leaf sizes');
+ }
+ audited++;
+}
+console.log(`${audited} species: final blade frames, independent leaflet curvature and variation at adult size limits passed.`);
