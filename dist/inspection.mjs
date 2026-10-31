@@ -1,3 +1,4 @@
+import {HIGH_DETAIL_DISTANCE_SCALE} from './maximum-detail.mjs?v=25';
 import {studyWindPosition} from './software-study.mjs?v=25';
 import {bipinnateCoverage,redwoodSprayCoverage,pineSprayCoverage} from './compound-lod.mjs?v=25';
 
@@ -40,7 +41,7 @@ export function createSurfaceProximity(vertices,bounds,cell=.18){
  return{cell,bytes:offsets.byteLength+refs.byteLength+marks.byteLength,nearest(p,limit=1.15){if(++stamp===0xffffffff){marks.fill(0);stamp=1;}let best=limit*limit;const lo=p.map((v,k)=>Math.max(0,Math.floor((v-limit-min[k])/cell))),hi=p.map((v,k)=>Math.min(dims[k]-1,Math.floor((v+limit-min[k])/cell)));for(let z=lo[2];z<=hi[2];z++)for(let y=lo[1];y<=hi[1];y++)for(let x=lo[0];x<=hi[0];x++){const c=index(x,y,z);if(offsets[c]===offsets[c+1])continue;const xyz=[x,y,z],d=p.reduce((s,v,k)=>s+Math.max(min[k]+xyz[k]*cell-v,0,v-(min[k]+(xyz[k]+1)*cell))**2,0);if(d>best)continue;for(let r=offsets[c];r<offsets[c+1];r++){const t=refs[r];if(marks[t]===stamp)continue;marks[t]=stamp;best=Math.min(best,triangleDistance2(vertices,t*42,p));}}return Math.sqrt(best);}};
 }
 export function inspectionRegion({eye,direction=null,aspect=1,height=800,cfg,time=0,proximity,current=null}){
- if(!proximity)return null;const center=restCamera(eye,cfg,time),distance=proximity.nearest(center),limit=current?1.05:.78;if(distance>limit)return null;
+ if(!proximity)return null;const center=restCamera(eye,cfg,time),limit=(current?1.05:.78)*HIGH_DETAIL_DISTANCE_SCALE,distance=proximity.nearest(center,limit+.10);if(distance>limit)return null;
  const delta=direction?restCamera(eye.map((v,k)=>v+direction[k]),cfg,time).map((v,k)=>v-center[k]):null,forward=delta?delta.map(v=>v/(Math.hypot(...delta)||1)):null,cone=Math.tan(Math.min(1.2,Math.atan(Math.tan(.3)*Math.max(1,aspect))+.20)),radius=Math.max(.16,distance+.08),move=current?Math.hypot(...center.map((v,k)=>v-current.center[k])):Infinity,turn=current?.forward&&forward?current.forward.reduce((s,v,k)=>s+v*forward[k],0):1;
  return current&&move<.003&&radius<=current.radius+.12&&turn>.9995?current:{center,radius,forward,cone,camera:[...eye],cameraForward:direction?[...direction]:null,surfaceDistance:distance,height,time};
 }

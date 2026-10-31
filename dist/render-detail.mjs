@@ -1,13 +1,13 @@
-import {MAXIMUM_DETAIL} from './maximum-detail.mjs?v=25';
+import {MAXIMUM_DETAIL,HIGH_DETAIL_DISTANCE_SCALE} from './maximum-detail.mjs?v=25';
 // Screen-space choices change tessellation, never organ counts or seeded growth.
 export function selectRenderDetail({view,distance,height=800,leafLength=.09,mode='auto',current=null}){
  if(mode==='full')return'full';
  const field=Math.max(.00001,2*distance*Math.tan(.3)),pixels=leafLength*height/field;
  let value;
- if(view==='tree')value=pixels<18?'far':pixels<65?'balanced':pixels<160?'near':'full';
- else if(view==='bark'||view==='wood')value=field>.75?'far':field>.40?'balanced':field>.20?'near':'full';
- else if(view==='leaf'||view==='shoot')value=field>.65?'far':field>.24?'balanced':field>.065?'near':'full';
- else if(view==='surface')value=field>.10?'balanced':field>.035?'near':'full';
+ if(view==='tree')value=pixels>=160/HIGH_DETAIL_DISTANCE_SCALE?'full':pixels<18?'far':pixels<65?'balanced':'near';
+ else if(view==='bark'||view==='wood')value=field<=.20*HIGH_DETAIL_DISTANCE_SCALE?'full':field>.75?'far':field>.40?'balanced':'near';
+ else if(view==='leaf'||view==='shoot')value=field<=.065*HIGH_DETAIL_DISTANCE_SCALE?'full':field>.65?'far':field>.24?'balanced':'near';
+ else if(view==='surface')value=field<=.035*HIGH_DETAIL_DISTANCE_SCALE?'full':field>.10?'balanced':'near';
  else value='full';
  // A small dead band prevents repeated mesh rebuilds at zoom boundaries.
  if(current&&current!==value){const other=selectRenderDetail({view,distance:distance*(view==='tree'?1.12:1.10),height,leafLength,mode});const another=selectRenderDetail({view,distance:distance/(view==='tree'?1.12:1.10),height,leafLength,mode});if(other!==another)return current;}

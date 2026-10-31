@@ -1,3 +1,4 @@
+import {REGIONAL_SPECIES,REGIONAL_PRESETS,REGIONS} from './regional-species.mjs?v=25';
 // Surface dimensions are representative rendering estimates, not measured
 // epidermal reconstructions. Venation classes are kept distinct by species.
 import {PALMATE_VEINS} from './leaf-shapes.mjs?v=25';
@@ -95,3 +96,5 @@ export function createLeafSurfaceTexture(type,length,width,under=false,{height=7
  }
  return {width:w,height:h,data,bounds};
 }
+
+for(const [id,sp] of Object.entries(REGIONAL_SPECIES))LEAF_ANATOMY[id]={...LEAF_ANATOMY[sp.template],thickness:sp.evergreen?.00024:.00015};

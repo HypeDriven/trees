@@ -1,3 +1,6 @@
+import {REGIONAL_REPRODUCTION} from './regional-reproduction.mjs?v=25';
+import {buildRegionalFruit} from './regional-organs.mjs?v=25';
+import {REGIONAL_SPECIES,REGIONAL_PRESETS,REGIONS} from './regional-species.mjs?v=25';
 import {EAST_ASIAN_SPECIES} from './east-asia.mjs?v=25';
 import {buildEastAsianOrgan} from './east-asia-organs.mjs?v=25';
 // Geometric reproductive structures, in metres. Surface amplitudes and
@@ -26,6 +29,7 @@ export const FRUIT_NOTES={
 };
 
 export function buildFruit(mesh,cfg,{base=[0,0,0],axis=[0,-1,0],fine=false,layoutFine=fine,maximum=false,attached=['tree','shoot'].includes(cfg.view),stage=cfg.fruitStage??'mature',seed=cfg.seed??2847}={}){
+ if(REGIONAL_REPRODUCTION[cfg.type])return buildRegionalFruit(mesh,cfg,{base,axis,fine,layoutFine,maximum,attached,stage,seed});
  if(maximum)fine=true;
  if(EAST_ASIAN_SPECIES[cfg.type]&&cfg.type!=='chinesepine')return buildEastAsianOrgan(mesh,cfg,{mode:'fruit',base,axis,fine,stage,seed});
  axis=norm(axis);const [u,v]=frame(axis),rnd=(i,a,b)=>mix(a,b,hash(seed+i*1.73)),type=cfg.type;
@@ -159,3 +163,5 @@ export function buildFruit(mesh,cfg,{base=[0,0,0],axis=[0,-1,0],fine=false,layou
  }
  return{...details,focus,inspectDistance:type==='jacaranda'?.035:type==='monkeytail'?.018:type==='eucalyptus'?.016:type==='baobab'?.060:type==='sausagetree'?.070:type==='fevertree'?.028:type==='karee'?.016:type==='pine'?.038:type==='sweetthorn'?.028:type==='marula'?.030:type==='oak'?.028:.018};
 }
+
+for(const [id,p] of Object.entries(REGIONAL_REPRODUCTION))FRUIT_NOTES[id]={name:p.fruitForm,source:p.source,text:`${p.fruitForm} morphology at a representative mature length of ${Math.round(p.fruitLength*1000)} mm. ${p.release?'Release exposes seeds or separates the modeled dispersal units.':'This structure remains closed; splitting valves are not imposed on indehiscent fruits.'} Developing and mature stages have separate dimensions and materials.`};

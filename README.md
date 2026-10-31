@@ -16,8 +16,48 @@ Open http://localhost:8080. Use HTTPS when hosting remotely so WebGPU is availab
 
 [PolyForm Noncommercial 1.0.0](LICENSE), with the same additional StarHermit.com game permission as `HypeDriven/starhermit-engine`. See the full terms in `LICENSE`. Third-party resources retain their own terms; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
+## Growth variation and close-up rendering
+
+Foliage now carries a relative initiation age inherited from its position on its
+parent branch. Within each shoot, node rank determines leaf development; crown
+height contributes a modest exposure/vigour bias rather than being treated as
+age. Younger side shoots have shorter, thinner axes. Blades and petioles share
+developmental scaling, with smaller folded leaves near growing tips and fully
+expanded foliage on set shoots. Species size limits apply to mature potential
+lengths. Regional species inherit their template's seasonal flush behavior.
+
+Seeded, bounded normal perturbations vary shoot direction and leaf yaw, pitch
+and roll around species phyllotaxis. Opposite pairs, whorls, and Dawn redwood's
+two-ranked opposite foliage retain their structure. Compound leaves share one
+parent leaf's age and orientation. Detail refinement preserves biological keys,
+sizes and poses. These are illustrative age/exposure rules and angular spreads,
+not measured distributions fitted to every species. The primary developmental
+references are listed in `dist/foliage-growth.mjs`.
+
+Close-up inspection regions retain their measured surface distance for camera
+clipping, including the worker/retained-detail path. This avoids unnecessarily
+collapsing depth precision at root/soil contacts. The physical soil remains at
+grade; a small raster depth offset resolves exact ground-contact ties.
+
+Both GPU renderers fit filtered shadow comparisons to the local receiver plane
+and treat samples outside the shadow volume as lit. Cached shadows refresh when
+the light projection changes, including paused panning and close-up radius
+changes. Material derivatives are evaluated before conditional branches so
+WebGPU validation does not unexpectedly force a fallback. The shadow approach
+follows [receiver-plane filtering guidance](https://learn.microsoft.com/en-us/windows/desktop/DxTechArts/cascaded-shadow-maps).
+
+Future additions should follow [AGENTS.md](AGENTS.md). Targeted checks:
+`node tests/foliage-distribution.mjs` and `node tests/shadow-contact.mjs`.
+Browser checks should include paused orbit/panning, continuous zoom through root
+contacts, and growing/set shoots in both GPU renderers.
+`node tests/shadow-pcf.cjs` additionally renders controlled WebGPU comparisons:
+a sloped receiver must not shadow itself, a genuine occluder must remain dark,
+and out-of-map positions must be lit. It requires Playwright and Chrome plus
+the local server; use `PLAYWRIGHT_MODULE`, `CHROME_PATH` or `TREES_URL` to
+override their locations.
+
 ## Morphology
-`dist/botany.mjs` contains sourced profiles for twenty-two species (twenty-one trees and one fibrous-stemmed perennial), including the original Quercus robur, Salix babylonica, Pinus sylvestris and Betula pendula. South African profiles are defined in `dist/south-africa.mjs`, with the garden specimens in `dist/garden-species.mjs`. Geometry uses metres. Typical expanded leaf/needle length ranges constrain the mature-size control. Developing organs can be smaller. Species differ in lamina outline, petiole proportions, buds, branching habit, bark, reproductive structures and seasonal foliage. Pine needles occur in pairs and remain in winter. Wild olive, jacaranda and sugar maple have opposite decussate leaf pairs; sausage tree uses whorls of three pinnate leaves. The remaining broadleaf presets use alternate attachment sites; dawn-redwood sprays have opposite two-ranked blades. Wild olive, yellowwood, karee and river red gum remain evergreen through winter; the thorn trees use a dry/cold deciduous winter phase.
+`dist/botany.mjs` contains 147 species presets: 125 regional additions and the original twenty-two species (twenty-one trees and one fibrous-stemmed perennial), including the original Quercus robur, Salix babylonica, Pinus sylvestris and Betula pendula. South African profiles are defined in `dist/south-africa.mjs`, with the garden specimens in `dist/garden-species.mjs`. Geometry uses metres. Typical expanded leaf/needle length ranges constrain the mature-size control. Developing organs can be smaller. Species differ in lamina outline, petiole proportions, buds, branching habit, bark, reproductive structures and seasonal foliage. Pine needles occur in pairs and remain in winter. Wild olive, jacaranda and sugar maple have opposite decussate leaf pairs; sausage tree uses whorls of three pinnate leaves. The remaining broadleaf presets use alternate attachment sites; dawn-redwood sprays have opposite two-ranked blades. Wild olive, yellowwood, karee and river red gum remain evergreen through winter; the thorn trees use a dry/cold deciduous winter phase.
 
 Whole-tree crowns keep seasonal foliage on every terminal shoot and use reduced organ geometry for interactive rendering. Tree branches retain connected apical continuations; monkey’s-tail fibrous axes carry their own terminal sheath crowns. Leaf density and leafy side-shoot controls add foliage; ancillary shoot complexity adapts at extreme depth/density combinations to preserve all terminal clusters within the GPU budget. Shoot, leaf and surface studies resolve individual organs, including upper and lower lamina surfaces and a finite blade edge. Crown maturity is a shape/art direction control, not an age or growth calculation.
 
@@ -226,3 +266,21 @@ Monkey’s-tail crowns (v16): `dist/xerophyta-crown.mjs` replaces the exposed fl
 Primary crown reference: [Flora Zambesiaca via Kew, Xerophyta retinervis](https://powo.science.kew.org/taxon/urn:lsid:ipni.org:names:67155-1/general-information), especially the terminal tuft, 30–60 mm fan-shaped sheath, persistent fibre lattice and slender 75–155 mm (occasionally longer) peduncle descriptions. Procedural fibre spacing, crown shape and tissue dimensions remain illustrative.
 
 Foliage attachment (v17): nodes are sampled on the emitted stem loft, including its curved centreline, polygonal cross section, taper and bark displacement. Petioles start slightly inside the intersected surface. Open end-ring rays project to the nearest real side triangle. Fine pinna leaflet insertions use the same segmented rachis path as the supporting mesh. Whole-tree compound, redwood and pine masks now include a continuous central axis down to the branch attachment; thin crossed stem geometry preserves the connection when the alpha texture cannot resolve it. Their meshes have a pinned centreline, so leaf-tip flutter cannot pull that axis off its parent. Whole-canopy software rendering shares the GPU study wind function and uses zero flutter at each blade base, including moving veins. Petiole proxies have two crossed tapered faces so they remain visible from varying angles. Fine studies retain full tubes. At extreme eucalyptus density the node target caps at 125,000 to retain every terminal cluster within the existing mesh budget. Attachments overlap tissue; this is not a watertight Boolean union or biomechanical simulation.
+
+## Regional collection
+
+`dist/regional-species.mjs` adds **five distinct woody species in each of 25 regions** (125 additions), preserving the supplied order and historical geographic labels. The species panel has collapsible region groups. Regional presets support selection, URL links (`?type=fagus-sylvatica`), recipe import/export, seasons and leaf, shoot, tree, root, wood and bark studies.
+
+These additions use shared procedural crown, foliage, bark and root templates with representative species dimensions and evergreen/deciduous, opposite and compound-leaf settings. Every regional preset supports attached reproductive structures and detached Flower and Fruit studies. Arctic entries are dwarf shrubs rather than full-sized trees. Leaf dimensions for compound species refer to leaflets; leaflet counts and forms are approximate. Scale-leaved tamarisk and palmately lobed Cecropia foliage use simplified blades.
+
+Each preset links to its taxon search in [Kew Plants of the World Online](https://powo.science.kew.org/), a taxonomy and distribution reference. Dimensions and seasonal timing are illustrative modelling choices. [Polar willow](https://powo.science.kew.org/taxon/urn%3Alsid%3Aipni.org%3Anames%3A778516-1) supports the dwarf Arctic inclusion.
+
+Validate regional coverage and finite geometry with `node tests/regional-species.mjs`.
+
+Automatic maximum-detail thresholds and surface-refinement entry/exit distances are three times their original camera range. `node tests/detail-distance.mjs` checks the boundaries.
+
+The regional reproductive collection uses taxon-specific profiles in `dist/regional-reproduction.mjs` and anatomical geometry in `dist/regional-organs.mjs`. Forms include catkins, stamen-rich heads, spikes, unequal pea petals, tubular and urn-shaped corollas, fig syconia, nuts and cupules, samaras, bracted nutlets, pods, capsules, fleshy fruits, aggregate fruits and mangrove propagules. Detached fig flower studies use a labeled cutaway; attached syconia stay closed. Flowers have finite front/back petal surfaces or bracts, filaments, paired anther thecae, pollen samples and female stigmatic tissues. Male/female selection is available for profiles with separate sexual forms; bud, open and late stages and single/cluster arrangements are supported throughout.
+
+Regional reproductive geometry participates in seasonal whole-tree/shoot attachment, proximity refinement, retained geometry, software/GPU rendering, material-aware OBJ export and recipe import/export. Developing fruits differ in size and material; release separates valves or dispersal structures only for eligible profiles. Indehiscent fruits stay closed. Counts, dimensions, phenology and microscopic relief remain representative procedural models. Genus morphology references are linked in `REPRODUCTIVE_REFERENCES`; each profile also retains its Kew species link.
+
+Run `node tests/regional-reproduction.mjs` for all 125 profiles, stages, sexual forms and representative maximum-detail tissues. The existing fruit and maximum-detail tests also include regional taxa.

@@ -14,7 +14,7 @@ const released=generate({fruitStage:'released'});assert(released.stats.fruitDeta
 const young=generate({fruitStage:'developing',coneOpening:1});assert(young.stats.fruitDetails[0].length<cone.length*.7);assert.equal(young.stats.fruitDetails[0].opening,0);
 assert.deepEqual(closed.vertices,generate({}).vertices,'Cone geometry must reproduce from the recipe seed');
 closed=null;
-for(const type of Object.keys(SPECIES)){
+for(const type of Object.keys(SPECIES).filter(type=>SPECIES[type].reproductiveModel!==false)){
  const r=generate({type,leafSize:SPECIES[type].length,fruitStage:type==='willow'?'released':'mature'}),f=r.stats.fruitDetails[0];assert(r.vertices.every(Number.isFinite));assert(r.stats.fruits>0);assert(r.bounds.max[1]-r.bounds.min[1]<(SPECIES[type].fruitStudySpan??.16),'Fruit study must stay at natural scale');
  if(type==='oak'){assert(f.cupCoverage>=.25&&f.cupCoverage<=1/3);assert(f.scales>=80);}
  if(type==='willow'){assert(f.capsules>=30);assert(f.silkyHairs>=300);assert.equal(f.seeds,f.capsules);}

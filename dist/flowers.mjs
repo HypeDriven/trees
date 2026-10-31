@@ -1,3 +1,5 @@
+import {REGIONAL_REPRODUCTION} from './regional-reproduction.mjs?v=25';
+import {buildRegionalFlower} from './regional-organs.mjs?v=25';
 import {organDirection,blossomDevelopment} from './organ-distribution.mjs?v=25';
 import {triangulateContour} from './leaf-shapes.mjs?v=25';
 
@@ -28,6 +30,7 @@ const sepalContour=fine=>{const p=[[0,0]];quadratic(p,[.9,.13],[.72,.47],fine?5:
 const roundedPetal=(fine=true)=>{const p=[[0,0]];quadratic(p,[.22,.10],[.85,.43],fine?4:1);quadratic(p,[1.08,.86],[.40,.98],fine?7:2);quadratic(p,[.15,1.04],[0,1],fine?4:1);return[...p,...p.slice(1,-1).reverse().map(([x,y])=>[-x,y])];};
 
 export function buildFlowers(mesh,cfg,{base=[0,0,0],axis=[0,0,1],fine=false,layoutFine=fine,macroDetail=false,maximum=false,seed=cfg.seed,study=false}={}){
+ if(REGIONAL_REPRODUCTION[cfg.type])return buildRegionalFlower(mesh,cfg,{base,axis,fine,layoutFine,macroDetail,maximum,seed,study});
  if(maximum)fine=true;
  const type=cfg.type,d=norm(axis),[u,v]=frame(d),macro=maximum||macroDetail||study&&cfg.flowerLayout!=='cluster',stage=study?(cfg.flowerStage??'open'):'open',R=(i,a,b)=>a+(b-a)*hash(seed+i*1.731),detail=fine?macro?2:1:0;
  const out={type,stage,maximumDetail:fine&&macro,clusterAxis:[...d],flowers:0,petals:0,sepals:0,stamens:0,styles:0,stigmas:0,anthers:0,thecae:0,ovules:0,pollenCones:0,pollenSacs:0,microsporophylls:0,staminodes:0,hairs:0,pollenGrains:0,pedicelLengths:[],flowerRecords:[],petalRecords:[],scaleRecords:[],length:0};
@@ -145,3 +148,5 @@ export function buildFlowers(mesh,cfg,{base=[0,0,0],axis=[0,0,1],fine=false,layo
  if(type==='sakura')cherry();else if(type==='redbud')redbud();else if(type==='maple')maple();else if(type==='ginkgo')ginkgo();else if(type==='dawnredwood'||type==='chinesepine')pollen();else if(type==='sweetgum')sweetgum();else throw new Error('No detailed floral profile for '+type);
  return {...out,focus,surfaceFocus,center,inspectDistance:type==='sakura'?.025:type==='redbud'?.017:.012,surfaceDistance:type==='sakura'?.012:.008};
 }
+
+for(const [id,p]of Object.entries(REGIONAL_REPRODUCTION))FLOWER_NOTES[id]={name:p.flowerForm==='fig'?'Syconium flower cutaway':p.flowerForm+' inflorescence',kind:'Flower',source:p.source,text:p.flowerForm==='fig'?'The syconium encloses minute flowers. The detached study cuts away part of the receptacle to reveal its inner flowers; attached syconia remain closed.':`${p.flowerForm} morphology; ${p.petals} petals and ${p.stamens} stamens per representative male or bisexual flower. ${p.sexed?'Male and female structures have separate studies. ':''}Finite petals or bracts, filaments, paired anther thecae, pollen samples and stigmatic tissue are procedural anatomical models.`};

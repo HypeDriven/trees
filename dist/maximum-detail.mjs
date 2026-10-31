@@ -1,3 +1,5 @@
+// Keep maximum detail visible at three times the original camera distance.
+export const HIGH_DETAIL_DISTANCE_SCALE=3;
 // Shared by attached organs and detached studies. Maximum is a geometry
 // profile, independent of the view, whole-tree LOD or species size control.
 export const MAXIMUM_DETAIL=Object.freeze({leafRows:96,leafColumns:8,fanColumns:32,contourSubdivisions:4,needleRows:96,barkSides:512,barkRows:224});

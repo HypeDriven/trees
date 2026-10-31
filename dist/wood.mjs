@@ -1,3 +1,4 @@
+import {REGIONAL_SPECIES,REGIONAL_PRESETS,REGIONS} from './regional-species.mjs?v=25';
 import {MAXIMUM_DETAIL} from './maximum-detail.mjs?v=25';
 import {DETAIL_GRID} from './render-detail.mjs?v=25';
 import {createStemSurface} from './stem-attachment.mjs?v=25';
@@ -37,6 +38,7 @@ export function barkGeometryHeight(type,uv,age,radius){
 }
 export function barkSample(type,uv,age=.65,zone=0){
  let x=uv[0],y=uv[1],coarse=woodNoise(x*13,y*8),warp=woodNoise(x*24,y*9),fibers=Math.sin(x*3100+Math.sin(y*180)*1.5),height=0,dark=0,rough=.82;
+ if(REGIONAL_SPECIES[type]){const profile=REGIONAL_SPECIES[type].bark;return{height:barkGeometryHeight(type,uv,age,.12)*.25,dark:(1-coarse)*.30,roughness:profile.pattern==='powdery'?.56:.78,color:coarse};}
  if(type==='chinesepine')type='pine';
  if(type==='monkeytail'){let fiber=Math.pow(.5+.5*Math.sin(x*2400+Math.sin(y*35)*.8),12),crossing=Math.pow(.5+.5*Math.sin(x*650+y*960),18),pores=woodNoise(x*1800,y*1400);return{height:fiber*.00038+crossing*.00022+(pores-.5)*.00006,dark:.3+.4*(1-fiber),roughness:.92,color:pores*.6+fiber*.4};}
  if(zone>.075&&type!=='pine'){let pores=woodNoise(x*950,y*750);return {height:(pores-.5)*.00005,dark:smooth(.8,1,pores)*.20,roughness:.60,color:coarse}}
@@ -141,3 +143,5 @@ export const WOOD_NOTES={
  pine:{text:'A shared brown palette blends gradually into warmer upper bark across the trunk and limbs. Plate relief becomes finer toward the crown and young twigs without abrupt colour bands.',source:'https://plants.ces.ncsu.edu/plants/pinus-sylvestris/'},
  birch:{text:'Pale older bark with horizontal lenticels and dark fissures; brown fine twigs. Maturity increases diamond-like dark striations.',source:'https://www.ucc.ie/en/tree-explorers/trees/a-z/betulapendula/'}
 };
+
+for(const [id,sp] of Object.entries(REGIONAL_SPECIES)){BARK_GEOMETRY[id]=sp.bark.depth;BARK_PROFILES[id]=[sp.bark.pattern,sp.bark.pitch,sp.bark.length];WOOD_NOTES[id]={source:sp.source,text:sp.bark.pattern+' bark relief with continuous stem materials and a finite wood section. Tissue scale and grain are representative procedural estimates.'};}

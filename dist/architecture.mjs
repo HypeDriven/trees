@@ -1,3 +1,4 @@
+import {REGIONAL_SPECIES,REGIONAL_PRESETS,REGIONS} from './regional-species.mjs?v=25';
 import {EAST_ASIAN_CROWNS,EAST_ASIAN_SPECIES} from './east-asia.mjs?v=25';
 import {buildXerophytaArchitecture} from './garden-species.mjs?v=25';
 import {SOUTH_AFRICAN_CROWNS,SOUTH_AFRICAN_SPECIES} from './south-africa.mjs?v=25';
@@ -25,6 +26,7 @@ export function sampleBranch(points,t){
 }
 
 export function buildTreeArchitecture(cfg){
+ if(REGIONAL_SPECIES[cfg.type])cfg={...cfg,type:REGIONAL_SPECIES[cfg.type].template};
  if(cfg.type==='monkeytail')return buildXerophytaArchitecture(cfg);
  const random=seeded(cfg.seed^0x391a6d27),R=(a,b)=>a+(b-a)*random(),type=cfg.type,h=cfg.height,m=clamp(cfg.maturity??.65,0,1),levels=clamp(Math.round(cfg.levels),2,5),dense=(cfg.shoots??3)>=2;
  const south=EAST_ASIAN_CROWNS[type]??SOUTH_AFRICAN_CROWNS[type],pineLike=type==='pine'||type==='chinesepine';
@@ -41,7 +43,8 @@ export function buildTreeArchitecture(cfg){
   }return pts;
  }
  function record(points,r0,r1,depth,parent=null,t=0,role='lateral',phase=R(0,6.283)){
-  const r={id:records.length,points,r0,r1,depth,parent:parent?.id??null,attachment:t,role,phase,fruit:random()<.10,children:0};records.push(r);if(parent)parent.children++;return r;
+  const relativeAge=parent?clamp(parent.relativeAge*.30+(1-t)*.70,0,1):1;
+  const r={id:records.length,points,r0,r1,depth,parent:parent?.id??null,attachment:t,relativeAge,role,phase,fruit:random()<.10,children:0};records.push(r);if(parent)parent.children++;return r;
  }
  function limb(parent,t,dir,len,radius,depth,phase,role='lateral'){
   const attachment=sampleBranch(parent.points,t),start=norm(dir),out=norm([attachment.point[0]+Math.cos(phase)*h*.1,0,attachment.point[2]+Math.sin(phase)*h*.1]);let end,bend;
@@ -127,3 +130,5 @@ export function buildTreeArchitecture(cfg){
  const terminals=records.filter(r=>!r.children),tipDirections=terminals.map(r=>sampleBranch(r.points,1).direction),scaffolds=records.filter(r=>r.role==='scaffold');
  return{records,baseRadius:trunk.r0,stats:{profile:type,trunkHeight:trunk.points.at(-1)[1],height:h,scaffolds:scaffolds.length,terminals:terminals.length,apicalContinuations:records.filter(r=>r.role==='continuation').length,pendulousTips:tipDirections.filter(d=>d[1]<-.35).length,upturnedTips:tipDirections.filter(d=>d[1]>.25).length,notes:ARCHITECTURE_NOTES[type]}};
 }
+
+Object.assign(ARCHITECTURE_NOTES,Object.fromEntries(Object.entries(REGIONAL_SPECIES).map(([id,sp])=>[id,sp.habit])));

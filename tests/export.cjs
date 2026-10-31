@@ -1,11 +1,12 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const source=fs.readFileSync(require('node:path').join(__dirname,'../dist/app.js'),'utf8');
 (async()=>{
+ const {REGIONAL_SPECIES,REGIONAL_PRESETS}=await import('../dist/regional-species.mjs');
  const {SPECIES,FLOWER_NOTES}=await import('../dist/botany.mjs'),{bipinnateCoverage,redwoodSprayCoverage,pineSprayCoverage}=await import('../dist/compound-lod.mjs');
  const elements=new Map(),$=key=>{if(!elements.has(key))elements.set(key,{close(){},querySelector(){return{};}});return elements.get(key);};
  let files,downloaded,pixels,mask;
  const canvas={width:0,height:0,getContext(){return{createImageData(w,h){return{data:new Uint8ClampedArray(w*h*4)};},putImageData(p){pixels=p;}};},toBlob(done){mask=pixels.data.slice();done(new Blob([new Uint8Array([137,80,78,71,13,10,26,10])]));}};
- const context={assert,SPECIES,FLOWER_NOTES,bipinnateCoverage,redwoodSprayCoverage,pineSprayCoverage,console,studyCamera(){},$,document:{createElement:()=>canvas},Uint8Array,Uint8ClampedArray,Float32Array,TextEncoder,Blob,Map,Math,JSON,Number,Promise,toast(){},zipDownload(value){files=value;},download(value){downloaded=value;},sync(){},schedule(){}};
+ const context={assert,REGIONAL_SPECIES,SPECIES,FLOWER_NOTES,bipinnateCoverage,redwoodSprayCoverage,pineSprayCoverage,console,studyCamera(){},$,document:{createElement:()=>canvas},Uint8Array,Uint8ClampedArray,Float32Array,TextEncoder,Blob,Map,Math,JSON,Number,Promise,toast(){},zipDownload(value){files=value;},download(value){downloaded=value;},sync(){},schedule(){}};
  let exportOptions;context.buildSpecimen=(_cfg,options)=>(exportOptions=options,{vertices:context.treeVertices});vm.createContext(context);
  vm.runInContext('const SPECIES_IDS='+source.match(/const SPECIES_IDS=(.*?);/)[1]+';let defaults='+source.match(/const defaults=(.*?);\n/)[1]+';let controls='+source.match(/const controls=(.*?);\n/)[1]+';let cfg={...defaults};let hidden=false;',context);
  vm.runInContext(source.slice(source.indexOf('async function thornCutoutFiles'),source.indexOf("$('#export').onclick=")),context);
@@ -39,6 +40,12 @@ const source=fs.readFileSync(require('node:path').join(__dirname,'../dist/app.js
   if(type==='oak'){delete r.parameters.fruitStage;delete r.parameters.coneOpening;}
   const input={files:[{async text(){return JSON.stringify(r);}}],value:'file'};
   await context.restore({target:input});assert.equal(vm.runInContext('cfg.type',context),type);assert.equal(vm.runInContext('cfg.fruitStage',context),'mature');assert.equal(input.value,'');
+ }
+ // Every regional reproductive view survives the real recipe-import handler.
+ for(const type of Object.keys(REGIONAL_SPECIES))for(const view of ['flower','fruit']){
+  const parameters={...vm.runInContext('({...defaults})',context),...REGIONAL_PRESETS[type],type,view,flowerLayout:'cluster',flowerStage:'late',flowerSex:'female',fruitStage:'developing'};
+  await context.restore({target:{files:[{async text(){return JSON.stringify({format:'starhermit-trees',version:21,parameters});}}],value:'file'}});
+  for(const key of ['type','view','flowerLayout','flowerStage','flowerSex','fruitStage'])assert.equal(vm.runInContext('cfg.'+key,context),parameters[key],type+': '+key);
  }
  // Flower recipes retain inspection choices and the exporter separates petal,
  // filament, anther and stigma material groups.

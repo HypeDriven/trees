@@ -26,7 +26,7 @@ const triangle=new Float32Array(42);for(const [i,p]of[[0,[-.03,-1.8,0]],[1,[.03,
 assert(field.geometryNear(triangle));assert(!field.near([0,0,0],.22));
 
 function surfaceEye(result,record,focus){let best=Infinity,eye=null;const start=record.geometryStartVertex*14,end=start+record.geometryVertices*14;focus??=Array.from(result.vertices.subarray(start+Math.floor(record.geometryVertices/6)*42,start+Math.floor(record.geometryVertices/6)*42+3));for(let i=start;i<end;i+=14){const d=Math.hypot(...focus.map((v,k)=>v-result.vertices[i+k]));if(d<best){best=d;eye=[0,1,2].map(k=>result.vertices[i+k]+result.vertices[i+3+k]*.001);}}return eye;}
-for(const type of Object.keys(SPECIES).filter(t=>!flowersOnly&&include(t))){
+for(const type of Object.keys(SPECIES).filter(t=>SPECIES[t].reproductiveModel!==false&&!flowersOnly&&include(t))){
  const c=cfg(type),base=buildSpecimen(c,{preview:false,detail:'far'}),site=base.stats.fruitDetails[0];assert(site,`${type}: test specimen has no fruit`);
  const eye=surfaceEye(base,site,site.focus);
  const close=buildSpecimen(c,{preview:false,detail:'far',inspection:{center:eye,radius:.004,height:800}}),fruit=close.stats.fruitDetails.find(d=>d.seed===site.seed);
@@ -42,7 +42,7 @@ for(const type of Object.keys(SPECIES).filter(t=>!flowersOnly&&include(t))){
 
 // Verify the actual petals, pollen, anthers, calyces and other reproductive
 // organs, not just a fine-detail flag or a higher total tree triangle count.
-for(const type of ['sakura','maple','redbud','sweetgum','ginkgo','dawnredwood','chinesepine','jacaranda','monkeytail','eucalyptus'].filter(include)){
+for(const type of ['sakura','maple','redbud','sweetgum','ginkgo','dawnredwood','chinesepine','jacaranda','monkeytail','eucalyptus',...Object.keys(SPECIES).filter(type=>SPECIES[type].collection==='regional')].filter(include)){
  const c={...cfg(type),season:'spring'},base=buildSpecimen(c,{preview:false,detail:'far'}),site=base.stats.flowerDetails[0];assert(site);
  const record=site.flowerRecords?.[0],focus=record?.throat??site.focus,eye=surfaceEye(base,site,focus);
  const close=buildSpecimen(c,{preview:false,detail:'far',inspection:{center:eye,radius:.008,height:800}}),flower=close.stats.flowerDetails.find(d=>d.seed===site.seed);

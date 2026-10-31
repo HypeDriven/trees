@@ -22,3 +22,5 @@
 #flower-panel[hidden],#flower-panel [hidden]{display:none!important}#flower-panel{padding:4px 0 12px}#flower-panel>p{font-size:10px;line-height:1.8}#flower-source{font-size:10px;color:#627d50}#viewport[data-view=flower] .scene-bottom>div:first-child{background:#f7f9f0e8;border:1px solid #e0e6d7;border-radius:7px;padding:10px 14px}#viewport[data-view=flower] .scene-bottom h2{font-size:23px}#flower-panel .wood-actions button{font-size:9px}
 
 #render-quality{background:#f8faf3;border:1px solid #d7dfcf;border-radius:6px;padding:8px;color:#35503b;font:inherit;font-size:11px}#render-stats{font-size:9px;text-transform:none}@media(max-width:700px){#render-quality{max-width:100px}.head-right .badge{display:none}}
+
+#regional-presets details{margin:10px 0}#regional-presets summary{cursor:pointer;font-size:12px;line-height:1.5;padding:8px 0;color:var(--ink,#29362b)}#regional-presets button{font-size:12px}#regional-presets small{display:block}
